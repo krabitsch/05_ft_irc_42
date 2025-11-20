@@ -78,6 +78,8 @@ int main()
         }
         // Display message
         std::cout << "Received: " << std::string(buf, 0, bytesRecv - 1) + "-" << std::endl;
+
+		//Print parsed massage
 		IrcCommand command = parseMessage(std::string(buf, 0, bytesRecv));
  		if (!command.command.empty()) {
             command.print();

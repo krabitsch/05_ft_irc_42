@@ -1,4 +1,4 @@
-#include "../includes/Parser.hpp"
+#include "Parser.hpp"
 /*
 //Data Structure to hold the final parsed command
 struct IrcCommand {
