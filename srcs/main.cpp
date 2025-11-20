@@ -1,7 +1,6 @@
+#include "../includes/Server.hpp"
 
-#include "Server.hpp"
-
-int main()
+int main(int argc, char **argv)
 {
     // Create a socket
     int fdListening = socket(AF_INET, SOCK_STREAM, 0);
@@ -31,6 +30,8 @@ int main()
         std::cerr << "Can't listen" << std::endl;
         return (-3);
     }
+
+    fcntl(fdListening, F_SETFL, O_NONBLOCK);
     
     // Accept a call
     sockaddr_in client;
