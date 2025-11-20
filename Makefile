@@ -14,6 +14,7 @@ NAME	 	= ircserv
 
 SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
+			  srcs/Parser.cpp
 
 INCLUDES    = -I ./includes	  
 			  

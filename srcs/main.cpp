@@ -1,5 +1,6 @@
 
 #include "Server.hpp"
+#include "Parser.hpp"
 
 int main()
 {
@@ -11,7 +12,7 @@ int main()
         return (-1);
     }
     
-    
+    std::cout << "Socket created" <<std::endl;
     // Bind the socket to an IP/export
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
@@ -24,14 +25,14 @@ int main()
         std::cerr << "Can't bind to IP/port" << std::endl;
         return (-2);
     }
-    
+    std::cout << "Listening starts: " <<std::endl;
     // Mark the socket for listening in
     if (listen(fdListening, SOMAXCONN) == -1) // SOMAXCONN: how many connections it can listen to
     {
         std::cerr << "Can't listen" << std::endl;
         return (-3);
     }
-    
+    std::cout << "Listening finished: " <<std::endl;
     // Accept a call
     sockaddr_in client;
     socklen_t   clientSize = sizeof(client);
@@ -76,7 +77,14 @@ int main()
             break ;
         }
         // Display message
-        std::cout << "Received: " << std::string(buf, 0, bytesRecv) << std::endl;
+        std::cout << "Received: " << std::string(buf, 0, bytesRecv - 1) + "-" << std::endl;
+		IrcCommand command = parseMessage(std::string(buf, 0, bytesRecv));
+ 		if (!command.command.empty()) {
+            command.print();
+        } else {
+            std::cout << "Invalid or empty command string." << std::endl;
+        }
+
         // Resend message
         send(clientSocket, buf, bytesRecv, 0);
     }
