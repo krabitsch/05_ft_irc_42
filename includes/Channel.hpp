@@ -1,23 +1,30 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <iostream>
 #include "Client.hpp"
 
 class Channel
 {
 	private:
-	std::string name;
-	std::map<int, Client> members; //This is a basic map that will contain all the nicknames of the clients who are apart of the channel
-	std::vector<std::string> operators; //String of names belong to which members are operators
+	std::string channel_name; //Name of the channel i.e. the topic
+	std::vector<Client> members; //This is a basic map that will contain all the nicknames of the clients who are apart of the channel
+	std::vector<int> operators; //Array of fds belonging to which members are operators
 
 	public:
-	Channel();
+	Channel(std::string name);
 	~Channel();
 	Channel(const Channel &type);
 	Channel &operator=(const Channel &type1);
 
-	void AddMember();
-	void RemoveMember();
+	//Member Functions
+	void AddMember(Client user);
+	void RemoveMember(std::string username);
+
+	std::string getname(void);
+	bool IsOperator(int fd);
 
 	//All Mode Commands will be inside the channel class
+	void SetOperator(std::string username);
+	void UnsetOperator(std::string username);
 };
