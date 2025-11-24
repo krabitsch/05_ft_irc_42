@@ -40,14 +40,25 @@ void	Client::setIpAdd(std::string ipAddr)	{ this->_ipClient = ipAddr; }
 
 // Public member functions/ methods
 
-/*
+
 //Accepting New Client
 //Accepts client in the server if they dont already exist 
 
-//Discounting Client or use the quit command in commandsAuth
+//Setters/Getters and an insert function
+void Client::addNofitication(std::string msg, char type)
+{
+    notifications.insert({type, msg});
+}
 
-//Need a function where we get the specific client 
+void Client::SetChannel(std::map<std::string, char> *newchannels)
+{
+    channels = *newchannels;
+}
 
+void Client::AddChannel(std::string channelname)
+{
+    channels.insert({channelname, 'm'});    
+}
 void Client::SetNickname(std::string newname)
 {
 	nickname = newname;
@@ -66,8 +77,17 @@ std::string Client::GetUsername(void)
 	return (username);
 }
 
+std::string Client::GetCurrentChannel(void)
+{
+    return (current_channel);
+}
+
+void Client::SetCurrentChannel(std::string newchannel)
+{
+    current_channel = newchannel;
+}
+
 std::map<std::string, char> *Client::GetChannel(void)
 {
 	return (&channels);
 }
-*/
