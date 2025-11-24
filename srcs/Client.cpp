@@ -1,18 +1,31 @@
 #include "../includes/Client.hpp"
 
 //Orothodox For Client Class
-Client::Client() {};
-Client::~Client() {};
+Client::Client(int socket, std::string name): fd(socket), username(name) 
+{
+    nickname = nullptr;
+    password = nullptr;
+};
+
+Client::~Client() {}; //For the decontructor im unsure whether or not we completely delete the user from every channel or we retain that info
 Client::Client(const Client &type) {};
-Client &Client:: operator=(const Client &type1) {};
+Client &Client:: operator=(const Client &type1) { return *this;};
 
-//Accepting New Client
-//Accepts client in the server if they dont already exist 
+//Setters/Getters and an insert function
+void Client::addNofitication(std::string msg, char type)
+{
+    notifications.insert({type, msg});
+}
 
-//Discounting Client or use the quit command in commandsAuth
+void Client::SetChannel(std::map<std::string, char> *newchannels)
+{
+    channels = *newchannels;
+}
 
-//Need a function where we get the specific client 
-
+void Client::AddChannel(std::string channelname)
+{
+    channels.insert({channelname, 'm'});    
+}
 void Client::SetNickname(std::string newname)
 {
     nickname = newname;
@@ -29,6 +42,16 @@ int Client::GetFdSocket(void)
 std::string Client::GetUsername(void)
 {
     return (username);
+}
+
+std::string Client::GetCurrentChannel(void)
+{
+    return (current_channel);
+}
+
+void Client::SetCurrentChannel(std::string newchannel)
+{
+    current_channel = newchannel;
 }
 
 std::map<std::string, char> *Client::GetChannel(void)

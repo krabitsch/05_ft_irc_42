@@ -17,11 +17,11 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <cstring>
-#include <fcntl.h>
-#include <string>
-#include <map>
-#include <vector>
-#include "Channel.hpp"
+# include <fcntl.h>
+# include <string>
+# include <map>
+# include <vector>
+# include "Channel.hpp"
 
 class Server
 {
@@ -39,7 +39,14 @@ class Server
 
   //Find Functions
   Channel* findChannel(const std::string &name);
-  Client* findClient(const int fd);
+  Client* findClient(const int fd, std::string username);
+
+  //Commands that need the use of the server
+  void nickComand(int fd, std::string newname); //Sets the new nickanem maybe change but we will see
+  void join(int fd, std::string channelname); //Creates or joins a channel that exists
+  void part(int fd);
+  void privateMsg(std::string username, std::string msg);
+
 
 };
 

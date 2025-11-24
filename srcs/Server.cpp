@@ -14,11 +14,27 @@ Channel* Server::findChannel(const std::string &name)
 
 }
 
-Client* Server::findClient(const int fd)
-{
-  std::map<int, Client>::iterator it = clients.find(fd);
-  if (it == clients.end())
-    return NULL;
+//maybe make this template
 
-    return (&it->second);
+Client* Server::findClient(const int fd, std::string username) //THis doesnt really work maybe change this into a template
+{
+  if (fd != -1)
+  {
+    std::map<int, Client>::iterator it = clients.find(fd);
+    if (it != clients.end())
+      return (&it->second);
+  }
+
+  if (!username.empty())
+  {
+    std::map<int, Client>::iterator it = clients.begin();
+    while (it != clients.end())
+    {
+      if (it->second.GetUsername() == username || it->second.GetNickname() == username)
+        return (&it->second);
+      it++;
+    }
+  } 
+
+  return (NULL);
 }

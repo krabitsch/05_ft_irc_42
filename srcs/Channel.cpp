@@ -1,16 +1,19 @@
-#include "../includes/Channel.hpp"
-#include <string_view>
+#include "../includes/Server.hpp"
+#include <iostream>
 
-Channel::Channel(std::string name): channel_name(name) 
+Channel::Channel(int fd, std::string name): channel_name(name) 
 {
 	//Set the user who made the channel as its first memeber with the operator status
-	
-
+	Server server; //again here i want to find out how to call the server to the get the user data and insert it into the class
+	Client *client = server.findClient(fd, NULL);
+	client->AddChannel(name);
+	AddMember(*client);
+	operators.push_back(client->GetFdSocket());
 };
 
 Channel::~Channel() {};
 Channel::Channel(const Channel &type) {};
-Channel &Channel:: operator=(const Channel &type1) {};
+Channel &Channel:: operator=(const Channel &type1) {return *this;};
 
 //Add Member
 //Step 1: Get client and add it to the map
@@ -45,23 +48,28 @@ void Channel::RemoveMember(std::string username)
 //Step 2: Add member onto the vector 
 //Step 3: Set the status in the client class
 
-bool Channel::IsOperator(int fd)
+bool Channel::IsOperator(int fd) //Checks if the user is an operator or not
 {
-	int i = 0;
-	while (i <  operators.size())
+	if (operatorPriv == true)
 	{
-		if (fd == operators[i])
-			return true;
-		i++;
+		int i = 0;
+		while (i <  operators.size())
+		{
+			if (fd == operators[i])
+				return true;
+			i++;
+		}
+		return false;
 	}
-	return false;
+	else
+		return true; //We can change this if needed
 }
 
-void Channel::SetOperator(std::string username)
+void Channel::SetOperator(std::string username, int fd) //Another Note: This function isnt done we still need to verify that the one executing this comamnd is a user or everyone is an operator
 {
 	//If the user is an operator
 	int i = 0;
-	while (i < members.size())
+	while (i < members.size()) //Note: Maybe put this into its own sperate function
 	{
 		if (members[i].GetNickname() == username || members[i].GetUsername() == username)
 		{
@@ -69,7 +77,7 @@ void Channel::SetOperator(std::string username)
 			{
 				
 				std::map<std::string, char> *user_channels = members[i].GetChannel();
-				(*user_channels)[channel_name] = 'o';
+				(*user_channels)[channel_name] = 'o'; //check if this sets the channel in the client correctly
 				operators.push_back(members[i].GetFdSocket());
 				std::cout << "User " << username << " is now an operator" << std::endl;
 			}
@@ -82,6 +90,51 @@ void Channel::SetOperator(std::string username)
 		i++;
 	}
 	std::cerr << "User does not exist in this channel" << std::endl;
+}
+
+void Channel::UnsetOperator(std::string username, int fd)
+{
+	if (IsOperator(fd) == true) //Checks if the user is an operator themselves 
+	{
+		//Unset the operator 
+		int i = 0;
+		while (i < members.size())
+		{
+			if (members[i].GetNickname() == username || members[i].GetUsername() == username)
+			{
+				if (IsOperator(members[i].GetFdSocket()) == true)
+				{
+					int clientfd = members[i].GetFdSocket();
+					std::map<std::string, char> *user_channels = members[i].GetChannel();
+					(*user_channels)[channel_name] = 'm'; //Set there status back to member
+
+					//Creates the new list of operators without the unset member
+					std::vector<int> newoperators;
+					int k = 0;
+					while (k < operators.size())
+					{
+						if (operators[i] != clientfd)
+							newoperators.push_back(operators[i]);
+						k++;
+					}
+					operators = newoperators;
+
+					std::cout << "User " << username << " is no longer an operator" << std::endl;
+				}
+				else 
+				{
+					std::cout << "User is already not an operator in this channel" << std::endl;
+					return ;
+				}
+			}
+			i++;
+		}
+
+	}
+	else 
+	{
+		std::cout << "You are not an operator in this channel!"	<< std::endl;
+	}
 }
 
 //Unset Operator Privilage
