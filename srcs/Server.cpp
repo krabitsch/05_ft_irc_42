@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 15:27:04 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/11/24 15:52:58 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,7 +265,7 @@ Channel* Server::findChannel(const std::string &name)
 
 }
 
-//maybe make this template
+//maybe make this template //change to use vector
 
 Client* Server::findClient(const int fd, std::string username) //THis doesnt really work maybe change this into a template
 {

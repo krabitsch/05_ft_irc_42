@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 15:17:46 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/11/24 15:52:42 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,10 +50,10 @@ class Server
 		int							_fdServer;
 		std::vector<Client>			_clients; 	// vector of clients
 		std::vector<struct pollfd>	_fds; 		// vector of pollfd
-		/*
-  		std::vector<Channel>		channels; 	//A vector of all the channels 
-  		std::map<int, Client>		clients; 	//Should we have a vector of all current clients connected to the server
-		*/
+	
+  	std::vector<Channel>		channels; 	//A vector of all the channels 
+  	std::map<int, Client>		clients; 	//Should we have a vector of all current clients connected to the server
+	
 
 		Server();
 		// Variables/methods global to the class:

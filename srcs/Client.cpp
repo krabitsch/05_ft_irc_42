@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 14:59:45 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/11/24 15:51:35 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,10 +66,6 @@ void Client::SetNickname(std::string newname)
 std::string Client::GetNickname(void)
 {
 	return (nickname);
-}
-int Client::GetFdSocket(void)
-{
-	return (fd);
 }
 
 std::string Client::GetUsername(void)
