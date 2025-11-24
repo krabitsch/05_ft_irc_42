@@ -1,6 +1,17 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
+/*   Updated: 2025/11/24 15:17:46 by krabitsc         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#ifndef PMERGEME_hpp
-# define PMERGEME_hpp
+#ifndef SERVER_hpp
+# define SERVER_hpp
 
 # ifdef FT_IRC_DEBUG
   #  define DBG(someCode) do { someCode; } while (0)
@@ -17,29 +28,75 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <cstring>
-#include <fcntl.h>
+# include <fcntl.h>
+# include <poll.h>
+# include <csignal>
+# include <cerrno>
 #include <string>
 #include <map>
 #include <vector>
 #include "Channel.hpp"
 
+# define RED    "\e[1;31m"
+# define WHITE  "\e[0;37m"
+# define GREEN  "\e[1;32m"
+# define YELLOW "\e[1;33m"
+
 class Server
 {
-  private:
-  std::vector<Channel> channels; //A vector of all the channels 
-  std::map<int, Client> clients;//Should we have a vector of all current clients conencted to the server
+	private:
+		int							_port;
+		int							_password;
+		int							_fdServer;
+		std::vector<Client>			_clients; 	// vector of clients
+		std::vector<struct pollfd>	_fds; 		// vector of pollfd
+		/*
+  		std::vector<Channel>		channels; 	//A vector of all the channels 
+  		std::map<int, Client>		clients; 	//Should we have a vector of all current clients connected to the server
+		*/
 
-  public:
-  Server();
-  ~Server();
-  Server(const Server &type);
-	Server &operator=(const Server &type1);
+		Server();
+		// Variables/methods global to the class:
+		static bool					signalBool;
 
-  void topic(std::string channelname, int clientfd); //Topic Command
+	public:
+		// Constructors:
+		Server(int port, int password);
+		Server(const Server& other);
 
-  //Find Functions
-  Channel* findChannel(const std::string &name);
-  Client* findClient(const int fd);
+		// Destructor:
+		~Server();
+
+		// Operator overloads
+		Server& operator=(const Server& other);
+
+		// Public member functions/ methods
+		void serverInit(); 				//-> server initialization
+		void createSocketBindListen();	//-> server socket creation
+		void acceptClient(); 			//-> accept new client
+		void receiveData(int fd);		//-> receive new data from a registered client
+
+		void closeFds(); 			//-> close file descriptors
+		void clearClients(int fd);	//-> clear clients
+
+		//static void SignalHandler(int signum); //-> signal handler
+
+
+		/*
+		void		topic(std::string channelname, int clientfd); //Topic Command
+  		//Find Functions
+		Channel*	findChannel(const std::string &name);
+		Client*		findClient(const int fd);
+		*/
+
+  		// Getters
+
+		// Setters
+
+		// Variables/methods global to the class
+		static void signalHandler(int signalReceived);
+
+		// Exception classes
 
 };
 
