@@ -6,7 +6,7 @@
 #    By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/11/18 16:11:31 by krabitsc         ###   ########.fr        #
+#    Updated: 2025/11/24 12:50:33 by krabitsc         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,7 @@ NAME	 	= ircserv
 
 SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
+			  srcs/Client.cpp
 
 INCLUDES    = -I ./includes	  
 			  
@@ -23,6 +24,7 @@ OBJS        = $(SRCS:srcs/%.cpp=$(OBJDIR)/%.o)
 DEPS 		= $(OBJS:.o=.d)
 CC 	 		= c++
 CPPFLAGS   	= -Wall -Wextra -Werror -std=c++98 -MMD -MP $(INCLUDES)
+#CPPFLAGS   	= -std=c++98 -MMD -MP $(INCLUDES)
 CPPFLAGSDBG = $(CPPFLAGS) -FT_IRC_DEBUG
 BUILD_FLAGS ?= $(CPPFLAGS)
 RMF		 	= rm -f

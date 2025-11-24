@@ -1,90 +1,100 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/24 14:56:54 by krabitsc          #+#    #+#             */
+/*   Updated: 2025/11/24 14:56:55 by krabitsc         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/Server.hpp"
+#include <cerrno>
+#include <climits>
 
-int main(int argc, char **argv)
+
+int	checkInputArgs(int ac, char **av, int* port, int* password)
 {
-    // Create a socket
-    int fdListening = socket(AF_INET, SOCK_STREAM, 0);
-    if (fdListening == -1)
-    {
-        std::cerr << "Can't create a socket!" << std::endl;
-        return (-1);
-    }
-    
-    
-    // Bind the socket to an IP/export
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(54000); // takes host shorts and converts them to network shorts
-    inet_pton(AF_INET, "0.0.0.0", &serverAddress.sin_addr); // want to run it on/ bind it to any IP address
-                                                   // for it to take any address: 0.0.0.0
-                                                   // number to an array of , e.g. 127.0.0.1
-	if (bind(fdListening, (sockaddr*)&serverAddress, sizeof(serverAddress)) == -1)
-    {
-        std::cerr << "Can't bind to IP/port" << std::endl;
-        return (-2);
-    }
-    
-    // Mark the socket for listening in
-    if (listen(fdListening, SOMAXCONN) == -1) // SOMAXCONN: how many connections it can listen to
-    {
-        std::cerr << "Can't listen" << std::endl;
-        return (-3);
-    }
+	if (ac != 3)
+	{
+		std::cout << "Wrong number of input arguments.\n"
+				  << "Expected format:\n"
+				  << "./ircserv <port> <password>" << std::endl;
+		return (-1);
+	}
 
-    fcntl(fdListening, F_SETFL, O_NONBLOCK);
-    
-    // Accept a call
-    sockaddr_in client;
-    socklen_t   clientSize = sizeof(client);
-    char host[NI_MAXHOST];
-    char svc[NI_MAXSERV];
-    int clientSocket = accept(fdListening, (sockaddr*)&client, &clientSize);
-    if (clientSocket == -1)
-    {
-        std::cerr << "Problem with client connecting!" << std::endl;
-        return (-4);
-    }
-    close (fdListening);
-    memset(host, 0, NI_MAXHOST);
-    memset(svc, 0, NI_MAXSERV);
-    int result = getnameinfo((sockaddr*)&client, sizeof(client), host, NI_MAXHOST, svc, NI_MAXSERV, 0);
-    if (result == 0)
-    {
-        std::cout << host << " connected on " << svc << std::endl;
-    }
-    else
-    {
-        inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
-        std::cout << host << " connected on " << ntohs(client.sin_port) << std::endl;
-    }
-    
-    // While receiving, display message, echo message
-    char buf[4096];
-    while (true)
-    {
-        // clear the buffer
-        memset(buf, 0, 4096);
-        // wait for a message
-        int bytesRecv = recv(clientSocket, buf, 4096, 0);
-        if (bytesRecv == -1)
-        {
-            std::cerr << "There was a connection issue" << std::endl;
-            break ;
-        }
-        if (bytesRecv == 0)
-        {
-            std::cerr << "The client disconnected" << std::endl;
-            break ;
-        }
-        // Display message
-        std::cout << "Received: " << std::string(buf, 0, bytesRecv) << std::endl;
-        // Resend message
-        send(clientSocket, buf, bytesRecv, 0);
-    }
-    
-    
-    // Close the listening socket
-    close(clientSocket);
+   long	values[2];
+	for (int i = 1; i <= 2; ++i)
+	{
+		std::string arg(av[i]);
 
-    return (0);
+		for (size_t j = 0; j < arg.size(); ++j)
+		{
+			if (j == 0 && arg[j] == '+')
+				continue ;
+			if (!std::isdigit(static_cast<unsigned char>(arg[j])))
+			{
+				std::cerr << "Error: Arguments can only be positive integers." << std::endl;
+				return (-1);
+			}
+		}
+		char* endptr = 0;
+		errno = 0;
+		long num = std::strtol(av[i], &endptr, 10);
+		if (*endptr != '\0' || errno == ERANGE || num < 0 || num > INT_MAX)
+		{
+			std::cerr << "Error: Arguments must be valid positive integers within range." << std::endl;
+			return (-1);
+		}
+		values[i - 1] = num;
+	}
+
+	int portVal	 = static_cast<int>(values[0]);
+	int passwordVal = static_cast<int>(values[1]);
+
+	// check port ranges:
+	if (portVal <= 0 || portVal > 65535)
+	{
+		std::cerr << "Error: Port must be in range 1–65535." << std::endl;
+		return (-1);
+	}
+	else if (portVal <= 1023)
+	{
+		std::cerr << "Warning: Ports 1–1023 are reserved (root-only). " << "Pick a port >= 1024, e.g. 4444." << std::endl;
+		return (-1);
+	}
+
+	*port	 = portVal;
+	*password = passwordVal;
+
+	return (0);
+}
+
+int main(int ac, char **av)
+{
+	int		port;
+	int		password;
+
+	if (checkInputArgs(ac, av, &port, &password) != 0)
+		return (-1);
+
+	Server	server(port, password); // call constructor with port = av[1], password = av[2]
+
+	std::cout << "---- SERVER ----" << std::endl;
+	try
+	{
+		signal(SIGINT,  Server::signalHandler); //-> catch signal (ctrl + c)
+		signal(SIGQUIT, Server::signalHandler); //-> catch signal (ctrl + \)
+		server.serverInit();
+	}
+	catch(const std::exception& e)
+	{
+		server.closeFds();
+		std::cerr << e.what() << std::endl;
+	}
+	std::cout << "The Server Closed!" << std::endl;
+
+	return (0);
 }
