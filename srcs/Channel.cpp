@@ -4,11 +4,11 @@
 Channel::Channel(int fd, std::string name): channel_name(name) 
 {
 	//Set the user who made the channel as its first memeber with the operator status
-	Server server; //again here i want to find out how to call the server to the get the user data and insert it into the class
-	Client *client = server.findClient(fd, NULL);
-	client->AddChannel(name);
-	AddMember(*client);
-	operators.push_back(client->GetFdSocket());
+	//Server server; //again here i want to find out how to call the server to the get the user data and insert it into the class
+	//Client *client = server.findClient(fd, NULL);
+	//client->AddChannel(name);
+	//AddMember(*client);
+	//operators.push_back(client->GetFdSocket());
 };
 
 Channel::~Channel() {};
@@ -73,12 +73,12 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 	{
 		if (members[i].GetNickname() == username || members[i].GetUsername() == username)
 		{
-			if (IsOperator(members[i].GetFdSocket()) == false)
+			if (IsOperator(members[i].getFd()) == false)
 			{
 				
 				std::map<std::string, char> *user_channels = members[i].GetChannel();
 				(*user_channels)[channel_name] = 'o'; //check if this sets the channel in the client correctly
-				operators.push_back(members[i].GetFdSocket());
+				operators.push_back(members[i].getFd());
 				std::cout << "User " << username << " is now an operator" << std::endl;
 			}
 			else 
@@ -102,9 +102,9 @@ void Channel::UnsetOperator(std::string username, int fd)
 		{
 			if (members[i].GetNickname() == username || members[i].GetUsername() == username)
 			{
-				if (IsOperator(members[i].GetFdSocket()) == true)
+				if (IsOperator(members[i].getFd()) == true)
 				{
-					int clientfd = members[i].GetFdSocket();
+					int clientfd = members[i].getFd();
 					std::map<std::string, char> *user_channels = members[i].GetChannel();
 					(*user_channels)[channel_name] = 'm'; //Set there status back to member
 

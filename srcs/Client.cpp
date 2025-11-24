@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 15:51:35 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/24 15:57:58 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,20 +45,20 @@ void	Client::setIpAdd(std::string ipAddr)	{ this->_ipClient = ipAddr; }
 //Accepts client in the server if they dont already exist 
 
 //Setters/Getters and an insert function
-void Client::addNofitication(std::string msg, char type)
+/*void Client::addNofitication(std::string msg, char type)
 {
     notifications.insert({type, msg});
-}
+}*/
 
 void Client::SetChannel(std::map<std::string, char> *newchannels)
 {
     channels = *newchannels;
 }
 
-void Client::AddChannel(std::string channelname)
+/*void Client::AddChannel(std::string channelname)
 {
     channels.insert({channelname, 'm'});    
-}
+}*/
 void Client::SetNickname(std::string newname)
 {
 	nickname = newname;
