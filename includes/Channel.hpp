@@ -5,16 +5,16 @@
 class Channel
 {
 	private:
-	std::string channel_name; //Name of the channel i.e. the topic
-	std::vector<Client> members; //This is a basic map that will contain all the nicknames of the clients who are apart of the channel
-	std::vector<int> operators; //Array of fds belonging to which members are operators
+	std::string _channelname; //Name of the channel i.e. the topic
+	std::vector<Client> _members; //This is a basic map that will contain all the nicknames of the clients who are apart of the channel
+	std::vector<int> _operators; //Array of fds belonging to which members are operators
 	
 	//Mode Settings
-	bool operatorPriv;
-	bool inviteonly;
-	bool topicPriv; //Im unsure for this one its mode -t 
-	std::string password;
-	size_t userlimit; //Immportant as we should dicuss what to do if you set the limit to 2 users and there is 5 who are apart of the channel
+	bool _operatorPriv;
+	bool _inviteonly;
+	bool _topicPriv; //Im unsure for this one its mode -t 
+	std::string _password;
+	size_t _userlimit; //Immportant as we should dicuss what to do if you set the limit to 2 users and there is 5 who are apart of the channel
 
 	public:
 	Channel(int fd, std::string name);

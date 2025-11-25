@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 15:52:58 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 11:10:33 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -247,45 +247,34 @@ void	Server::closeFds()
 }
 
 
-
-
-
+//Finder Functions 
 
 Channel* Server::findChannel(const std::string &name)
 {
   //This function looks for the specific channel
   size_t i = 0;
-  while (i < channels.size())
+  while (i < _channels.size())
   {
-	  if (channels[i].getname() == name)
-		return (&channels[i]);
+	  if (_channels[i].getname() == name)
+		return (&_channels[i]);
 	i++;
   }
   return NULL;
 
 }
 
-//maybe make this template //change to use vector
 
-Client* Server::findClient(const int fd, std::string username) //THis doesnt really work maybe change this into a template
+Client* Server::findClient(const int fd, std::string username)
 {
-  if (fd != -1)
-  {
-    std::map<int, Client>::iterator it = clients.find(fd);
-    if (it != clients.end())
-      return (&it->second);
-  }
-
-  if (!username.empty())
-  {
-    std::map<int, Client>::iterator it = clients.begin();
-    while (it != clients.end())
+    int i = 0;
+    while (i <_clients.size())
     {
-      if (it->second.GetUsername() == username || it->second.GetNickname() == username)
-        return (&it->second);
-      it++;
+		if (_clients[i].getUsername() == username || _clients[i].getNickname() == username)
+			return (&_clients[i]);
+		else if (fd > 1 && _clients[i].getFd() == fd)
+			return (&_clients[i]);
+      i++;
     }
-  } 
-
-  return (NULL);
+	
+  	return (NULL);
 }

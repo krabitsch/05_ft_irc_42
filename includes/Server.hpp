@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 15:52:42 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 11:10:27 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,58 +45,46 @@
 class Server
 {
 	private:
-		int							_port;
-		int							_password;
-		int							_fdServer;
-		std::vector<Client>			_clients; 	// vector of clients
-		std::vector<struct pollfd>	_fds; 		// vector of pollfd
+	int							_port;
+	int							_password;
+	int							_fdServer;
+	std::vector<Client>			_clients; 	// vector of clients
+	std::vector<struct pollfd>	_fds; 		// vector of pollfd
+  	std::vector<Channel>		_channels; 	//A vector of all the channels 
 	
-  	std::vector<Channel>		channels; 	//A vector of all the channels 
-  	std::map<int, Client>		clients; 	//Should we have a vector of all current clients connected to the server
+	Server();
 	
-
-		Server();
-		// Variables/methods global to the class:
-		static bool					signalBool;
+	// Variables/methods global to the class:
+	static bool					signalBool;
 
 	public:
-		// Constructors:
-		Server(int port, int password);
-		Server(const Server& other);
+	
+	// Constructors/Destructors/Operators Overlords
+	Server(int port, int password);
+	Server(const Server& other);
+	~Server();
+	Server& operator=(const Server& other);
 
-		// Destructor:
-		~Server();
+	// Public member functions/ methods
 
-		// Operator overloads
-		Server& operator=(const Server& other);
+  	// Getters
 
-		// Public member functions/ methods
-		void serverInit(); 				//-> server initialization
-		void createSocketBindListen();	//-> server socket creation
-		void acceptClient(); 			//-> accept new client
-		void receiveData(int fd);		//-> receive new data from a registered client
+	// Setters
 
-		void closeFds(); 			//-> close file descriptors
-		void clearClients(int fd);	//-> clear clients
+	//Server Functions
+	void serverInit(); 				//-> server initialization
+	void createSocketBindListen();	//-> server socket creation
+	void acceptClient(); 			//-> accept new client
+	void receiveData(int fd);		//-> receive new data from a registered client
 
-		//static void SignalHandler(int signum); //-> signal handler
+	void closeFds(); 			//-> close file descriptors
+	void clearClients(int fd);	//-> clear clients
 
+	// Variables/methods global to the class
+	static void signalHandler(int signalReceived);
+	//static void SignalHandler(int signum); //-> signal handler
 
-		/*
-		void		topic(std::string channelname, int clientfd); //Topic Command
-  		//Find Functions
-		Channel*	findChannel(const std::string &name);
-		Client*		findClient(const int fd);
-		*/
-
-  		// Getters
-
-		// Setters
-
-		// Variables/methods global to the class
-		static void signalHandler(int signalReceived);
-
-    //Find Functions
+    //Finder Functions
     Channel* findChannel(const std::string &name);
     Client* findClient(const int fd, std::string username);
 
@@ -105,9 +93,7 @@ class Server
     void join(int fd, std::string channelname); //Creates or joins a channel that exists
     void part(int fd);
     void privateMsg(std::string username, std::string msg);
-
-		// Exception classes
-
+	void topic(std::string channelname, int clientfd);
 
 };
 

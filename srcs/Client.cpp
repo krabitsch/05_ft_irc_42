@@ -6,11 +6,11 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 15:57:58 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 11:12:39 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/Client.hpp"
+#include "../includes/Server.hpp"
 
 // Constructors:
 Client::Client() {}
@@ -30,14 +30,58 @@ Client&	Client::operator=(const Client& other)
 	return (*this);
 }
 
-
 // Getters
-int		Client::getFd() const { return (this->_fdClient); }
+int	Client::getFd() const 
+{ 
+	return (this->_fdClient); 
+}
+
+std::string Client::getNickname(void) const
+{
+	return (_nickname);
+}
+
+std::string Client::getUsername(void) const
+{
+	return (_username);
+}
+
+std::string Client::getCurrentChannel(void) const
+{
+    return (_currentChannel);
+}
+
+std::map<std::string, char> *Client::GetChannel(void)
+{
+	return (&_channels);
+}
+
 
 // Setters
-void	Client::setFd(int fd)					{ this->_fdClient = fd; }
-void	Client::setIpAdd(std::string ipAddr)	{ this->_ipClient = ipAddr; }
+void	Client::setFd(int fd)					
+{ 
+	this->_fdClient = fd;
+}
 
+void	Client::setIpAdd(std::string ipAddr)	
+{ 
+	this->_ipClient = ipAddr; 
+}
+
+void 	Client::SetChannel(std::map<std::string, char> *newchannels)
+{
+    _channels = *newchannels;
+}
+
+void Client::SetNickname(std::string newname)
+{
+	_nickname = newname;
+}
+
+void Client::SetCurrentChannel(std::string newchannel)
+{
+    _currentChannel = newchannel;
+}
 // Public member functions/ methods
 
 
@@ -45,45 +89,12 @@ void	Client::setIpAdd(std::string ipAddr)	{ this->_ipClient = ipAddr; }
 //Accepts client in the server if they dont already exist 
 
 //Setters/Getters and an insert function
-/*void Client::addNofitication(std::string msg, char type)
+void Client::addNofitication(std::string msg, char type)
 {
-    notifications.insert({type, msg});
-}*/
-
-void Client::SetChannel(std::map<std::string, char> *newchannels)
-{
-    channels = *newchannels;
+    _notifications.insert({type, msg});
 }
 
-/*void Client::AddChannel(std::string channelname)
+void Client::AddChannel(std::string channelname)
 {
-    channels.insert({channelname, 'm'});    
-}*/
-void Client::SetNickname(std::string newname)
-{
-	nickname = newname;
-}
-std::string Client::GetNickname(void)
-{
-	return (nickname);
-}
-
-std::string Client::GetUsername(void)
-{
-	return (username);
-}
-
-std::string Client::GetCurrentChannel(void)
-{
-    return (current_channel);
-}
-
-void Client::SetCurrentChannel(std::string newchannel)
-{
-    current_channel = newchannel;
-}
-
-std::map<std::string, char> *Client::GetChannel(void)
-{
-	return (&channels);
+    _channels.insert({channelname, 'm'});    
 }

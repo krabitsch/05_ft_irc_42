@@ -27,9 +27,9 @@
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
       int i = 0;
-      while (i < members.size()) //checks all the members if the channel
+      while (i < _members.size()) //checks all the members if the channel
       {
-        if (members[i].GetNickname() == username || members[i].GetUsername() == username) //compares the user written to possible users
+        if (_members[i].getNickname() == username || _members[i].getUsername() == username) //compares the user written to possible users
         {
           std::cout << "User is already a member of the channel" << std::endl;
           return ;
@@ -41,9 +41,9 @@
       Server server; //remove this and find out how to pass around the server of at least call for the server
       Client *client = server.findClient(-1, username);
       AddMember(*client); //adds the client onto the channel list
-      client->AddChannel(channel_name); //adds the channel to the clients channels
+      client->AddChannel(_channelname); //adds the channel to the clients channels
       
-      std::string msg = username + " you have been invited to " + channel_name + "channel";
+      std::string msg = username + " you have been invited to " + _channelname + "channel";
       client->addNofitication(msg, 'i'); //give them a notification that they have been invited
     }
     else 
@@ -66,16 +66,16 @@
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
       int i = 0;
-      while (i < members.size()) //checks all the members if the channel
+      while (i < _members.size()) //checks all the members if the channel
       {
-        if (members[i].GetNickname() == username || members[i].GetUsername() == username) //compares the user written to possible users
+        if (_members[i].getNickname() == username || _members[i].getUsername() == username) //compares the user written to possible users
         {
           RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
           return ;
         }
         i++;
       }
-      std::cerr << "The user does not exist in " << channel_name << " channel" << std::endl; //error msg
+      std::cerr << "The user does not exist in " << _channelname << " channel" << std::endl; //error msg
     }
     else 
     {

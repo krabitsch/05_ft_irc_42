@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:57:10 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/24 16:00:02 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 11:13:11 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,68 +27,47 @@
 class Client
 {
 	private:
-		int			_fdClient;
-		std::string	_ipClient;
-  
-	  //int fd;
-    std::string nickname; //Nickname
-    std::string hostname; //resolved hsotname or the IP of the user
-    std::string username; //Default username set by the system for explain aruckenb or pvass //The username is bascially the home user
-    std::string password; //User password
+	int			_fdClient;
+	std::string	_ipClient;
 
-    std::map<std::string, char> channels; //Which channels the user is apart of and the char is either a m or o for member or operator
-    std::string current_channel; //Should this exist or not is there a better way
-    std::map<char, std::string> notifications; //Map containing invite to channel or private msg, as well as a char to indicaite what type of notification it is
+    std::string _nickname; //Nickname
+    std::string _hostname; //resolved hsotname or the IP of the user
+    std::string _username; //Default username set by the system for explain aruckenb or pvass //The username is bascially the home user
+    std::string _password; //User password
+
+    std::map<std::string, char> _channels; //Which channels the user is apart of and the char is either a m or o for member or operator
+    std::string _currentChannel; //Should this exist or not is there a better way
+    std::map<char, std::string> _notifications; //Map containing invite to channel or private msg, as well as a char to indicaite what type of notification it is
 	
 	public:
-		// Constructors:
-		Client();
-		Client(const Client& other);
+	
+	// Constructors/Destructors/Operators Overlords
+	Client();
+	Client(const Client& other);
+	~Client();
+	Client &operator=(const Client& other);
 
-		// Destructor:
-		~Client();
+	// Public member functions/ methods
 
-		// Operator overloads
-		Client &operator=(const Client& other);
+	// Getters
+	int 						getFd() const;
+	std::string 				getNickname(void) const;
+	std::string 				getUsername(void) const;
+	std::string 				getCurrentChannel(void) const;
+	std::map<std::string, char> *GetChannel(void); //Not const due to returning a pointer
 
-		// Public member functions/ methods
+	// Setters
+	void						setFd(int fd);
+	void						setIpAdd(std::string ipadd);
+	void 						SetNickname(std::string newname);
+	void 						SetChannel(std::map<std::string, char> *newchannels);
+    void 						SetCurrentChannel(std::string newchannel);
 
-		// Getters
-		int 						getFd() const;
-		/*
-		//Client Info
-		std::string 				GetNickname(void);
-		int							GetFdSocket(void);
-		std::string 				GetUsername(void);
-		//Client Channel Features
-		std::map<std::string, char> *GetChannel(void);
-		*/
+	//Notifications *Still unsure about this part honestly
 
-		// Setters
-		void						setFd(int fd);
-		void						setIpAdd(std::string ipadd);
-
-		/*
-		//Client Info
-		void						SetNickname(std::string newname);
-		//Client Channel Features
-		void 						SetChannel(std::map<std::string, char> *newchannels);
-		*/
-
-		//Notifications *Still unsure about this part honestly
-
-		// Variables/methods global to the class
-
-		// Exception classes
-    std::string GetNickname(void);
-    void SetNickname(std::string newname);
-    std::string GetUsername(void);
+	// Variables/methods global to the class
 
     //Client Channel Features
-    std::map<std::string, char> *GetChannel(void);
-    void SetChannel(std::map<std::string, char> *newchannels);
-    std::string GetCurrentChannel(void);
-    void SetCurrentChannel(std::string newchannel);
     void AddChannel(std::string channelname);
 
     //Notifications *Still unsure about this part honestly
