@@ -2,14 +2,12 @@
 #include <iostream>
 
 //Constructor 
-Channel::Channel(int fd, std::string name): _channelname(name) 
+Channel::Channel(Server *server, int fd, std::string name): _channelname(name), _server(server) 
 {
-	//Set the user who made the channel as its first memeber with the operator status
-	//Server server; //again here i want to find out how to call the server to the get the user data and insert it into the class
-	//Client *client = server.findClient(fd, NULL);
-	//client->AddChannel(name);
-	//AddMember(*client);
-	//operators.push_back(client->GetFdSocket());
+	Client *client = _server->findClient(fd, NULL);
+	client->AddChannel(name);
+	AddMember(*client);
+	_operators.push_back(client->getFd());
 };
 
 //Destructor
@@ -40,7 +38,7 @@ void Channel::RemoveMember(std::string username)
 		{
 			std::map<std::string, char> *user_channels = _members[i].GetChannel(); //Gets the channel array
 			user_channels->erase(_channelname); //removes the channel
-			_members[i].SetChannel(user_channels); //Inserts new channel array
+			_members[i].setChannel(user_channels); //Inserts new channel array
 			_members.erase(_members.begin() + i); //removes the user from members
 			//Kicks them idk how to do that yet XD
 		}

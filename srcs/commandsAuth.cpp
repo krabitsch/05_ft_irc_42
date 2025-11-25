@@ -17,7 +17,7 @@
       std::cout << "This nickname is already taken!" << std::endl;
       return ;
     }
-    user->SetNickname(newname); 
+    user->setNickname(newname); 
     std::cout << "Your new nickname is " << newname << std::endl;
   }
 

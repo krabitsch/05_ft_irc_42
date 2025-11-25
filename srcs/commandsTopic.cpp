@@ -17,7 +17,7 @@ void Server::topic(std::string channelname, int clientfd)
   {
     //Switch channels
 
-    user->SetCurrentChannel(channelname);
+    user->setCurrentChannel(channelname);
     return ;
   }
 

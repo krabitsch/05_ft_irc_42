@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 11:10:27 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 12:04:14 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@
 # include <csignal>
 # include <cerrno>
 #include <string>
-#include <map>
 #include <vector>
 #include "Channel.hpp"
 
@@ -45,6 +44,7 @@
 class Server
 {
 	private:
+	Server 						*_serverAdd;
 	int							_port;
 	int							_password;
 	int							_fdServer;
@@ -68,8 +68,10 @@ class Server
 	// Public member functions/ methods
 
   	// Getters
+	Server *getServerAdd(void) const;
 
 	// Setters
+	void setServerAdd(Server *server);
 
 	//Server Functions
 	void serverInit(); 				//-> server initialization

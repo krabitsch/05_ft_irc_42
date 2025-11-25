@@ -2,9 +2,12 @@
 #include <vector>
 #include "Client.hpp"
 
+class Server;
+
 class Channel
 {
 	private:
+	Server *_server;
 	std::string _channelname; //Name of the channel i.e. the topic
 	std::vector<Client> _members; //This is a basic map that will contain all the nicknames of the clients who are apart of the channel
 	std::vector<int> _operators; //Array of fds belonging to which members are operators
@@ -17,7 +20,7 @@ class Channel
 	size_t _userlimit; //Immportant as we should dicuss what to do if you set the limit to 2 users and there is 5 who are apart of the channel
 
 	public:
-	Channel(int fd, std::string name);
+	Channel(Server *server, int fd, std::string name);
 	~Channel();
 	Channel(const Channel &type);
 	Channel &operator=(const Channel &type1);

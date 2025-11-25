@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 11:12:39 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 11:19:14 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,17 +68,17 @@ void	Client::setIpAdd(std::string ipAddr)
 	this->_ipClient = ipAddr; 
 }
 
-void 	Client::SetChannel(std::map<std::string, char> *newchannels)
+void 	Client::setChannel(std::map<std::string, char> *newchannels)
 {
     _channels = *newchannels;
 }
 
-void Client::SetNickname(std::string newname)
+void Client::setNickname(std::string newname)
 {
 	_nickname = newname;
 }
 
-void Client::SetCurrentChannel(std::string newchannel)
+void Client::setCurrentChannel(std::string newchannel)
 {
     _currentChannel = newchannel;
 }

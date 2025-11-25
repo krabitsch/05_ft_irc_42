@@ -8,7 +8,8 @@
   {
     if (findChannel(channelname) == NULL) //if the channel does not exist then create it and automatically join it
     {
-      Channel channel(fd,channelname);
+      Channel channel(_serverAdd, fd,channelname);
+      _channels.push_back(channel);
     }
     else //Join the channel if it exists //Note: that we should check if the user even has access to it and whether or not it is private 
     {

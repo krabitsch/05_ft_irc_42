@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 11:10:33 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 12:06:25 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,6 +244,18 @@ void	Server::closeFds()
 		std::cout << RED << "Server (fd = " << _fdServer << ") Disconnected" << WHITE << std::endl;
 		close(_fdServer);
 	}
+}
+
+
+//Setters && Getters
+Server *Server::getServerAdd(void) const
+{
+	return (_serverAdd);
+}
+
+void Server::setServerAdd(Server *server)
+{
+	_serverAdd = server;
 }
 
 

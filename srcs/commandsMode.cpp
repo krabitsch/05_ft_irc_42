@@ -38,8 +38,7 @@
       }
 
       //Gets the client information from the server
-      Server server; //remove this and find out how to pass around the server of at least call for the server
-      Client *client = server.findClient(-1, username);
+      Client *client = _server->findClient(-1, username);
       AddMember(*client); //adds the client onto the channel list
       client->AddChannel(_channelname); //adds the channel to the clients channels
       
