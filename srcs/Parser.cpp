@@ -77,27 +77,3 @@ IrcCommand parseMessage(const std::string& raw_message) {
     
     return cmd;
 }
-
-/*int main() {
-    
-    std::vector<std::string> tests;
-    tests.push_back("NICK new_user");
-    tests.push_back("JOIN #general");
-    tests.push_back("PRIVMSG #ft_irc :This is a test message.");
-    tests.push_back("MODE #channel +o user1 +l 10");
-	tests.push_back("");
-
-    for (std::vector<std::string>::const_iterator it = tests.begin(); it != tests.end(); ++it) {
-        const std::string& raw = *it; 
-        
-        std::cout << "\n>>> Parsing: '" << raw << "'" << std::endl;
-        IrcCommand command = parseMessage(trim(raw));
-        if (!command.command.empty()) {
-            command.print();
-        } else {
-            std::cout << "Invalid or empty command string." << std::endl;
-        }
-    }
-
-    return 0;
-}*/

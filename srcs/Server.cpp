@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 11:10:33 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 15:14:34 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,6 +178,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	char buff[1024];
 	memset(buff, 0, sizeof(buff));
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
+	std::string result;
 
 	if(bytes < 0)
 	{
@@ -197,15 +198,26 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	// print received data (if bytes > 0 : we have data)
 	{
 		buff[bytes] = '\0';
-		std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << buff;
+		std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << buff << WHITE;
 		
+		result.append(buff, sizeof(buff));
 		// code to process the received data: parse, check, authenticate, handle the command, etc...
+		
+		size_t pos;
+		while ((pos = result.find("\n")) != std::string::npos) {
+    		// Extract the message INCLUDING "\r\n"
+    		std::string message = result.substr(0, pos);  // exclude CRLF
+    		result.erase(0, pos + 2); // remove processed message (CRLF = 2 chars)
 
+    		// Now you can use the message
+    		std::cout << "Received complete message: [" << message << "]\n";
 
-		const char* replyMsg = "Received client msg...\n";
-		ssize_t sent = send(fd, replyMsg, std::strlen(replyMsg), 0);
-		if (sent == -1)
-			std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
+			//const char* replyMsg = "Received client msg...\n";
+			//ssize_t sent = send(fd, replyMsg, std::strlen(replyMsg), 0);
+			ssize_t sent = send(fd, message.c_str(), message.size(), 0);
+			if (sent == -1)
+				std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
+		}
 	}
 
 }

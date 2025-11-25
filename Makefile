@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
+#    By: pvass <pvass@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/11/24 15:59:20 by aruckenb         ###   ########.fr        #
+#    Updated: 2025/11/25 14:18:15 by pvass            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME	 	= ircserv
 
 SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
-			  srcs/Parser.cpp
+			  srcs/Parser.cpp \
 			  srcs/Client.cpp \
 			  srcs/Channel.cpp
 

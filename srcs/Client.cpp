@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 11:12:39 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 14:18:28 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,10 +91,10 @@ void Client::SetCurrentChannel(std::string newchannel)
 //Setters/Getters and an insert function
 void Client::addNofitication(std::string msg, char type)
 {
-    _notifications.insert({type, msg});
+    //_notifications.insert({type, msg});
 }
 
 void Client::AddChannel(std::string channelname)
 {
-    _channels.insert({channelname, 'm'});    
+    //_channels.insert({channelname, 'm'});    
 }
