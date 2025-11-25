@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 12:06:25 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 12:57:56 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,7 +263,6 @@ void Server::setServerAdd(Server *server)
 
 Channel* Server::findChannel(const std::string &name)
 {
-  //This function looks for the specific channel
   size_t i = 0;
   while (i < _channels.size())
   {
@@ -287,6 +286,5 @@ Client* Server::findClient(const int fd, std::string username)
 			return (&_clients[i]);
       i++;
     }
-	
   	return (NULL);
 }
