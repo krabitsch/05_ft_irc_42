@@ -1,5 +1,6 @@
   // Commands_Mode.cpp     // MODE/INVITE/KICK (subset)
   #include "../includes/Server.hpp"
+  #include <cstdlib>
 
   //Mode - Change the Channels Mode
   //Flags
@@ -9,12 +10,58 @@
   //- o: Give/take channel operator privilege
   //- l: Set/remove the user limit to channel 
 
-  void Channel::mode()//the input is one of the flags 
+  void Channel::mode(int fd)//the input is one of the flags 
   {
+    char temp;//Temp flag
+    std::string param; //Temp string param
+
     //Set certain status in the channel
+    if (IsOperator(fd))
+    {
+      if (temp == 'i')
+      {
+        if (_inviteonly == true)
+            _inviteonly = false;
+        else
+            _inviteonly = true;
+      }
+      else if (temp = 't')
+      {
+        if (_topicPriv == true)
+            _topicPriv = false;
+        else
+            _topicPriv = true;
+      }
+      else if (temp = 'k')
+      {
+        if (_password.empty() && !param.empty() || !_password.empty() && !param.empty())
+          _password = param;
+        else
+          _password.erase();
+      }
+      else if (temp = '0')
+      {
+        if (_operatorPriv == true)
+            _operatorPriv = false;
+        else
+            _operatorPriv = true;
+      }
+      else if (temp = 'l') //takes a string convert it into an int or size_t
+      {
+        int num = 0;//Here we would convert the numerical string value into an int
 
-
-
+        if (num < 0)
+          std::cerr << "The note set is invalid" << std::endl; //Maybe change this into a throw
+        if (num < _members.size())
+          std::cout << "They are currently too many members who are apart of the channel" << std::endl;
+        else
+          _userlimit = num;
+      }
+    }
+    else 
+    {
+      std::cerr << "You are not an operator!" << std::endl;
+    }
   }
 
   //Invite - Invite a client of the current channel
@@ -41,7 +88,6 @@
       Client *client = _server->findClient(-1, username);
       AddMember(*client); //adds the client onto the channel list
       client->AddChannel(_channelname); //adds the channel to the clients channels
-      
       std::string msg = username + " you have been invited to " + _channelname + "channel";
       client->addNofitication(msg, 'i'); //give them a notification that they have been invited
     }
@@ -70,6 +116,7 @@
         if (_members[i].getNickname() == username || _members[i].getUsername() == username) //compares the user written to possible users
         {
           RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
+          //the User should then bekicked from the server 
           return ;
         }
         i++;

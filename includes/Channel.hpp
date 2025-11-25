@@ -22,13 +22,15 @@ class Channel
 	public:
 	Channel(Server *server, int fd, std::string name);
 	~Channel();
-	Channel(const Channel &type);
-	Channel &operator=(const Channel &type1);
+	Channel(const Channel &other);
+	Channel &operator=(const Channel &other);
 
 	//Member Functions
 	void AddMember(Client user);
 	void RemoveMember(std::string username);
-	std::string getname(void);
+	std::string getname(void) const;
+	size_t	getUserlimit(void) const;
+	size_t	getMembersize(void) const;
 
 	//Operator Commands
 	bool IsOperator(int fd);
@@ -37,5 +39,5 @@ class Channel
 
 	void kick(std::string username, int fd);
 	void invite(std::string username, int fd);
-	void mode();
+	void mode(int fd);
 };

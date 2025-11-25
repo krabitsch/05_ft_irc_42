@@ -31,8 +31,14 @@
         std::cerr << "You are not apart of this channel" << std::endl;
         return ;
       }
+
+      if (_channel->getUserlimit() == _channel->getMembersize())
+      {
+        std::cout << "Unable to join due to channel reaching member limmit" << std::endl;
+        return ;
+      }
       _client->setCurrentChannel(channelname);
-      std::cout << _client->getUsername() << " switch to " << channelname << std::endl;
+      std::cout << _client->getUsername() << " switched to " << channelname << std::endl;
     }
 
   }
@@ -41,8 +47,6 @@
   //leaves the channel you are currently on!
   void Server::part(int fd)
   {
-
-
   }
 
   //Names

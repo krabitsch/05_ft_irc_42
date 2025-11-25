@@ -14,10 +14,16 @@ Channel::Channel(Server *server, int fd, std::string name): _channelname(name), 
 Channel::~Channel() {};
 
 //Copy Contructor 
-Channel::Channel(const Channel &type) {};
+Channel::Channel(const Channel &other) {};
 
 //Copy Assign Operator
-Channel &Channel:: operator=(const Channel &type1) {return *this;};
+Channel &Channel:: operator=(const Channel &other) 
+{
+	if (this != &other)
+	{ //Need to still add this
+	}
+	return (*this);
+};
 
 //Add Member
 //Step 1: Get client and add it to the map
@@ -96,6 +102,11 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 	std::cerr << "User does not exist in this channel" << std::endl;
 }
 
+//Unset Operator Privilage
+//Step 1: Check if user is already a operator and is already a member
+//Step 2: remove member in the vector 
+//Step 3: Set the status in the client class
+
 void Channel::UnsetOperator(std::string username, int fd)
 {
 	if (IsOperator(fd) == true) //Checks if the user is an operator themselves 
@@ -141,12 +152,18 @@ void Channel::UnsetOperator(std::string username, int fd)
 	}
 }
 
-//Unset Operator Privilage
-//Step 1: Check if user is already a operator and is already a member
-//Step 2: remove member in the vector 
-//Step 3: Set the status in the client class
-
-std::string Channel::getname(void)
+//Getters
+std::string Channel::getname(void) const
 {
 	return (_channelname);
+}
+
+size_t Channel::getUserlimit(void) const
+{
+	return (_userlimit);
+}
+
+size_t Channel::getMembersize(void) const
+{
+	return (_members.size());
 }

@@ -26,3 +26,8 @@
 
   //Quit 
   //Exits the server 
+
+  void quit()
+  {
+
+  }

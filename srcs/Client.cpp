@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 13:32:09 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 15:28:41 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,10 +91,9 @@ void Client::setCurrentChannel(std::string newchannel)
 //Setters/Getters and an insert function
 void Client::addNofitication(std::string msg, char type)
 {
-    //_notifications.insert({type, msg});
+    _notifications.insert(std::make_pair(type, msg));
 }
-
 void Client::AddChannel(std::string channelname)
 {
-   // _channels.insert({channelname, 'm'});    
+	_channels.insert(std::make_pair(channelname, 'm'));    
 }

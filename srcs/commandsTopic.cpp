@@ -7,11 +7,16 @@
 
 void Server::topic(std::string channelname, int clientfd)
 {
-
   //Changing Channel 
   //Note: that this should only be executed when the TOPIC command has an additional prameter 
   //Check if the channel exists 
   Channel *channel_type = findChannel(channelname);
+  if (channel_type == NULL) //Checkes if the channel doesnt exist
+  {
+    std::cerr << "Channel does not exist!" << std::endl;
+    return ;
+  }
+
   Client *user = findClient(clientfd, NULL); 
   if (channel_type != NULL)
   {

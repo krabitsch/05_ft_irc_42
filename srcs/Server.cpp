@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 12:57:56 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 15:46:00 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,6 +156,7 @@ void Server::acceptClient()	// accepts new client
 	memset(serv, 0, NI_MAXSERV);
 	client.setFd(incomingClientFd);														// sets client file descriptor
 	client.setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));	// converts ip address to string and sets it
+	client.setUsername(host); //Sets the username to the hostname, CHECK IF THIS IS CORRECT
 	//client.setIpAdd(inet_ntoa((addrClient.sin_addr)));								// converts ip address to string and sets it
 	_clients.push_back(client);															// adds client to the vector of clients
 	_fds.push_back(NewPoll);															// adds client socket to the pollfd
