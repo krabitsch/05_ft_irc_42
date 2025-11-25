@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "../includes/Parser.hpp"
 #include "../includes/Server.hpp"
 #include <cerrno>
 #include <climits>
@@ -95,6 +96,5 @@ int main(int ac, char **av)
 		std::cerr << e.what() << std::endl;
 	}
 	std::cout << "The Server Closed!" << std::endl;
-
 	return (0);
 }
