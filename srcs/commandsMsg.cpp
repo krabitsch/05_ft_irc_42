@@ -10,6 +10,7 @@
 
   void Server::privateMsg(std::string username, std::string msg)
   {
+    std::cout << "Executing PRIVMSG to " << username << " with message: " << msg << std::endl;
     Client *client = findClient(-1, username);
     if (client == NULL)
     {
@@ -17,7 +18,11 @@
       return ;
     }
     //send the msg to the user im not really sure how to do th at XD
-
+		ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
+		if (sent == -1) 
+		{
+		  std::cerr << "send() error on fd " << client->getFd() << ": " << std::strerror(errno) << std::endl;
+		}
   }
 
   //Notice

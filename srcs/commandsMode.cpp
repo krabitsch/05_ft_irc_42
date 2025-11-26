@@ -38,13 +38,13 @@
       }
 
       //Gets the client information from the server
-      Server server; //remove this and find out how to pass around the server of at least call for the server
-      Client *client = server.findClient(-1, username);
-      AddMember(*client); //adds the client onto the channel list
-      client->AddChannel(_channelname); //adds the channel to the clients channels
+      //Server server; //remove this and find out how to pass around the server of at least call for the server
+      //Client *client = server.findClient(-1, username);
+      //AddMember(*client); //adds the client onto the channel list
+     // client->AddChannel(_channelname); //adds the channel to the clients channels
       
-      std::string msg = username + " you have been invited to " + _channelname + "channel";
-      client->addNofitication(msg, 'i'); //give them a notification that they have been invited
+      //std::string msg = username + " you have been invited to " + _channelname + "channel";
+      //client->addNofitication(msg, 'i'); //give them a notification that they have been invited
     }
     else 
     {

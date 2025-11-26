@@ -6,11 +6,12 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 15:14:34 by pvass            ###   ########.fr       */
+/*   Updated: 2025/11/26 13:22:32 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Server.hpp"
+#include "../includes/Parser.hpp"
 
 // Variables/methods global to the class:
 bool Server::signalBool = false;
@@ -178,7 +179,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	char buff[1024];
 	memset(buff, 0, sizeof(buff));
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
-	std::string result;
+	static std::string result;
 
 	if(bytes < 0)
 	{
@@ -198,28 +199,98 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	// print received data (if bytes > 0 : we have data)
 	{
 		buff[bytes] = '\0';
-		std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << buff << WHITE;
-		
 		result.append(buff, sizeof(buff));
+
+		//std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << result << WHITE;
+		
+		
 		// code to process the received data: parse, check, authenticate, handle the command, etc...
 		
 		size_t pos;
 		while ((pos = result.find("\n")) != std::string::npos) {
-    		// Extract the message INCLUDING "\r\n"
-    		std::string message = result.substr(0, pos);  // exclude CRLF
-    		result.erase(0, pos + 2); // remove processed message (CRLF = 2 chars)
 
-    		// Now you can use the message
-    		std::cout << "Received complete message: [" << message << "]\n";
+    		std::string message = result.substr(0, pos);
+    		result.erase(0, pos + 1);
+			
+    		//std::cout << "Received complete message: [" << message << "]\n";
 
 			//const char* replyMsg = "Received client msg...\n";
 			//ssize_t sent = send(fd, replyMsg, std::strlen(replyMsg), 0);
-			ssize_t sent = send(fd, message.c_str(), message.size(), 0);
-			if (sent == -1)
-				std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
+			//ssize_t sent = send(fd, message.c_str(), message.size(), 0);
+
+			IrcCommand command = parseMessage(message);
+			command.print();
+			this->broadcastMessage(fd, message + "\n");
+
+			this->handleMessage(fd, command);
+			//if (sent == -1)
+			//	std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
 		}
 	}
 
+}
+
+void Server::broadcastMessage(int from_fd, const std::string& msg) 
+{
+	for (size_t i = 0; i < _clients.size(); ++i) 
+	{
+		int client_fd = _clients[i].getFd();
+		if (client_fd != from_fd) 
+		{
+			ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
+			if (sent == -1) 
+			{
+				std::cerr << "send() error on fd " << client_fd << ": " << std::strerror(errno) << std::endl;
+			}
+		}
+	}
+}
+
+void Server::handleMessage(int fd, const IrcCommand &cmd)
+{
+    std::string c = cmd.command;
+	std::cout << "Handling command: " << c << std::endl;
+    // command should already be uppercased by your parser
+    if (c == "NICK")
+    {
+		std::cout << "Handling NICK command" << std::endl;
+        if (!cmd.parameters.empty())
+            nickComand(fd, cmd.parameters[0]);
+        return;
+    }
+    if (c == "JOIN")
+    {
+        if (!cmd.parameters.empty())
+            join(fd, cmd.parameters[0]);
+        return;
+    }
+    if (c == "PART")
+    {
+        // your part() currently takes only fd; if you need channel name, change signature
+        part(fd);
+        return;
+    }
+    if (c == "PRIVMSG")
+    {
+		std::cout << "Handling PRIVMSG command" << std::endl;
+        if (!cmd.parameters.empty())
+        {
+            std::string target = cmd.parameters[0];
+            std::string msg = (cmd.parameters.size() > 1) ? cmd.parameters[1] : std::string();
+            // forward to your private message handler (username=target)
+            privateMsg(target, msg);
+        }
+        return;
+    }
+    if (c == "TOPIC")
+    {
+        if (!cmd.parameters.empty())
+            topic(cmd.parameters[0], fd);
+        return;
+    }
+
+    // unknown/other commands: optionally handle or reply with error
+    // std::cerr << "Unhandled command: " << c << std::endl;
 }
 
 
