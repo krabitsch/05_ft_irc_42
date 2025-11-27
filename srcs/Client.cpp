@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 15:28:41 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/27 11:32:58 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,16 @@
 
 // Constructors:
 Client::Client() {}
-Client::Client(const Client &other): _fdClient(other._fdClient), _ipClient(other._ipClient)  {}
+Client::Client(const Client &other): _fdClient(other._fdClient), 
+    _ipClient(other._ipClient),
+    _nickname(other._nickname),
+    _hostname(other._hostname),
+    _username(other._username),
+    _password(other._password),
+    _channels(other._channels),
+    _currentChannel(other._currentChannel),
+    _notifications(other._notifications)
+{}
 
 // Destructor:
 Client::~Client() {}
@@ -76,6 +85,11 @@ void 	Client::setChannel(std::map<std::string, char> *newchannels)
 void Client::setNickname(std::string newname)
 {
 	_nickname = newname;
+}
+
+void Client::setUsername(std::string newname)
+{
+	_username = newname;
 }
 
 void Client::setCurrentChannel(std::string newchannel)

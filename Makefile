@@ -6,7 +6,7 @@
 #    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/11/24 15:59:20 by aruckenb         ###   ########.fr        #
+#    Updated: 2025/11/27 11:10:22 by aruckenb         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,8 @@ NAME	 	= ircserv
 SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
 			  srcs/Client.cpp \
-			  srcs/Channel.cpp
+			  srcs/Channel.cpp \
+			  srcs/commandsChannel.cpp
 
 INCLUDES    = -I ./includes	  
 			  

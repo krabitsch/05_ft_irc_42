@@ -31,6 +31,7 @@ class Channel
 	std::string getname(void) const;
 	size_t	getUserlimit(void) const;
 	size_t	getMembersize(void) const;
+	bool 	getInviteonly(void) const;
 
 	//Operator Commands
 	bool IsOperator(int fd);

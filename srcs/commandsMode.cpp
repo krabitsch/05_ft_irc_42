@@ -116,7 +116,7 @@
         if (_members[i].getNickname() == username || _members[i].getUsername() == username) //compares the user written to possible users
         {
           RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
-          //the User should then bekicked from the server 
+          std::cout << username << " has been kicked from " << _channelname << " channel" << std::endl;
           return ;
         }
         i++;
