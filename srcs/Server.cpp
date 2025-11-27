@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/26 13:22:32 by pvass            ###   ########.fr       */
+/*   Updated: 2025/11/27 11:25:31 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,10 +207,10 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 		// code to process the received data: parse, check, authenticate, handle the command, etc...
 		
 		size_t pos;
-		while ((pos = result.find("\n")) != std::string::npos) {
+		while ((pos = result.find("\r\n")) != std::string::npos) {
 
     		std::string message = result.substr(0, pos);
-    		result.erase(0, pos + 1);
+    		result.erase(0, pos + 2); // +2 to remove the \r\n
 			
     		//std::cout << "Received complete message: [" << message << "]\n";
 
@@ -220,7 +220,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 
 			IrcCommand command = parseMessage(message);
 			command.print();
-			this->broadcastMessage(fd, message + "\n");
+			this->broadcastMessage(fd, message + "\r\n");
 
 			this->handleMessage(fd, command);
 			//if (sent == -1)
