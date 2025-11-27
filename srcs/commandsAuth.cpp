@@ -11,7 +11,7 @@
 
   void Server::nickComand(int fd, std::string newname)
   {
-    Client *user = findClient(fd, NULL);
+    Client *user = findClient(fd, "");
     if (findClient(-1, newname) != NULL)// Checks if the nickname has already been taken or not
     {
       std::cout << "This nickname is already taken!" << std::endl;

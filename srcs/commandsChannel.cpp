@@ -15,7 +15,7 @@
     }
     else 
     {
-      Client *_client = findClient(fd, NULL);
+      Client *_client = findClient(fd, "");
       std::map<std::string, char>*channelist = _client->GetChannel();
 
       //Checks if the user has access to the channel already or not if not add it to there channellist

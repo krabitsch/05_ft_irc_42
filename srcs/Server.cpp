@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/27 11:25:31 by pvass            ###   ########.fr       */
+/*   Updated: 2025/11/27 12:19:25 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,13 +257,24 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
     {
 		std::cout << "Handling NICK command" << std::endl;
         if (!cmd.parameters.empty())
+		{
+			/*Client *client = findClient(fd, "");
+			if (!client->getNickname().empty())
+				std::cout << client->getNickname() << std::endl;*/
             nickComand(fd, cmd.parameters[0]);
+			//client = findClient(fd, "");
+			//std::cout << client->getNickname() << std::endl;
+		}
         return;
     }
     if (c == "JOIN")
     {
+		std::cout << "Get here" << std::endl;
         if (!cmd.parameters.empty())
+		{
             join(fd, cmd.parameters[0]);
+			std::cout << _channels[0].getname() << std::endl;
+		}
         return;
     }
     if (c == "PART")

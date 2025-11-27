@@ -25,28 +25,28 @@
         else
             _inviteonly = true;
       }
-      else if (temp = 't')
+      else if (temp == 't')
       {
         if (_topicPriv == true)
             _topicPriv = false;
         else
             _topicPriv = true;
       }
-      else if (temp = 'k')
+      else if (temp == 'k')
       {
         if (_password.empty() && !param.empty() || !_password.empty() && !param.empty())
           _password = param;
         else
           _password.erase();
       }
-      else if (temp = '0')
+      else if (temp == '0')
       {
         if (_operatorPriv == true)
             _operatorPriv = false;
         else
             _operatorPriv = true;
       }
-      else if (temp = 'l') //takes a string convert it into an int or size_t
+      else if (temp == 'l') //takes a string convert it into an int or size_t
       {
         int num = 0;//Here we would convert the numerical string value into an int
 

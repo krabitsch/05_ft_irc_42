@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: pvass <pvass@student.42.fr>                +#+  +:+       +#+         #
+#    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/11/26 12:49:46 by pvass            ###   ########.fr        #
+#    Updated: 2025/11/27 12:10:06 by aruckenb         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,6 @@ SRCS 	 	= srcs/main.cpp \
 			  srcs/commandsMode.cpp \
 			  srcs/commandsMsg.cpp \
 			  srcs/commandsTopic.cpp
-			  srcs/commandsChannel.cpp
 
 INCLUDES    = -I ./includes	  
 			  

@@ -4,7 +4,7 @@
 //Constructor 
 Channel::Channel(Server *server, int fd, std::string name): _channelname(name), _server(server) 
 {
-	Client *client = _server->findClient(fd, NULL);
+	Client *client = _server->findClient(fd, "");
 	client->AddChannel(name);
 	AddMember(*client);
 	_operators.push_back(client->getFd());
@@ -14,7 +14,15 @@ Channel::Channel(Server *server, int fd, std::string name): _channelname(name), 
 Channel::~Channel() {};
 
 //Copy Contructor 
-Channel::Channel(const Channel &other) {};
+Channel::Channel(const Channel &other): _server(other._server),
+    _channelname(other._channelname),
+    _members(other._members),
+    _operators(other._operators),
+    _operatorPriv(other._operatorPriv),
+    _inviteonly(other._inviteonly),
+    _topicPriv(other._topicPriv),
+    _password(other._password),
+    _userlimit(other._userlimit) {};
 
 //Copy Assign Operator
 Channel &Channel:: operator=(const Channel &other) 
