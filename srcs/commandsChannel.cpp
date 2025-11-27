@@ -12,6 +12,7 @@
     {
       Channel _newchannel(_serverAdd, fd,channelname); //creates the channel
       _channels.push_back(_newchannel);
+      std::cout << channelname << " this channel has been created!" << std::endl;
     }
     else 
     {
@@ -39,7 +40,10 @@
         return ;
       }
       _client->setCurrentChannel(channelname);
-      std::cout << _client->getUsername() << " switched to " << channelname << std::endl;
+      if (!_client->getNickname().empty())
+          std::cout << _client->getNickname() << " switched to " << channelname << std::endl;
+      else
+        std::cout << _client->getUsername() << " switched to " << channelname << std::endl;
       if (checker == false) //Adds the channel to the client list
         _client->AddChannel(channelname);
     }
