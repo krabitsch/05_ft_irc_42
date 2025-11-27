@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/27 12:19:25 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/27 14:40:08 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -250,6 +250,91 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 
 void Server::handleMessage(int fd, const IrcCommand &cmd)
 {
+    // Validate command exists
+    if (cmd.command.empty()) {
+        // No command parsed — malformed message
+        std::string reply = ":server 400 * :Invalid command\r\n";
+        send(fd, reply.c_str(), reply.size(), 0);
+        return;
+    }
+
+    std::string c = cmd.command;
+
+    // NICK <nickname>
+    if (c == "NICK") {
+        if (cmd.parameters.empty()) {
+            std::string reply = ":server 431 * :No nickname given\r\n";
+            send(fd, reply.c_str(), reply.size(), 0);
+            return;
+        }
+        nickComand(fd, cmd.parameters[0]);
+        return;
+    }
+
+    // JOIN <channel> [<key>]
+    if (c == "JOIN") {
+        if (cmd.parameters.empty()) {
+            std::string reply = ":server 461 * JOIN :Not enough parameters\r\n";
+            send(fd, reply.c_str(), reply.size(), 0);
+            return;
+        }
+        join(fd, cmd.parameters[0]);
+        return;
+    }
+
+    // PART <channel>
+    if (c == "PART") {
+        if (cmd.parameters.empty()) {
+            std::string reply = ":server 461 * PART :Not enough parameters\r\n";
+            send(fd, reply.c_str(), reply.size(), 0);
+            return;
+        }
+        part(fd);
+        return;
+    }
+
+    // PRIVMSG <target> <message>
+    if (c == "PRIVMSG") {
+        if (cmd.parameters.size() < 2) {
+            std::string reply = ":server 461 * PRIVMSG :Not enough parameters\r\n";
+            send(fd, reply.c_str(), reply.size(), 0);
+            return;
+        }
+        std::string target = cmd.parameters[0];
+        std::string msg = cmd.parameters[1];
+        privateMsg(target, msg);
+        return;
+    }
+
+    // TOPIC <channel> [<topic>]
+    if (c == "TOPIC") {
+        if (cmd.parameters.empty()) {
+            std::string reply = ":server 461 * TOPIC :Not enough parameters\r\n";
+            send(fd, reply.c_str(), reply.size(), 0);
+            return;
+        }
+        topic(cmd.parameters[0], fd);
+        return;
+    }
+
+    // MODE <channel> <modestring> [<mode arguments>]
+    if (c == "MODE") {
+        if (cmd.parameters.size() < 2) {
+            std::string reply = ":server 461 * MODE :Not enough parameters\r\n";
+            send(fd, reply.c_str(), reply.size(), 0);
+            return;
+        }
+        // handle mode (you'll need to add this)
+        return;
+    }
+
+    // Unknown command
+    std::string reply = ":server 500 * :Unknown command\r\n";
+    send(fd, reply.c_str(), reply.size(), 0);
+}
+
+/* void Server::handleMessage(int fd, const IrcCommand &cmd)
+{
     std::string c = cmd.command;
 	std::cout << "Handling command: " << c << std::endl;
     // command should already be uppercased by your parser
@@ -258,9 +343,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		std::cout << "Handling NICK command" << std::endl;
         if (!cmd.parameters.empty())
 		{
-			/*Client *client = findClient(fd, "");
+			Client *client = findClient(fd, "");
 			if (!client->getNickname().empty())
-				std::cout << client->getNickname() << std::endl;*/
+				std::cout << client->getNickname() << std::endl;
             nickComand(fd, cmd.parameters[0]);
 			//client = findClient(fd, "");
 			//std::cout << client->getNickname() << std::endl;
@@ -304,7 +389,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 
     // unknown/other commands: optionally handle or reply with error
     // std::cerr << "Unhandled command: " << c << std::endl;
-}
+} */
 
 
 void	Server::clearClients(int fd)
