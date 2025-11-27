@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
 /*   Updated: 2025/11/25 12:04:14 by aruckenb         ###   ########.fr       */
@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 #include "Channel.hpp"
+#include "Parser.hpp"
 
 # define RED    "\e[1;31m"
 # define WHITE  "\e[0;37m"
@@ -97,6 +98,11 @@ class Server
     void privateMsg(std::string username, std::string msg);
 	void topic(std::string channelname, int clientfd);
 
+
+
+	void broadcastMessage(int from_fd, const std::string& msg);
+
+	void handleMessage(int fd, const IrcCommand &cmd);
 };
 
 

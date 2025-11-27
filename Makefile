@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
+#    By: pvass <pvass@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/11/25 13:41:48 by aruckenb         ###   ########.fr        #
+#    Updated: 2025/11/26 12:49:46 by pvass            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,11 @@ SRCS 	 	= srcs/main.cpp \
 			  srcs/Parser.cpp \
 			  srcs/Client.cpp \
 			  srcs/Channel.cpp \
+			  srcs/commandsAuth.cpp \
+			  srcs/commandsChannel.cpp \
+			  srcs/commandsMode.cpp \
+			  srcs/commandsMsg.cpp \
+			  srcs/commandsTopic.cpp
 			  srcs/commandsChannel.cpp
 
 INCLUDES    = -I ./includes	  

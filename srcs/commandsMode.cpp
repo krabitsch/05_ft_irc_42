@@ -90,7 +90,6 @@
       client->AddChannel(_channelname); //adds the channel to the clients channels
       std::string msg = username + " you have been invited to " + _channelname + "channel";
       client->addNofitication(msg, 'i'); //give them a notification that they have been invited
-
     }
     else 
     {

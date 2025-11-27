@@ -33,7 +33,7 @@ std::string trim(const std::string& str) {
 // Parsing Function
 IrcCommand parseMessage(const std::string& raw_message) {
     IrcCommand cmd;
-    std::string message = raw_message;
+    std::string message = trim(raw_message);
 
     if (message.empty()) {
         return cmd;
@@ -58,13 +58,16 @@ IrcCommand parseMessage(const std::string& raw_message) {
 
     while (ss >> token) {
         if (is_command_or_prefix) {
-            if (token[0] == ':') {
+            //std::cout << "Token: [" << token << "]\n";
+            if (!token.empty() && token[0] == ':') {
                 cmd.prefix = token.substr(1);
+                //std::cout << "Detected prefix: [" << cmd.prefix << "]\n";
                 if (!(ss >> token)) {
                     cmd.command.clear();
                     return cmd;
                 }
             }
+            std::cout << "Token: [" << token << "]\n";
             std::transform(token.begin(), token.end(), token.begin(), ::toupper);
             cmd.command = token;
             is_command_or_prefix = false;
@@ -72,33 +75,9 @@ IrcCommand parseMessage(const std::string& raw_message) {
             cmd.parameters.push_back(token);
         }
     }
-    if (!trailing_param.empty()) {
+    if (trailing_pos != std::string::npos) {
         cmd.parameters.push_back(trailing_param);
     }
     
     return cmd;
 }
-
-/*int main() {
-    
-    std::vector<std::string> tests;
-    tests.push_back("NICK new_user");
-    tests.push_back("JOIN #general");
-    tests.push_back("PRIVMSG #ft_irc :This is a test message.");
-    tests.push_back("MODE #channel +o user1 +l 10");
-	tests.push_back("");
-
-    for (std::vector<std::string>::const_iterator it = tests.begin(); it != tests.end(); ++it) {
-        const std::string& raw = *it; 
-        
-        std::cout << "\n>>> Parsing: '" << raw << "'" << std::endl;
-        IrcCommand command = parseMessage(trim(raw));
-        if (!command.command.empty()) {
-            command.print();
-        } else {
-            std::cout << "Invalid or empty command string." << std::endl;
-        }
-    }
-
-    return 0;
-}*/
