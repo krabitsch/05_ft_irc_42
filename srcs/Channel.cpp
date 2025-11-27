@@ -2,24 +2,28 @@
 #include <iostream>
 
 //Constructor 
-Channel::Channel(int fd, std::string name): _channelname(name) 
+Channel::Channel(Server *server, int fd, std::string name): _channelname(name), _server(server) 
 {
-	//Set the user who made the channel as its first memeber with the operator status
-	//Server server; //again here i want to find out how to call the server to the get the user data and insert it into the class
-	//Client *client = server.findClient(fd, NULL);
-	//client->AddChannel(name);
-	//AddMember(*client);
-	//operators.push_back(client->GetFdSocket());
+	Client *client = _server->findClient(fd, NULL);
+	client->AddChannel(name);
+	AddMember(*client);
+	_operators.push_back(client->getFd());
 };
 
 //Destructor
 Channel::~Channel() {};
 
 //Copy Contructor 
-Channel::Channel(const Channel &type) {};
+Channel::Channel(const Channel &other) {};
 
 //Copy Assign Operator
-Channel &Channel:: operator=(const Channel &type1) {return *this;};
+Channel &Channel:: operator=(const Channel &other) 
+{
+	if (this != &other)
+	{ //Need to still add this
+	}
+	return (*this);
+};
 
 //Add Member
 //Step 1: Get client and add it to the map
@@ -40,13 +44,13 @@ void Channel::RemoveMember(std::string username)
 		{
 			std::map<std::string, char> *user_channels = _members[i].GetChannel(); //Gets the channel array
 			user_channels->erase(_channelname); //removes the channel
-			_members[i].SetChannel(user_channels); //Inserts new channel array
+			_members[i].setChannel(user_channels); //Inserts new channel array
+			_members[i].setCurrentChannel("lobby"); //Set the users current channel to the general or lobby
 			_members.erase(_members.begin() + i); //removes the user from members
-			//Kicks them idk how to do that yet XD
+			return ;
 		}
 		i++;
 	}
-	std::cerr << "User does not exist in this channel" << std::endl;
 }
 
 //Set Operator Privilage
@@ -74,29 +78,41 @@ bool Channel::IsOperator(int fd) //Checks if the user is an operator or not
 void Channel::SetOperator(std::string username, int fd) //Another Note: This function isnt done we still need to verify that the one executing this comamnd is a user or everyone is an operator
 {
 	//If the user is an operator
-	int i = 0;
-	while (i < _members.size()) //Note: Maybe put this into its own sperate function
+	if (_operatorPriv == true)
 	{
-		if (_members[i].getNickname() == username || _members[i].getUsername() == username)
+		int i = 0;
+		while (i < _members.size()) //Note: Maybe put this into its own sperate function
 		{
-			if (IsOperator(_members[i].getFd()) == false)
+			if (_members[i].getNickname() == username || _members[i].getUsername() == username)
 			{
-				
-				std::map<std::string, char> *user_channels = _members[i].GetChannel();
-				(*user_channels)[_channelname] = 'o'; //check if this sets the channel in the client correctly
-				_operators.push_back(_members[i].getFd());
-				std::cout << "User " << username << " is now an operator" << std::endl;
+				if (IsOperator(_members[i].getFd()) == false)
+				{
+					
+					std::map<std::string, char> *user_channels = _members[i].GetChannel();
+					(*user_channels)[_channelname] = 'o'; //check if this sets the channel in the client correctly
+					_operators.push_back(_members[i].getFd());
+					std::cout << "User " << username << " is now an operator" << std::endl;
+				}
+				else 
+				{
+					std::cout << "User is already an operator for this channel" << std::endl;
+					return ;
+				}
 			}
-			else 
-			{
-				std::cout << "User is already an operator for this channel" << std::endl;
-				return ;
-			}
+			i++;
 		}
-		i++;
+		std::cerr << "User does not exist in this channel" << std::endl;
 	}
-	std::cerr << "User does not exist in this channel" << std::endl;
+	else 
+	{
+		std::cout << "Operator privilege is turned off!" << std::endl;
+	}
 }
+
+//Unset Operator Privilage
+//Step 1: Check if user is already a operator and is already a member
+//Step 2: remove member in the vector 
+//Step 3: Set the status in the client class
 
 void Channel::UnsetOperator(std::string username, int fd)
 {
@@ -143,12 +159,23 @@ void Channel::UnsetOperator(std::string username, int fd)
 	}
 }
 
-//Unset Operator Privilage
-//Step 1: Check if user is already a operator and is already a member
-//Step 2: remove member in the vector 
-//Step 3: Set the status in the client class
-
-std::string Channel::getname(void)
+//Getters
+std::string Channel::getname(void) const
 {
 	return (_channelname);
+}
+
+size_t Channel::getUserlimit(void) const
+{
+	return (_userlimit);
+}
+
+size_t Channel::getMembersize(void) const
+{
+	return (_members.size());
+}
+
+bool Channel::getInviteonly(void) const
+{
+	return (_inviteonly);
 }

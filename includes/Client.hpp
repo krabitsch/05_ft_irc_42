@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:57:10 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 11:13:11 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/27 11:23:58 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,14 @@
 # endif
 
 # include <string>
-# include <vector>
 # include <map>
+
+class Server;
 
 class Client
 {
 	private:
+	Server 		*_server;
 	int			_fdClient;
 	std::string	_ipClient;
 
@@ -59,9 +61,10 @@ class Client
 	// Setters
 	void						setFd(int fd);
 	void						setIpAdd(std::string ipadd);
-	void 						SetNickname(std::string newname);
-	void 						SetChannel(std::map<std::string, char> *newchannels);
-    void 						SetCurrentChannel(std::string newchannel);
+	void						setUsername(std::string newname);
+	void 						setNickname(std::string newname);
+	void 						setChannel(std::map<std::string, char> *newchannels);
+    void 						setCurrentChannel(std::string newchannel);
 
 	//Notifications *Still unsure about this part honestly
 

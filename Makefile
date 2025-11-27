@@ -22,6 +22,7 @@ SRCS 	 	= srcs/main.cpp \
 			  srcs/commandsMode.cpp \
 			  srcs/commandsMsg.cpp \
 			  srcs/commandsTopic.cpp
+			  srcs/commandsChannel.cpp
 
 INCLUDES    = -I ./includes	  
 			  
@@ -33,7 +34,7 @@ CC 	 		= c++
 #CPPFLAGS   	= -Wall -Wextra -Werror -std=c++98 -MMD -MP $(INCLUDES)
 CPPFLAGS   	= -std=c++98 -MMD -MP $(INCLUDES)
 CPPFLAGSDBG = $(CPPFLAGS) -FT_IRC_DEBUG
-BUILD_FLAGS ?= $(CPPFLAGS)
+BUILD_FLAGS = $(CPPFLAGS)
 RMF		 	= rm -f
 MKDIR 		= mkdir -p
 

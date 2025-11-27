@@ -157,6 +157,8 @@ void Server::acceptClient()	// accepts new client
 	memset(serv, 0, NI_MAXSERV);
 	client.setFd(incomingClientFd);														// sets client file descriptor
 	client.setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));	// converts ip address to string and sets it
+	client.setUsername("unknown");
+	
 	//client.setIpAdd(inet_ntoa((addrClient.sin_addr)));								// converts ip address to string and sets it
 	_clients.push_back(client);															// adds client to the vector of clients
 	_fds.push_back(NewPoll);															// adds client socket to the pollfd
@@ -330,11 +332,22 @@ void	Server::closeFds()
 }
 
 
+//Setters && Getters
+Server *Server::getServerAdd(void) const
+{
+	return (_serverAdd);
+}
+
+void Server::setServerAdd(Server *server)
+{
+	_serverAdd = server;
+}
+
+
 //Finder Functions 
 
 Channel* Server::findChannel(const std::string &name)
 {
-  //This function looks for the specific channel
   size_t i = 0;
   while (i < _channels.size())
   {
@@ -358,6 +371,5 @@ Client* Server::findClient(const int fd, std::string username)
 			return (&_clients[i]);
       i++;
     }
-	
   	return (NULL);
 }

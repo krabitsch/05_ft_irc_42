@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 14:18:28 by pvass            ###   ########.fr       */
+/*   Updated: 2025/11/25 13:42:17 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,16 @@
 
 // Constructors:
 Client::Client() {}
-Client::Client(const Client &other): _fdClient(other._fdClient), _ipClient(other._ipClient)  {}
+Client::Client(const Client &other): _fdClient(other._fdClient), 
+    _ipClient(other._ipClient),
+    _nickname(other._nickname),
+    _hostname(other._hostname),
+    _username(other._username),
+    _password(other._password),
+    _channels(other._channels),
+    _currentChannel(other._currentChannel),
+    _notifications(other._notifications)
+{}
 
 // Destructor:
 Client::~Client() {}
@@ -68,17 +77,22 @@ void	Client::setIpAdd(std::string ipAddr)
 	this->_ipClient = ipAddr; 
 }
 
-void 	Client::SetChannel(std::map<std::string, char> *newchannels)
+void 	Client::setChannel(std::map<std::string, char> *newchannels)
 {
     _channels = *newchannels;
 }
 
-void Client::SetNickname(std::string newname)
+void Client::setNickname(std::string newname)
 {
 	_nickname = newname;
 }
 
-void Client::SetCurrentChannel(std::string newchannel)
+void Client::setUsername(std::string newname)
+{
+	_username = newname;
+}
+
+void Client::setCurrentChannel(std::string newchannel)
 {
     _currentChannel = newchannel;
 }
@@ -91,10 +105,10 @@ void Client::SetCurrentChannel(std::string newchannel)
 //Setters/Getters and an insert function
 void Client::addNofitication(std::string msg, char type)
 {
-    //_notifications.insert({type, msg});
+    _notifications.insert(std::make_pair(type, msg));
 }
 
 void Client::AddChannel(std::string channelname)
 {
-    //_channels.insert({channelname, 'm'});    
+	_channels.insert(std::make_pair(channelname, 'm'));    
 }
