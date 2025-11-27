@@ -6,7 +6,7 @@
 #    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/11/27 11:10:22 by aruckenb         ###   ########.fr        #
+#    Updated: 2025/11/25 13:41:48 by aruckenb         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,7 @@ NAME	 	= ircserv
 
 SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
+			  srcs/Parser.cpp \
 			  srcs/Client.cpp \
 			  srcs/Channel.cpp \
 			  srcs/commandsChannel.cpp
@@ -28,7 +29,7 @@ CC 	 		= c++
 #CPPFLAGS   	= -Wall -Wextra -Werror -std=c++98 -MMD -MP $(INCLUDES)
 CPPFLAGS   	= -std=c++98 -MMD -MP $(INCLUDES)
 CPPFLAGSDBG = $(CPPFLAGS) -FT_IRC_DEBUG
-BUILD_FLAGS ?= $(CPPFLAGS)
+BUILD_FLAGS = $(CPPFLAGS)
 RMF		 	= rm -f
 MKDIR 		= mkdir -p
 

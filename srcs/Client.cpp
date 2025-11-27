@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/27 11:32:58 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/25 13:42:17 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,6 +107,7 @@ void Client::addNofitication(std::string msg, char type)
 {
     _notifications.insert(std::make_pair(type, msg));
 }
+
 void Client::AddChannel(std::string channelname)
 {
 	_channels.insert(std::make_pair(channelname, 'm'));    
