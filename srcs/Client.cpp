@@ -3,26 +3,26 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 13:42:17 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/29 14:05:44 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Server.hpp"
 
 // Constructors:
-Client::Client() {}
-Client::Client(const Client &other): _fdClient(other._fdClient), 
-    _ipClient(other._ipClient),
-    _nickname(other._nickname),
-    _hostname(other._hostname),
-    _username(other._username),
-    _password(other._password),
-    _channels(other._channels),
-    _currentChannel(other._currentChannel),
-    _notifications(other._notifications)
+Client::Client(): _server(NULL), _fdClient(-1), _ipClient(""),
+				  _nickname(""), _hostname(""), _username("unknown"),
+				  _password(""), _channels(),   _currentChannel(""),
+				  _notifications()
+{}
+
+Client::Client(const Client &other): _server(other._server), _fdClient(other._fdClient), _ipClient(other._ipClient),
+			_nickname(other._nickname), _hostname(other._hostname), _username(other._username),
+			_password(other._password), _channels(other._channels), _currentChannel(other._currentChannel),
+			_notifications(other._notifications)
 {}
 
 // Destructor:
@@ -33,8 +33,16 @@ Client&	Client::operator=(const Client& other)
 {
 	if (this != &other)
 	{
-		this->_fdClient = other._fdClient;
-		this->_ipClient = other._ipClient;
+		this->_server			= other._server;
+		this->_fdClient			= other._fdClient;
+		this->_ipClient			= other._ipClient;
+		this->_nickname	     	= other._nickname;
+		this->_hostname	     	= other._hostname;
+		this->_username	     	= other._username;
+		this->_password	     	= other._password;
+		this->_channels	     	= other._channels;
+		this->_currentChannel	= other._currentChannel;
+		this->_notifications	= other._notifications;
 	}
 	return (*this);
 }

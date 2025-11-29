@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 12:04:14 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/29 13:41:09 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@
 class Server
 {
 	private:
-	Server 						*_serverAdd;
+	Server 						*_serverAdd; // KR: I really don't understand why we need this: instances of Server class have access via this pointer anyway, outside the class no access to that?!
 	int							_port;
 	int							_password;
 	int							_fdServer;

@@ -3,12 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:56:54 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/25 12:07:04 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/29 13:41:57 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+// Instructions:
+// start server in a terminal window:
+// ./ircserv 4444 1234
+// start client in separate terminal window, running:
+// nc -C localhost 4444
+// -C flag ensures nc sends \r\n (not just \n)
 
 #include "../includes/Parser.hpp"
 #include "../includes/Server.hpp"
@@ -83,7 +90,7 @@ int main(int ac, char **av)
 
 	Server	server(port, password); // call constructor with port = av[1], password = av[2]
 
-	server.setServerAdd(&server); //Sets the server class inside to itself
+	// server.setServerAdd(&server); //Sets the server class inside to itself
 	
 	std::cout << "---- SERVER ----" << std::endl;
 	try

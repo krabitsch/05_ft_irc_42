@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/27 12:19:25 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/11/29 14:02:52 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,10 +27,16 @@ void Server::signalHandler(int signalReceived)
 }
 
 // Constructors:
-Server::Server(): _port(-1), _password(-1) {}
-Server::Server(int port, int password): _port(port), _password(password) {}
+Server::Server(): 						_serverAdd(this), _port(-1),   _password(-1),       _fdServer(-1) {}
+Server::Server(int port, int password): _serverAdd(this), _port(port), _password(password), _fdServer(-1) 
+{
+	// KR: I really don't understand why we need this: instances of Server class have access via this pointer anyway, outside the class no access to that?!
+	//server.setServerAdd(&server); //Sets the server class inside to itself 
+}
 
-Server::Server(Server const& other): _port(other._port), _password(other._password) {}
+Server::Server(Server const& other): _serverAdd(other._serverAdd), 
+									 _port(other._port), _password(other._password),
+									 _fdServer(other._fdServer) {}
 
 // Destructor:
 Server::~Server() {}
@@ -48,9 +54,8 @@ Server&	Server::operator=(Server const& other)
 
 
 // Public member functions/ methods
-void	Server::serverInit() //-> server initialization
+void	Server::serverInit()
 {
-
 	createSocketBindListen();
 
 	std::cout << GREEN << "Server (fd = " << _fdServer << ") Connected" << WHITE << std::endl;
@@ -106,7 +111,6 @@ void Server::createSocketBindListen()  // create server socket creation, bind po
 	addrServer.sin_addr.s_addr	= INADDR_ANY;			// sets address to any local machine address
 														// alternatively, use inet_pton command (for it to take any IP address: 0.0.0.0)
 														// inet_pton(AF_INET, "0.0.0.0", &addrServer.sin_addr); 
-
 	// Bind the socket to an IP/export
 	if (bind(_fdServer, (struct sockaddr*)&addrServer, sizeof(addrServer)) == -1)
 		throw(std::runtime_error("Can't bind to IP/port"));
@@ -116,10 +120,10 @@ void Server::createSocketBindListen()  // create server socket creation, bind po
 		throw(std::runtime_error("Can't listen"));
 
 	// add server related info for poll() function to vector of pollfd, _fds:
-	NewPoll.fd	  	= _fdServer; // adds server socket to the pollfd
-	NewPoll.events  = POLLIN;	// sets event to POLLIN for reading data
-	NewPoll.revents = 0;		// sets revents to 0
-	_fds.push_back(NewPoll);	// adds server socket to the pollfd
+	NewPoll.fd	  	= _fdServer;	// adds server socket to the pollfd
+	NewPoll.events  = POLLIN;		// sets event to POLLIN for reading data
+	NewPoll.revents = 0;			// sets revents to 0
+	_fds.push_back(NewPoll);		// adds server socket to the pollfd
 
 }
 
@@ -129,7 +133,6 @@ void Server::acceptClient()	// accepts new client
 	struct sockaddr_in	addrClient;
 	socklen_t			sizeClient = sizeof(addrClient);
 	struct pollfd		NewPoll;
-	
 
 	int incomingClientFd = accept(_fdServer, (sockaddr *)&(addrClient), &sizeClient); // accepts new client
 	if (incomingClientFd == -1)
@@ -148,8 +151,8 @@ void Server::acceptClient()	// accepts new client
 
 	// fill in client information
 	NewPoll.fd	  	= incomingClientFd;	// adds client socket to the pollfd
-	NewPoll.events  = POLLIN;		// sets event to POLLIN for reading data
-	NewPoll.revents = 0;			// sets the revents to 0
+	NewPoll.events  = POLLIN;			// sets event to POLLIN for reading data
+	NewPoll.revents = 0;				// sets the revents to 0
 
 	char host[NI_MAXHOST];
 	char serv[NI_MAXSERV];
@@ -157,9 +160,6 @@ void Server::acceptClient()	// accepts new client
 	memset(serv, 0, NI_MAXSERV);
 	client.setFd(incomingClientFd);														// sets client file descriptor
 	client.setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));	// converts ip address to string and sets it
-	client.setUsername("unknown");
-	
-	//client.setIpAdd(inet_ntoa((addrClient.sin_addr)));								// converts ip address to string and sets it
 	_clients.push_back(client);															// adds client to the vector of clients
 	_fds.push_back(NewPoll);															// adds client socket to the pollfd
 
@@ -199,35 +199,31 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 		return ;
 	}
 	// print received data (if bytes > 0 : we have data)
-	{
-		buff[bytes] = '\0';
-		result.append(buff, sizeof(buff));
+	
+	buff[bytes] = '\0';
+	result.append(buff, bytes);
 
-		//std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << result << WHITE;
-		
-		
-		// code to process the received data: parse, check, authenticate, handle the command, etc...
-		
-		size_t pos;
-		while ((pos = result.find("\r\n")) != std::string::npos) {
-
-    		std::string message = result.substr(0, pos);
-    		result.erase(0, pos + 2); // +2 to remove the \r\n
+	//std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << result << WHITE;
 			
-    		//std::cout << "Received complete message: [" << message << "]\n";
+	// code to process the received data: parse, check, authenticate, handle the command, etc...
+	size_t pos;
+	while ((pos = result.find("\r\n")) != std::string::npos)
+	{
+   		std::string message = result.substr(0, pos);
+    	result.erase(0, pos + 2); // +2 to remove the \r\n
 
-			//const char* replyMsg = "Received client msg...\n";
-			//ssize_t sent = send(fd, replyMsg, std::strlen(replyMsg), 0);
-			//ssize_t sent = send(fd, message.c_str(), message.size(), 0);
+   		//std::cout << "Received complete message: [" << message << "]\n";
 
-			IrcCommand command = parseMessage(message);
-			command.print();
-			this->broadcastMessage(fd, message + "\r\n");
+		//const char* replyMsg = "Received client msg...\n";
+		//ssize_t sent = send(fd, replyMsg, std::strlen(replyMsg), 0);
+		//ssize_t sent = send(fd, message.c_str(), message.size(), 0);
 
-			this->handleMessage(fd, command);
-			//if (sent == -1)
-			//	std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
-		}
+		IrcCommand command = parseMessage(message);
+		command.print();
+		this->broadcastMessage(fd, message + "\r\n");
+		this->handleMessage(fd, command);
+		//if (sent == -1)
+		//	std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
 	}
 
 }
