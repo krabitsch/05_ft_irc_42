@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 11:53:58 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/11/30 21:34:23 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,11 @@ Client::Client(): _server(NULL),
 				  _password(""),
 				  _channels(),
 				  _currentChannel(""),
-				  _notifications()
+				  _notifications(),
+				  _hasPass(false),
+				  _hasNick(false),
+				  _hasUser(false),
+				  _registered(false)
 {}
 
 Client::Client(const Client &other): _server(other._server), 
@@ -34,7 +38,11 @@ Client::Client(const Client &other): _server(other._server),
 									 _password(other._password),
 									 _channels(other._channels),
 									 _currentChannel(other._currentChannel),
-									 _notifications(other._notifications)
+									 _notifications(other._notifications),
+									 _hasPass(false),
+									 _hasNick(false),
+									 _hasUser(false),
+									 _registered(false)
 {}
 
 // Destructor:
@@ -55,6 +63,10 @@ Client&	Client::operator=(const Client& other)
 		this->_channels		 	= other._channels;
 		this->_currentChannel	= other._currentChannel;
 		this->_notifications	= other._notifications;
+		this->_hasPass		 	= other._hasPass;
+		this->_hasNick		 	= other._hasNick;
+		this->_hasUser		 	= other._hasUser;
+		this->_registered	 	= other._registered;
 	}
 	return (*this);
 }
@@ -67,7 +79,10 @@ std::string			Client::getNickname()		const { return (this->_nickname); }
 std::string			Client::getUsername() 		const { return (this->_username); }
 std::string			Client::getCurrentChannel()	const { return (this->_currentChannel); }
 std::map<std::string, char>* Client::GetChannel()	  { return (&this->_channels); }
-
+bool				Client::hasPass()			const { return (this->_hasPass); }
+bool				Client::hasNick()			const { return (this->_hasNick); }
+bool				Client::hasUser()			const { return (this->_hasUser); }
+bool				Client::isRegistered()		const { return (this->_registered); }
 
 // Setters
 void	Client::setFd(int fd)								{ this->_fdClient = fd; }
@@ -76,6 +91,10 @@ void 	Client::setChannel(std::map<std::string, char> *newchannels) { this->_chan
 void	Client::setNickname(std::string newname)			{ this->_nickname = newname; }
 void	Client::setUsername(std::string newname)			{ this->_username = newname; }
 void	Client::setCurrentChannel(std::string newchannel)	{ this->_currentChannel = newchannel; }
+void	Client::setHasPass(bool has)						{ this->_hasPass = has; }
+void	Client::setHasNick(bool has)						{ this->_hasNick = has; }
+void	Client::setHasUser(bool has)						{ this->_hasUser = has; }
+void	Client::setRegistered(bool is)						{ this->_registered = is; }
 
 // Public member functions/ methods
 

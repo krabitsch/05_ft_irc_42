@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:57:10 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 11:46:54 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/11/30 21:30:59 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,13 @@ class Client
 	std::string					_currentChannel;//Should this exist or not is there a better way
 	std::map<char, std::string>	_notifications;	//Map containing invite to channel or private msg, as well as a char to indicate what type of notification it is
 	
+	bool		_hasPass;
+	bool		_hasNick;
+	bool		_hasUser;
+	bool		_registered;
+
+
+	
 	public:
 	
 	// Constructors/Destructors/Operators Overlords
@@ -55,20 +62,28 @@ class Client
 
 	// Getters
 	int 						getFd() const;
+	std::string&				getBuffer();
+	const std::string&			getBuffer() const;
 	std::string 				getNickname(void) const;
 	std::string 				getUsername(void) const;
 	std::string 				getCurrentChannel(void) const;
 	std::map<std::string, char> *GetChannel(void); //Not const due to returning a pointer
+	bool						hasPass()			const;
+	bool						hasNick()			const;
+	bool						hasUser()			const;
+	bool						isRegistered()		const;
 
 	// Setters
 	void						setFd(int fd);
 	void						setIpAdd(std::string ipadd);
-	std::string&				getBuffer();
-	const std::string&			getBuffer() const;
 	void						setUsername(std::string newname);
 	void 						setNickname(std::string newname);
 	void 						setChannel(std::map<std::string, char> *newchannels);
 	void 						setCurrentChannel(std::string newchannel);
+	void						setHasPass(bool has);
+	void						setHasNick(bool has);
+	void						setHasUser(bool has);
+	void						setRegistered(bool is);
 
 	//Notifications *Still unsure about this part honestly
 

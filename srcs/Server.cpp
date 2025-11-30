@@ -6,12 +6,13 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 13:57:23 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/11/30 22:56:17 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Server.hpp"
 #include "../includes/Parser.hpp"
+
 
 // Variables/methods global to the class:
 bool Server::signalBool = false;
@@ -27,8 +28,17 @@ void Server::signalHandler(int signalReceived)
 }
 
 // Constructors:
-Server::Server(): 								_serverAdd(this), _port(-1),   _password(""),	    _fdServer(-1) {}
-Server::Server(int port, std::string password): _serverAdd(this), _port(port), _password(password), _fdServer(-1) 
+Server::Server(): _serverAdd(this),
+				  _port(-1),
+				  _password(""),
+				  _fdServer(-1),
+				  _serverName("") {}
+				  
+Server::Server(int port, std::string password): _serverAdd(this),
+												_port(port),
+												_password(password),
+												_fdServer(-1),
+												_serverName("ircAlPeKa@42")
 {
 	// KR: I really don't understand why we need this: instances of Server class have access via this pointer anyway, outside the class no access to that?!
 	//server.setServerAdd(&server); //Sets the server class inside to itself 
@@ -37,7 +47,8 @@ Server::Server(int port, std::string password): _serverAdd(this), _port(port), _
 Server::Server(Server const& other): _serverAdd(other._serverAdd), 
 									 _port(other._port), 
 									 _password(other._password),
-									 _fdServer(other._fdServer) {}
+									 _fdServer(other._fdServer),
+									 _serverName(other._serverName) {}
 
 // Destructor:
 Server::~Server() {}
@@ -74,7 +85,7 @@ void	Server::serverInit()
 		{
 			if (this->_fds[i].revents & (POLLHUP | POLLERR | POLLNVAL))
 			{
-				std::cout << RED << "Client <" << this->_fds[i].fd << "> poll error/hangup" << WHITE << std::endl;
+				std::cout << RED << "Client (fd = " << this->_fds[i].fd << ") poll error/hangup" << WHITE << std::endl;
 				clearClients(this->_fds[i].fd);
 				close(this->_fds[i].fd);
 				continue ;
@@ -167,7 +178,20 @@ void Server::acceptClient()	// accepts new client
 	this->_clients.push_back(client);												// adds client to the vector of clients
 	this->_fds.push_back(NewPoll);													// adds client socket to the pollfd
 
-	DBG({std::cout << GREEN << "Client <" << incomingClientFd << "> Connected" << WHITE << std::endl;
+	sendNotice(incomingClientFd, "AUTH", "*** Looking up your hostname...");
+	int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, NI_NAMEREQD); // require a hostname
+	if (result == 0)
+	{
+		std::string hostname(host);
+		sendNotice(incomingClientFd, "AUTH", "*** Found your hostname: " + hostname);
+	}
+	else
+		sendNotice(incomingClientFd, "AUTH", "*** Couldn't look up your hostname");
+	
+	sendNotice(incomingClientFd, "AUTH", "*** Checking Ident"); // send fake msgs re Ident (has nothing to do with IRC authentification)
+	sendNotice(incomingClientFd, "AUTH", "*** No Ident response");
+
+	DBG({std::cout << GREEN << "Client (fd = " << incomingClientFd << ") Connected" << WHITE << std::endl;
 		int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, 0);
 		if (result == 0)
 		{
@@ -205,17 +229,17 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	// bytes > 0 : we have data
 	buff[bytes] = '\0';
 	
-    // find client associated with this fd and append (valid) bytes to client's buffer
-    Client*			client 		 = findClient(fd, "");
-    std::string&	resultBuffer = client->getBuffer();
-    resultBuffer.append(buff, bytes);
+	// find client associated with this fd and append (valid) bytes to client's buffer
+	Client*			client 		 = findClient(fd, "");
+	std::string&	resultBuffer = client->getBuffer();
+	resultBuffer.append(buff, bytes);
 	static const size_t IRC_MAX_MSG = 512;
 	if (resultBuffer.size() > IRC_MAX_MSG) // strict RFC enforcement, drop client if msg too long
 	{
-    	std::cerr << "Client " << fd << " sent too long message (>512 bytes), closing connection" << std::endl;
-    	clearClients(fd);
-    	close(fd);
-    	return ;
+		std::cerr << "Client (fd = " << fd << ") sent too long message (>512 bytes), closing connection" << std::endl;
+		clearClients(fd);
+		close(fd);
+		return ;
 	}
 
 	//std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << result << WHITE;
@@ -243,6 +267,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 
 }
 
+
 void Server::broadcastMessage(int from_fd, const std::string& msg) 
 {
 	for (size_t i = 0; i < _clients.size(); ++i) 
@@ -262,28 +287,74 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 void Server::handleMessage(int fd, const IrcCommand &cmd)
 {
 	std::string c = cmd.command;
+	Client*		client = findClient(fd, "");
+	if (!client)
+		return ;
+
 	DBG({std::cout << "Handling command: " << c << std::endl; });
-	// command should already be uppercased by your parser
+
+	// Commands PASS, NICK, USER and QUIT are accepted even before registration is completed
+	if (c == "PASS")
+	{
+		DBG({std::cout << "Handling PASS command" << std::endl; });
+		this->passCommand(*client, cmd);
+		return ;
+	}
 	if (c == "NICK")
 	{
 		DBG({std::cout << "Handling NICK command" << std::endl; });
-		if (!cmd.parameters.empty())
+		this->nickCommand(*client, cmd);
+		return ;
+		/*if (!cmd.parameters.empty())
 		{
-			/*Client *client = findClient(fd, "");
-			if (!client->getNickname().empty())
-				std::cout << client->getNickname() << std::endl;*/
+			//Client *client = findClient(fd, "");
+			//if (!client->getNickname().empty())
+			//	std::cout << client->getNickname() << std::endl;
 			nickComand(fd, cmd.parameters[0]);
 			//client = findClient(fd, "");
 			//std::cout << client->getNickname() << std::endl;
 		}
 		return;
+		*/
 	}
+	if (c == "USER")
+	{
+		DBG({std::cout << "Handling USER command" << std::endl; });
+		this->userCommand(*client, cmd);
+		return ;
+	}
+	if (c == "QUIT")
+	{
+		DBG({std::cout << "Handling QUIT command" << std::endl; });
+		//this->quitCommand(*client, cmd);
+		return ;
+	}
+	
+	DBG({
+    std::cout << YELLOW << "[REG CHECK] Cliend (fd = " << fd << ")"
+              << " PASS=" << (client->hasPass() ? "true" : "false")
+              << " NICK=" << (client->hasNick() ? "true" : "false")
+              << " USER=" << (client->hasUser() ? "true" : "false")
+              << " REGISTERED=" << (client->isRegistered() ? "true" : "false")
+              << WHITE << std::endl; });
+
+	
+	// check if client is registered 
+	if (!client->isRegistered())
+	{
+		// 451 ERR_NOTREGISTERED
+		sendNumeric(fd, 451, "*", std::vector<std::string>(),
+					"You have not registered");
+		return;
+	}
+
+	// from here on, only registered clients:
 	if (c == "JOIN")
 	{
 		std::cout << "Get here" << std::endl;
-		if (!cmd.parameters.empty())
+		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
-			join(fd, cmd.parameters[0]);
+			join(fd, cmd.parameters[0]); // would (like in PASS) pass const IrcCommand &cmd to inside join 
 			std::cout << _channels[0].getname() << std::endl;
 		}
 		return;
@@ -312,10 +383,15 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			topic(cmd.parameters[0], fd);
 		return;
 	}
+	
 
-	// unknown/other commands: optionally handle or reply with error
-	// std::cerr << "Unhandled command: " << c << std::endl;
+	// unknown/other commands: handle by sending 421 numeric (unknown commands)
+	this->sendNumeric(fd, 421, client->getNickname(), std::vector<std::string>(1, c),
+				"Unknown command");
 }
+
+
+
 
 
 void	Server::clearClients(int fd)
@@ -355,9 +431,9 @@ void	Server::closeFds()
 
 
 //Setters && Getters
-Server *Server::getServerAdd(void) const { return (this->_serverAdd); }
+Server*	Server::getServerAdd(void) const { return (this->_serverAdd); }
 
-void Server::setServerAdd(Server *server) { this->_serverAdd = server; }
+void	Server::setServerAdd(Server *server) { this->_serverAdd = server; }
 
 
 //Finder Functions 
@@ -367,25 +443,120 @@ Channel* Server::findChannel(const std::string &name)
   size_t i = 0;
   while (i < _channels.size())
   {
-	  if (_channels[i].getname() == name)
-		return (&_channels[i]);
+	  if (this->_channels[i].getname() == name)
+		return (&this->_channels[i]);
 	i++;
   }
   return NULL;
 
 }
 
-
 Client* Server::findClient(const int fd, std::string username)
 {
 	int i = 0;
-	while (i <_clients.size())
+	while (i <this->_clients.size())
 	{
-		if (_clients[i].getUsername() == username || _clients[i].getNickname() == username)
-			return (&_clients[i]);
-		else if (fd > 1 && _clients[i].getFd() == fd)
-			return (&_clients[i]);
+		if (this->_clients[i].getUsername() == username || this->_clients[i].getNickname() == username)
+			return (&this->_clients[i]);
+		else if (fd > 1 && this->_clients[i].getFd() == fd)
+			return (&this->_clients[i]);
 	  i++;
 	}
   	return (NULL);
+}
+
+
+
+// ****************************************************************
+// constructing message the server sends in the right format
+// ****************************************************************
+
+void	Server::sendConstructedMsg(int fd, const std::string &line)
+{
+	ssize_t sent = send(fd, line.c_str(), line.size(), 0);
+	if (sent == -1)
+		std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
+}
+
+void	Server::sendMessage(int fd, const std::string &prefix, const std::string &command, 
+							const std::vector<std::string> &params, const std::string &trailing)
+{
+	std::ostringstream oss; // read IRC message syntax into oss:
+							// syntax: [:prefix] <command OR numeric> <params> :<optional text> (ends with \r\n)
+	if (!prefix.empty())
+		oss << ":" << prefix << " ";
+	oss << command;
+	for (size_t i = 0; i < params.size(); i++)
+	{
+		if (!params[i].empty())
+			oss << " " << params[i];
+	}
+
+	if (!trailing.empty())
+		oss << " :" << trailing;
+
+	oss << "\r\n";
+
+	std::string line = oss.str();
+	this->sendConstructedMsg(fd, line);
+}
+// RFC1459: numeric reply must be sent as one message consisting of the sender prefix, the three digit numeric, and the target of the reply.
+void	Server::sendNumeric(int fd, int code, const std::string &target, 
+							const std::vector<std::string> &params, const std::string &trailing)
+{
+	std::ostringstream cmd;
+	cmd.width(3);
+	cmd.fill('0');
+	cmd << code; // e.g. 1 -> "001"
+
+	std::vector<std::string> fullParams;
+	fullParams.push_back(target);
+	for (size_t i = 0; i < params.size(); i++)
+		fullParams.push_back(params[i]);
+
+	this->sendMessage(fd, _serverName, cmd.str(), fullParams, trailing);
+}
+
+void	Server::sendNotice(int fd, const std::string &target, const std::string &text)
+{
+	std::vector<std::string> params;
+	params.push_back(target);
+	this->sendMessage(fd, _serverName, "NOTICE", params, text);
+}
+
+void	Server::sendWelcome(Client &client)
+{
+	const std::string &nick = client.getNickname();
+
+	// 001 RPL_WELCOME
+	this->sendNumeric(client.getFd(), 1, nick,std::vector<std::string>(),
+				"Welcome to the ft_irc server " + nick);
+
+	// 002 RPL_YOURHOST
+	this->sendNumeric(client.getFd(), 2, nick, std::vector<std::string>(),
+				"Your host is " + this->_serverName + ", running version 1.0");
+
+	// 003 RPL_CREATED
+	this->sendNumeric(client.getFd(), 3, nick, std::vector<std::string>(),
+				"This server was created 2025-11-30");
+
+
+}
+
+
+void Server::tryRegisterClient(Client &client)
+{
+	if (client.isRegistered())
+		return ;
+
+	if (!client.hasPass())
+		return ;
+	if (!client.hasNick())
+		return ;
+	if (!client.hasUser())
+		return ;
+
+	// All conditions met -> mark as registered and send welcome
+	client.setRegistered(true);
+	this->sendWelcome(client);
 }
