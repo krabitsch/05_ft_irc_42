@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:56:54 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/29 13:41:57 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/11/30 13:19:56 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@
 #include <climits>
 
 
-int	checkInputArgs(int ac, char **av, int* port, int* password)
+int	checkInputArgs(int ac, char **av, int* port, std::string* password)
 {
 	if (ac != 3)
 	{
@@ -33,57 +33,58 @@ int	checkInputArgs(int ac, char **av, int* port, int* password)
 		return (-1);
 	}
 
-   long	values[2];
-	for (int i = 1; i <= 2; ++i)
-	{
-		std::string arg(av[i]);
+	// validation checks for argv[1] (i.e. argument for port; must be a positive integer)
+	std::string portStr(av[1]);
 
-		for (size_t j = 0; j < arg.size(); ++j)
+	for (size_t j = 0; j < portStr.size(); ++j)
+	{
+		if (j == 0 && portStr[j] == '+')
+			continue;
+		if (!std::isdigit(static_cast<unsigned char>(portStr[j])))
 		{
-			if (j == 0 && arg[j] == '+')
-				continue ;
-			if (!std::isdigit(static_cast<unsigned char>(arg[j])))
-			{
-				std::cerr << "Error: Arguments can only be positive integers." << std::endl;
-				return (-1);
-			}
-		}
-		char* endptr = 0;
-		errno = 0;
-		long num = std::strtol(av[i], &endptr, 10);
-		if (*endptr != '\0' || errno == ERANGE || num < 0 || num > INT_MAX)
-		{
-			std::cerr << "Error: Arguments must be valid positive integers within range." << std::endl;
+			std::cerr << "Error: Port argument must be a positive integer." << std::endl;
 			return (-1);
 		}
-		values[i - 1] = num;
 	}
 
-	int portVal	 = static_cast<int>(values[0]);
-	int passwordVal = static_cast<int>(values[1]);
-
-	// check port ranges:
-	if (portVal <= 0 || portVal > 65535)
+	char *endptr = 0;
+	errno = 0;
+	long portNum = std::strtol(av[1], &endptr, 10);
+	if (*endptr != '\0' || errno == ERANGE || portNum <= 0 || portNum > 65535)
 	{
 		std::cerr << "Error: Port must be in range 1–65535." << std::endl;
 		return (-1);
 	}
-	else if (portVal <= 1023)
+
+	int portVal = static_cast<int>(portNum);
+
+	// check privileged ports
+	if (portVal <= 1023)
 	{
-		std::cerr << "Warning: Ports 1–1023 are reserved (root-only). " << "Pick a port >= 1024, e.g. 4444." << std::endl;
+		std::cerr << "Warning: Ports 1–1023 are reserved (root-only). "
+		          << "Pick a port >= 1024, e.g. 4444." << std::endl;
 		return (-1);
 	}
 
-	*port	 = portVal;
-	*password = passwordVal;
+	// password (argv[2]) can be any non-empty string 
+	std::string pwdStr(av[2]);
+	// password constraints
+	if (pwdStr.length() == 0 || pwdStr.length() > 50)
+	{
+	    std::cerr << "Error: Password must be 1–50 characters long." << std::endl;
+    	return (-1);
+	}
+
+	*port     = portVal;
+	*password = pwdStr;
 
 	return (0);
 }
 
 int main(int ac, char **av)
 {
-	int		port;
-	int		password;
+	int			port;
+	std::string	password;
 
 	if (checkInputArgs(ac, av, &port, &password) != 0)
 		return (-1);
