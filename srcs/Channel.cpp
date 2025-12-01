@@ -29,6 +29,7 @@ Channel &Channel:: operator=(const Channel &other)
 {
 	if (this != &other)
 	{ //Need to still add this
+		
 	}
 	return (*this);
 };
