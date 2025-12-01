@@ -10,43 +10,40 @@
   //- o: Give/take channel operator privilege
   //- l: Set/remove the user limit to channel 
 
-  void Channel::mode(int fd)//the input is one of the flags 
+  void Channel::mode(int fd, std::string param)//the input is one of the flags 
   {
-    char temp;//Temp flag
-    std::string param; //Temp string param
-
     //Set certain status in the channel
     if (IsOperator(fd))
     {
-      if (temp == 'i')
+      if (param == "i")
       {
         if (_inviteonly == true)
             _inviteonly = false;
         else
             _inviteonly = true;
       }
-      else if (temp == 't')
+      else if (param == "t")
       {
         if (_topicPriv == true)
             _topicPriv = false;
         else
             _topicPriv = true;
       }
-      else if (temp == 'k')
+      else if (param == "k")
       {
         if (_password.empty() && !param.empty() || !_password.empty() && !param.empty())
           _password = param;
         else
           _password.erase();
       }
-      else if (temp == '0')
+      else if (param == "o")
       {
         if (_operatorPriv == true)
             _operatorPriv = false;
         else
             _operatorPriv = true;
       }
-      else if (temp == 'l') //takes a string convert it into an int or size_t
+      else if (param == "l") //takes a string convert it into an int or size_t
       {
         int num = 0;//Here we would convert the numerical string value into an int
 

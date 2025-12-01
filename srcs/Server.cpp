@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/01 13:33:57 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/01 15:38:40 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -371,7 +371,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		 	topic("", fd);
 		return;
 	}
-	if (c == "KICK")
+	if (c == "KICK") //Needs to be tested so far hasnt kick the user
 	{
 		if (!cmd.parameters.empty())
 		{
@@ -386,10 +386,53 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	if (c == "MODE")
 	{
 		//sets modes for channels and users
+		if (!cmd.parameters.empty())
+		{
+			Channel* channel = findChannel(cmd.parameters[0]);
+			if (channel == NULL)
+				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			else
+				channel->mode(fd, cmd.parameters[1]);
+			return ;
+		}
+	}
+	if (c == "INVITE") //Needs to be tested
+	{
+		if (cmd.parameters.empty())
+			return ;
+		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		channel->invite(cmd.parameters[0], fd);
 	}
 	if (c == "ME") //Sends a standard message to the current channel
 	{
 		return;
+	}
+	
+	//Special Debugging Commands to test stuff out
+	if (c == "LIST")
+	{
+		if (cmd.parameters.empty())
+		{	//prints out all user channels
+			Client *client = findClient(fd, "");
+			std::map<std::string, char> *userchannels = client->GetChannel();
+			if (userchannels != NULL)
+			{
+				std::cout << client->getNickname() << " this users channels!" << std::endl;
+				for (std::map<std::string, char>::iterator it = userchannels->begin(); it != userchannels->end(); ++it)
+				{
+					std::string channelName = it->first;   // key (channel name)
+					char channelType = it->second;         // value (member 'm' or operator 'o')
+					
+					std::cout << "Channel: " << channelName << " Type: " << channelType << std::endl;
+				}
+			}
+		}
+		else
+		{	//prints out all members of a channel
+			Channel* channel = findChannel(cmd.parameters[0]);
+			std::cout << channel->getMembersize() << std::endl;
+		}
+		return ;
 	}
 
 	// unknown/other commands: handle by sending 421 numeric (unknown commands)

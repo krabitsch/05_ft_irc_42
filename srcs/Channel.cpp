@@ -52,7 +52,15 @@ Channel &Channel:: operator=(const Channel &other)
 //Step 1: Get client and add it to the map
 void Channel::AddMember(Client user)
 {
+	int i = 0;
+	while (i < _members.size())
+	{
+		if (_members[i].getNickname() == user.getNickname() || _members[i].getUsername() == user.getUsername())
+			return ;
+		i++;
+	}
 	_members.push_back(user);
+	user.AddChannel(_channelname, 'm');
 }
 
 //Remove Member

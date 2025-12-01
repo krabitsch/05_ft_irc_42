@@ -18,6 +18,7 @@ void Server::topic(std::string channelname, int clientfd)
     this->sendNotice(clientfd, currentchannel, "Current channel topic is: " + currentchannel);
     return ;
   }
+
   Channel *channel_type = findChannel(channelname);
   if (channel_type == NULL && !channelname.empty()) //Checkes if the channel doesnt exist
   {
@@ -27,6 +28,7 @@ void Server::topic(std::string channelname, int clientfd)
   if (channel_type != NULL && channel_type->getInviteonly() == false)
   {
     //Switch channels
+    channel_type->AddMember(*user);
     user->setCurrentChannel(channelname);
     this->sendNotice(clientfd, channelname, "You have switched to channel: " + channelname);
     return ;

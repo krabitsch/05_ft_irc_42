@@ -40,5 +40,5 @@ class Channel
 
 	void kick(std::string username, int fd);
 	void invite(std::string username, int fd);
-	void mode(int fd);
+	void mode(int fd, std::string param);
 };

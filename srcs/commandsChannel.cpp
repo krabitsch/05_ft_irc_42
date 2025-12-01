@@ -12,7 +12,7 @@
     {
       Channel _newchannel(this, fd,channelname); //creates the channel
       _channels.push_back(_newchannel);
-      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "");
+      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "has been created!");
     }
     else 
     {
@@ -50,7 +50,7 @@
           this->sendNotice(fd, channelname, _client->getUsername() + " has joined the channel");
 
       if (checker == false) //Adds the channel to the client list
-        _client->AddChannel(channelname, 'm');
+        _channel->AddMember(*_client);
     }
   }
 

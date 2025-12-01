@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/01 12:50:27 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/01 15:31:46 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,10 +108,10 @@ void	Client::setPassword(std::string password)			{ this->_password = password; }
 //Setters/Getters and an insert function
 void Client::addNotification(std::string msg, char type)
 {
-	this->_notifications.insert(std::make_pair(type, msg));
+	_notifications.insert(std::make_pair(type, msg));
 }
 
 void Client::AddChannel(std::string channelname, char type)
 {
-	this->_channels.insert(std::make_pair(channelname, type));	
+	_channels.insert(std::make_pair(channelname, type));	
 }
