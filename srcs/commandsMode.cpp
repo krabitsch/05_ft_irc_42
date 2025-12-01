@@ -78,7 +78,7 @@
       {
         if (_members[i].getNickname() == username || _members[i].getUsername() == username) //compares the user written to possible users
         {
-          std::cout << "User is already a member of the channel" << std::endl;
+          _server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already in the channel");
           return ;
         } 
         i++;
@@ -121,7 +121,7 @@
         }
         i++;
       }
-      std::cerr << "The user does not exist in " << _channelname << " channel" << std::endl; //error msg
+      _server->sendNumeric(fd, 441, "", std::vector<std::string>(), "User is not in the channel");
     }
     else 
     {

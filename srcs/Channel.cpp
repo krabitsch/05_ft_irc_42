@@ -110,7 +110,6 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 			{
 				if (IsOperator(_members[i].getFd()) == false)
 				{
-					
 					std::map<std::string, char> *user_channels = _members[i].GetChannel();
 					(*user_channels)[_channelname] = 'o'; //check if this sets the channel in the client correctly
 					_operators.push_back(_members[i].getFd());
@@ -118,7 +117,6 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 				}
 				else 
 				{
-					
 					_server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already an operator in this channel");
 					return ;
 				}
@@ -164,7 +162,6 @@ void Channel::UnsetOperator(std::string username, int fd)
 						k++;
 					}
 					_operators = newoperators;
-
 					_server->sendNotice(clientfd, _channelname, "You are no longer an operator in " + _channelname + " channel");
 				}
 				else 
@@ -175,7 +172,6 @@ void Channel::UnsetOperator(std::string username, int fd)
 			}
 			i++;
 		}
-
 	}
 	else 
 	{

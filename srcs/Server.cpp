@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/01 13:24:26 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/01 13:33:57 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,10 +370,6 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		else
 		 	topic("", fd);
 		return;
-	}
-	if (c == "QUIT")
-	{
-		//user disconencts and quits from irc
 	}
 	if (c == "KICK")
 	{

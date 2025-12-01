@@ -40,7 +40,6 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 
 //Nick
 //Sets the nickname of the user
-
 void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 {
 	if (cmd.parameters.empty())
@@ -64,7 +63,6 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	client.setNickname(newNick);
   this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick);
 	client.setHasNick(true);
-
 	this->tryRegisterClient(client);
 
 }
@@ -99,7 +97,7 @@ void	Server::userCommand(Client &client, const IrcCommand &cmd)
 //Quit 
 //Exits the server 
 
-void quit()
+void Server::quit()
 {
 
 }
