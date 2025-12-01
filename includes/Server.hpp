@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 22:40:02 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/12/01 12:17:43 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Server
 {
 	private:
 	
-	Server 						*_serverAdd; // KR: I really don't understand why we need this: instances of Server class have access via this pointer anyway, outside the class no access to that?!
+	
 	int							_port;
 	std::string					_password;
 	int							_fdServer;
@@ -72,7 +72,6 @@ class Server
 	// Commands that need the use of the server
 	void		passCommand(Client &client, const IrcCommand &cmd);
 	void		nickCommand(Client &client, const IrcCommand &cmd);
-	void		nickComand(int fd, std::string newname); //Sets the new nickname maybe change but we will see
 	void		userCommand(Client &client, const IrcCommand &cmd);
 	void		join(int fd, std::string channelname);	 //Creates or joins a channel that exists
 	void		part(int fd);
@@ -81,14 +80,6 @@ class Server
 
 	void		broadcastMessage(int from_fd, const std::string& msg);
 	void		handleMessage(int fd, const IrcCommand &cmd);
-
-	// constructing the messages the server sends in the right format
-	void		sendConstructedMsg(int fd, const std::string &line);
-	void		sendMessage(int fd, const std::string &prefix, const std::string &command,
-					const std::vector<std::string> &params, const std::string &trailing);
-	void		sendNumeric(int fd, int code, const std::string &target,
-					const std::vector<std::string> &params, const std::string &trailing);
-	void		sendNotice(int fd, const std::string &target, const std::string &text);
 
 	// 
 	void		sendWelcome(Client &client);
@@ -105,11 +96,17 @@ class Server
 
 	// Public member functions/ methods
 
+	// constructing the messages the server sends in the right format AL: Made these public since i dont see a difference
+	void		sendConstructedMsg(int fd, const std::string &line);
+	void		sendMessage(int fd, const std::string &prefix, const std::string &command,
+					const std::vector<std::string> &params, const std::string &trailing);
+	void		sendNumeric(int fd, int code, const std::string &target,
+					const std::vector<std::string> &params, const std::string &trailing);
+	void		sendNotice(int fd, const std::string &target, const std::string &text);
+
   	// Getters
-	Server*		getServerAdd(void) const; // KR: delete if Server *_serverAdd; is not needed
 
 	// Setters
-	void		setServerAdd(Server *server); // KR: delete if Server *_serverAdd; is not needed
 
 	//Server Functions
 	void		serverInit(); 				// server initialization

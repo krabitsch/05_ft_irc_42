@@ -10,9 +10,9 @@
 
     if (_channel == NULL)
     {
-      Channel _newchannel(_serverAdd, fd,channelname); //creates the channel
+      Channel _newchannel(this, fd,channelname); //creates the channel
       _channels.push_back(_newchannel);
-      std::cout << channelname << " this channel has been created!" << std::endl;
+      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "");
     }
     else 
     {
@@ -29,25 +29,29 @@
         it++;
       }
 
+      //Error Handling
       if (_channel->getInviteonly() == true && checker == false)
       {
-        std::cerr << "This channel is invite only!" << std::endl;
+        this->sendNumeric(fd, 473, "", std::vector<std::string>(), "Cannot join channel (+i)"); //You need an invite to join
         return ;
       }
       if (_channel->getUserlimit() == _channel->getMembersize())
       {
-        std::cout << "Unable to join due to channel reaching member limmit" << std::endl;
+        this->sendNumeric(fd, 471, "", std::vector<std::string>(), "Cannot join channel (+l)"); //Channel is full
         return ;
       }
-      _client->setCurrentChannel(channelname);
-      if (!_client->getNickname().empty())
-          std::cout << _client->getNickname() << " switched to " << channelname << std::endl;
-      else
-        std::cout << _client->getUsername() << " switched to " << channelname << std::endl;
-      if (checker == false) //Adds the channel to the client list
-        _client->AddChannel(channelname);
-    }
 
+      //If no errors were found add the user, display message, if its a new channel add it to there list
+      _client->setCurrentChannel(channelname);
+
+      if (!_client->getNickname().empty()) //Joins the channel AL: Delete the else if nickname is must be set in the begining 
+          this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel");
+      else
+          this->sendNotice(fd, channelname, _client->getUsername() + " has joined the channel");
+
+      if (checker == false) //Adds the channel to the client list
+        _client->AddChannel(channelname, 'm');
+    }
   }
 
   //Part //We dont technically need this! decide whether or not we want to implement this feature!

@@ -5,9 +5,15 @@
 Channel::Channel(Server *server, int fd, std::string name): _channelname(name), _server(server) 
 {
 	Client *client = _server->findClient(fd, "");
-	client->AddChannel(name);
+	client->AddChannel(name, 'o');
 	AddMember(*client);
-	_operators.push_back(client->getFd());
+	client->setCurrentChannel(name);
+	_operators.push_back(fd);
+	_inviteonly = false;
+	_topicPriv = false;
+	_password = "";
+	_userlimit = 0;
+	_operatorPriv = true;
 };
 
 //Destructor
@@ -28,8 +34,16 @@ Channel::Channel(const Channel &other): _server(other._server),
 Channel &Channel:: operator=(const Channel &other) 
 {
 	if (this != &other)
-	{ //Need to still add this
-		
+	{
+		this->_server = other._server;
+		this->_channelname = other._channelname;
+		this->_members = other._members;
+		this->_operators = other._operators;
+		this->_operatorPriv = other._operatorPriv;
+		this->_inviteonly = other._inviteonly;
+		this->_topicPriv = other._topicPriv;
+		this->_password = other._password;
+		this->_userlimit = other._userlimit;
 	}
 	return (*this);
 };
@@ -81,7 +95,7 @@ bool Channel::IsOperator(int fd) //Checks if the user is an operator or not
 		return false;
 	}
 	else
-		return true; //We can change this if needed
+		return true;
 }
 
 void Channel::SetOperator(std::string username, int fd) //Another Note: This function isnt done we still need to verify that the one executing this comamnd is a user or everyone is an operator
@@ -100,21 +114,22 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 					std::map<std::string, char> *user_channels = _members[i].GetChannel();
 					(*user_channels)[_channelname] = 'o'; //check if this sets the channel in the client correctly
 					_operators.push_back(_members[i].getFd());
-					std::cout << "User " << username << " is now an operator" << std::endl;
+					_server->sendNotice(_members[i].getFd(), _channelname, "You are now an operator in " + _channelname + " channel");
 				}
 				else 
 				{
-					std::cout << "User is already an operator for this channel" << std::endl;
+					
+					_server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already an operator in this channel");
 					return ;
 				}
 			}
 			i++;
 		}
-		std::cerr << "User does not exist in this channel" << std::endl;
+		_server->sendNumeric(fd, 441, "", std::vector<std::string>(), "User is not in the channel");
 	}
 	else 
 	{
-		std::cout << "Operator privilege is turned off!" << std::endl;
+		_server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
 	}
 }
 
@@ -150,11 +165,11 @@ void Channel::UnsetOperator(std::string username, int fd)
 					}
 					_operators = newoperators;
 
-					std::cout << "User " << username << " is no longer an operator" << std::endl;
+					_server->sendNotice(clientfd, _channelname, "You are no longer an operator in " + _channelname + " channel");
 				}
 				else 
 				{
-					std::cout << "User is already not an operator in this channel" << std::endl;
+					_server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already not an operator in this channel");
 					return ;
 				}
 			}
@@ -164,7 +179,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 	}
 	else 
 	{
-		std::cout << "You are not an operator in this channel!"	<< std::endl;
+		_server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
 	}
 }
 

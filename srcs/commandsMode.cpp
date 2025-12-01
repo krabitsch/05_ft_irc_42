@@ -51,16 +51,16 @@
         int num = 0;//Here we would convert the numerical string value into an int
 
         if (num < 0)
-          std::cerr << "The note set is invalid" << std::endl; //Maybe change this into a throw
+          _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Invalid numerical input!"); //Maybe change this into a throw
         if (num < _members.size())
-          std::cout << "They are currently too many members who are apart of the channel" << std::endl;
+          _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Too many members are already apart of the channel: Unable to Set Limit!"); //Verify if that is the correct numerical number
         else
           _userlimit = num;
       }
     }
     else 
     {
-      std::cerr << "You are not an operator!" << std::endl;
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
     }
   }
 
@@ -87,13 +87,13 @@
       //Gets the client information from the server
       Client *client = _server->findClient(-1, username);
       AddMember(*client); //adds the client onto the channel list
-      client->AddChannel(_channelname); //adds the channel to the clients channels
+      client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
       std::string msg = username + " you have been invited to " + _channelname + "channel";
       client->addNotification(msg, 'i'); //give them a notification that they have been invited
     }
     else 
     {
-      std::cerr << "You are not an operator!" << std::endl;
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
     }
   }
 
@@ -125,7 +125,7 @@
     }
     else 
     {
-      std::cerr << "You are not an operator!" << std::endl; //error msg
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
     }
   }
   

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 21:34:23 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/12/01 12:50:27 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,8 @@ bool				Client::hasPass()			const { return (this->_hasPass); }
 bool				Client::hasNick()			const { return (this->_hasNick); }
 bool				Client::hasUser()			const { return (this->_hasUser); }
 bool				Client::isRegistered()		const { return (this->_registered); }
+Server*				Client::getServer()			const { return (this->_server); }
+std::string			Client::getPassword()		const { return (this->_password); }
 
 // Setters
 void	Client::setFd(int fd)								{ this->_fdClient = fd; }
@@ -95,6 +97,8 @@ void	Client::setHasPass(bool has)						{ this->_hasPass = has; }
 void	Client::setHasNick(bool has)						{ this->_hasNick = has; }
 void	Client::setHasUser(bool has)						{ this->_hasUser = has; }
 void	Client::setRegistered(bool is)						{ this->_registered = is; }
+void	Client::setServer(Server *server)					{ this->_server = server; }
+void	Client::setPassword(std::string password)			{ this->_password = password; }
 
 // Public member functions/ methods
 
@@ -107,7 +111,7 @@ void Client::addNotification(std::string msg, char type)
 	this->_notifications.insert(std::make_pair(type, msg));
 }
 
-void Client::AddChannel(std::string channelname)
+void Client::AddChannel(std::string channelname, char type)
 {
-	this->_channels.insert(std::make_pair(channelname, 'm'));	
+	this->_channels.insert(std::make_pair(channelname, type));	
 }

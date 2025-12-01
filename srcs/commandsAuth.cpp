@@ -1,7 +1,7 @@
 // Commands_Auth.cpp	 // PASS/NICK/USER/QUIT
 #include "../includes/Server.hpp"
 
-  //Pass
+//Pass
 void	Server::passCommand(Client &client, const IrcCommand &cmd)
 {
 	if (client.isRegistered())
@@ -33,13 +33,13 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 	}
 
 	client.setHasPass(true);
-	//client.setPassword(passwordInput);
-
+	client.setPassword(passwordInput);
+  this->sendNotice(client.getFd(), "*", "Password accepted");
 	this->tryRegisterClient(client);
 }
 
-  //Nick
-  //Sets the nickname of the user
+//Nick
+//Sets the nickname of the user
 
 void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 {
@@ -62,39 +62,44 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	}
 
 	client.setNickname(newNick);
+  this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick);
 	client.setHasNick(true);
 
 	this->tryRegisterClient(client);
 
 }
 
-void Server::nickComand(int fd, std::string newname)
-{
-	Client *user = findClient(fd, "");
-	if (findClient(-1, newname) != NULL)// Checks if the nickname has already been taken or not
-	{
-	  std::cout << "This nickname is already taken!" << std::endl;  // cout displays in terminal where ircserv runs
-	  return ;
-	}
-	user->setNickname(newname); 
-	std::cout << "Your new nickname is " << newname << std::endl;
-
-}
-
 //User
-//Unsure what this does
 void	Server::userCommand(Client &client, const IrcCommand &cmd)
 {
-	// KR: need to still implement this, for now setHasUser = true, so registration can be completed and other commands tested
-	client.setHasUser(true);
+	// KR: need to still implement this, for now setHasUser = true, so registration can be completed and other commands teste
+ /* if (cmd.parameters.empty())
+	{
+		this->sendNumeric(client.getFd(), 431, "*",	std::vector<std::string>(),
+					"No Username given");
+		return ;
+	}
 
+	std::string newUser = cmd.parameters[0];
+	for (size_t i = 0; i < this->_clients.size(); i++)
+	{
+		if (this->_clients[i].getNickname() == newUser && this->_clients[i].getFd() != client.getFd())
+		{
+			this->sendNumeric(client.getFd(), 433, newUser,	std::vector<std::string>(),	"Username is already in use");
+			return ;
+		}
+	}
+  client.setUsername(newUser); */
+
+	client.setHasUser(true);
+  this->sendNotice(client.getFd(), "*", "Username accepted");
 	this->tryRegisterClient(client);
 }
 
-  //Quit 
-  //Exits the server 
+//Quit 
+//Exits the server 
 
-  void quit()
-  {
+void quit()
+{
 
-  }
+}
