@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/02 13:21:54 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/02 13:50:29 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ class Server
 	void		userCommand(Client &client, const IrcCommand &cmd);
 	void		join(int fd, std::string channelname, std::string pass);	 //Creates or joins a channel that exists
 	void		part(int fd);
-	void		quit();
+	void		quit(int fd);
 	void		privateMsg(std::string username, std::string msg);
 	void		topic(std::string channelname, int clientfd);
 

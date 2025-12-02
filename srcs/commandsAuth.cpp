@@ -71,33 +71,23 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 void	Server::userCommand(Client &client, const IrcCommand &cmd)
 {
 	// KR: need to still implement this, for now setHasUser = true, so registration can be completed and other commands teste
- /* if (cmd.parameters.empty())
-	{
-		this->sendNumeric(client.getFd(), 431, "*",	std::vector<std::string>(),
-					"No Username given");
-		return ;
-	}
-
-	std::string newUser = cmd.parameters[0];
-	for (size_t i = 0; i < this->_clients.size(); i++)
-	{
-		if (this->_clients[i].getNickname() == newUser && this->_clients[i].getFd() != client.getFd())
-		{
-			this->sendNumeric(client.getFd(), 433, newUser,	std::vector<std::string>(),	"Username is already in use");
-			return ;
-		}
-	}
-  client.setUsername(newUser); */
 
 	client.setHasUser(true);
-  this->sendNotice(client.getFd(), "*", "Username accepted");
+  	this->sendNotice(client.getFd(), "*", "Username accepted");
 	this->tryRegisterClient(client);
 }
 
 //Quit 
 //Exits the server 
 
-void Server::quit()
+void Server::quit(int fd)
 {
-
+	Client *client = findClient(fd, ""); //Finds the client
+	if (client == NULL)
+		return ;
+	this->clearClients(fd); //Clears the client from the server
+	this->sendNotice(fd, "*", "You have quit the server. Goodbye!"); //Sends a notice to the client
+	std::cout << RED << "Client (fd = " << fd << ") Disconnected" << WHITE << std::endl;
+	close(fd); //Closes the connection
+	return ;
 }

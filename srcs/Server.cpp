@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/02 13:39:21 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/02 13:53:47 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,7 +312,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	if (c == "QUIT")
 	{
 		DBG({std::cout << "Handling QUIT command" << std::endl; });
-		//this->quitCommand(*client, cmd);
+		quit(fd);
 		return ;
 	}
 	
