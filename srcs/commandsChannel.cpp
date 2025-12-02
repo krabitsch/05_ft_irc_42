@@ -4,7 +4,7 @@
   //Join
   //Switching Channels and joining the one in the prameter 
 
-  void Server::join(int fd, std::string channelname)
+  void Server::join(int fd, std::string channelname, std::string pass)
   {
     Channel *_channel = findChannel(channelname);
 
@@ -37,6 +37,11 @@
         this->sendNumeric(fd, 471, "", std::vector<std::string>(), "Cannot join channel (+l)"); //Channel is full
         return ;
       }
+      if (!_channel->getPassword().empty() && _channel->getPassword() != pass)
+      {
+        this->sendNumeric(fd, 476, "", std::vector<std::string>(), "Wrong channel key"); //Wrong password when joining 
+        return ;
+      }
 
       //If no errors were found add the user, display message, if its a new channel add it to there list
       _client->setCurrentChannel(channelname);
@@ -56,7 +61,3 @@
   void Server::part(int fd)
   {
   }
-
-  //Names
-  //Also unsure what this does? 
-

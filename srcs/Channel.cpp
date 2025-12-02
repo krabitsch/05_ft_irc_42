@@ -245,3 +245,8 @@ bool Channel::getTopicpriv(void) const
 {
 	return (_topicPriv);
 }
+
+std::string	Channel::getPassword(void) const
+{
+	return (_password);
+}

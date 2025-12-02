@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/01 15:38:40 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/02 13:39:21 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,7 +339,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{
 		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
-			join(fd, cmd.parameters[0]); // would (like in PASS) pass const IrcCommand &cmd to inside join 
+			join(fd, cmd.parameters[0], ""); // would (like in PASS) pass const IrcCommand &cmd to inside join 
 			std::cout << _channels[0].getname() << std::endl;
 		}
 		return;
@@ -392,7 +392,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			if (channel == NULL)
 				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
 			else
-				channel->mode(fd, cmd.parameters[1]);
+				channel->mode(fd, cmd.parameters[1], cmd.parameters[2]);
 			return ;
 		}
 	}
@@ -402,10 +402,6 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			return ;
 		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
 		channel->invite(cmd.parameters[0], fd);
-	}
-	if (c == "ME") //Sends a standard message to the current channel
-	{
-		return;
 	}
 	
 	//Special Debugging Commands to test stuff out

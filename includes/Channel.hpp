@@ -34,6 +34,7 @@ class Channel
 	size_t	getMembersize(void) const;
 	bool 	getInviteonly(void) const;
 	bool	getTopicpriv(void) const;
+	std::string	getPassword(void) const;
 
 	//Operator Commands
 	bool IsOperator(int fd);
@@ -42,5 +43,5 @@ class Channel
 
 	void kick(std::string username, int fd);
 	void invite(std::string username, int fd);
-	void mode(int fd, std::string param);
+	void mode(int fd, std::string param, std::string input);
 };
