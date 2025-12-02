@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/01 15:31:46 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/02 10:58:45 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,4 +114,11 @@ void Client::addNotification(std::string msg, char type)
 void Client::AddChannel(std::string channelname, char type)
 {
 	_channels.insert(std::make_pair(channelname, type));	
+}
+
+void Client::RemoveChannel(std::string channelname)
+{
+	std::map<std::string, char>::iterator it = _channels.find(channelname);
+	if (it != _channels.end())
+		_channels.erase(it);
 }

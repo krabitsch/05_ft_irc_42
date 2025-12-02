@@ -17,17 +17,14 @@
     else 
     {
       Client *_client = findClient(fd, "");
+      if (_client == NULL)
+        return ;
+
+      //Getting Clients Channel List
       std::map<std::string, char>*channelist = _client->GetChannel();
 
       //Checks if the user has access to the channel already or not if not add it to there channellist
-      bool checker = false;
-      std::map<std::string, char>::iterator it = channelist->begin();
-      while (it != channelist->end())
-      {
-        if (it->first == channelname)
-          checker = true;
-        it++;
-      }
+      bool checker = (channelist->find(channelname) != channelist->end());
 
       //Error Handling
       if (_channel->getInviteonly() == true && checker == false)
@@ -49,8 +46,8 @@
       else
           this->sendNotice(fd, channelname, _client->getUsername() + " has joined the channel");
 
-      if (checker == false) //Adds the channel to the client list
-        _channel->AddMember(*_client);
+      if (!checker) //Adds the channel to the client list
+        _channel->AddMember(_client);
     }
   }
 

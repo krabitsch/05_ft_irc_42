@@ -73,7 +73,7 @@
       int i = 0;
       while (i < _members.size()) //checks all the members if the channel
       {
-        if (_members[i].getNickname() == username || _members[i].getUsername() == username) //compares the user written to possible users
+        if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users
         {
           _server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already in the channel");
           return ;
@@ -83,7 +83,7 @@
 
       //Gets the client information from the server
       Client *client = _server->findClient(-1, username);
-      AddMember(*client); //adds the client onto the channel list
+      AddMember(client); //adds the client onto the channel list
       client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
       std::string msg = username + " you have been invited to " + _channelname + "channel";
       client->addNotification(msg, 'i'); //give them a notification that they have been invited
@@ -110,10 +110,11 @@
       int i = 0;
       while (i < _members.size()) //checks all the members if the channel
       {
-        if (_members[i].getNickname() == username || _members[i].getUsername() == username) //compares the user written to possible users
+        if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users
         {
           RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
-          std::cout << username << " has been kicked from " << _channelname << " channel" << std::endl;
+          
+          _server->sendNotice(fd, _channelname, username + " has been kicked from the channel");
           return ;
         }
         i++;

@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:57:10 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/01 12:50:59 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/02 11:01:15 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,8 @@ class Client
 
 	//Client Channel Features
 	void						AddChannel(std::string channelname, char type);
-
+	void						RemoveChannel(std::string channelname);	
+	
 	//Notifications *Still unsure about this part honestly
 	void						addNotification(std::string msg, char type);
 	

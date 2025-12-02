@@ -19,18 +19,23 @@ void Server::topic(std::string channelname, int clientfd)
     return ;
   }
 
-  Channel *channel_type = findChannel(channelname);
-  if (channel_type == NULL && !channelname.empty()) //Checkes if the channel doesnt exist
+  Channel *channel_type = findChannel(user->getCurrentChannel());
+  if (channel_type == NULL) //Checkes if the channel doesnt exist
   {
     this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");
     return ;
   }
-  if (channel_type != NULL && channel_type->getInviteonly() == false)
+  if (channel_type != NULL) //Change the topic name
   {
-    //Switch channels
-    channel_type->AddMember(*user);
-    user->setCurrentChannel(channelname);
-    this->sendNotice(clientfd, channelname, "You have switched to channel: " + channelname);
+    if (channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == true || channel_type->getTopicpriv() == false)
+    {
+      channel_type->channelTopic(channelname);
+      this->sendNotice(clientfd, channel_type->getname(), "Channel topic has been changed to: " + channelname);
+    }
+    else if (channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == false)
+    {
+      this->sendNumeric(clientfd, 482, "", std::vector<std::string>(), "You are not an operator!");
+    }
     return ;
   }
 }
