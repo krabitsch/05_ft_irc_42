@@ -54,7 +54,7 @@
           _password = input;
           _server->sendNotice(fd, _channelname, "Channel key has been set/changed for the channel " + _channelname);
         }
-        else
+        else if (!_password.empty() && param.empty())
         {
           _password.erase();
           _server->sendNotice(fd, _channelname, "Channel key has been removed from the channel " + _channelname);

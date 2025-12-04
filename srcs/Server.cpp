@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/02 13:53:47 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/04 10:24:01 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,8 +339,11 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{
 		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
-			join(fd, cmd.parameters[0], ""); // would (like in PASS) pass const IrcCommand &cmd to inside join 
-			std::cout << _channels[0].getname() << std::endl;
+			if (cmd.parameters.size() == 2)
+				join(fd, cmd.parameters[0], cmd.parameters[1]);
+			else
+				join(fd, cmd.parameters[0], ""); // would (like in PASS) pass const IrcCommand &cmd to inside join 
+			std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
 		}
 		return;
 	}
@@ -385,14 +388,19 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "MODE")
 	{
-		//sets modes for channels and users
+		//sets modes for channels and users, modes need to be tested
 		if (!cmd.parameters.empty())
 		{
 			Channel* channel = findChannel(cmd.parameters[0]);
 			if (channel == NULL)
 				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
 			else
-				channel->mode(fd, cmd.parameters[1], cmd.parameters[2]);
+			{
+				if (cmd.parameters.size() == 2)
+					channel->mode(fd, cmd.parameters[1], "");
+				else if (cmd.parameters.size() == 3)
+					channel->mode(fd, cmd.parameters[1], cmd.parameters[2]);
+			}
 			return ;
 		}
 	}
@@ -401,10 +409,36 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		if (cmd.parameters.empty())
 			return ;
 		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		if (channel == NULL)
+		{
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			return ;
+		}
 		channel->invite(cmd.parameters[0], fd);
+		return ;
 	}
 	
-	//Special Debugging Commands to test stuff out
+	//Special Debugging Commands
+	if (c == "OP") //Al: The error handling hasnt been implemented for this function 
+	{	
+		if (cmd.parameters.empty())
+			return ;
+		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		if (channel == NULL)
+		{
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			return ;
+		}
+		if (cmd.parameters[0] == "-u")
+		{
+			channel->UnsetOperator(cmd.parameters[1], fd);
+		}
+		else if (cmd.parameters[0] == "-u")
+		{
+			channel->SetOperator(cmd.parameters[1], fd);
+		}
+		return ;
+	}
 	if (c == "LIST")
 	{
 		if (cmd.parameters.empty())

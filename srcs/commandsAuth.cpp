@@ -34,7 +34,7 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 
 	client.setHasPass(true);
 	client.setPassword(passwordInput);
-  this->sendNotice(client.getFd(), "*", "Password accepted");
+ 	this->sendNotice(client.getFd(), "*", "Password accepted");
 	this->tryRegisterClient(client);
 }
 
@@ -61,7 +61,7 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	}
 
 	client.setNickname(newNick);
-  this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick);
+  	this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick);
 	client.setHasNick(true);
 	this->tryRegisterClient(client);
 
