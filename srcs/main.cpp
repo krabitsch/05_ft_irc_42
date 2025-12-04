@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:56:54 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 13:19:56 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/12/01 11:53:45 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,8 +90,6 @@ int main(int ac, char **av)
 		return (-1);
 
 	Server	server(port, password); // call constructor with port = av[1], password = av[2]
-
-	// server.setServerAdd(&server); //Sets the server class inside to itself
 	
 	std::cout << "---- SERVER ----" << std::endl;
 	try

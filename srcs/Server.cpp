@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 22:56:17 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/12/04 10:24:01 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,14 +28,12 @@ void Server::signalHandler(int signalReceived)
 }
 
 // Constructors:
-Server::Server(): _serverAdd(this),
-				  _port(-1),
+Server::Server(): _port(-1),
 				  _password(""),
 				  _fdServer(-1),
 				  _serverName("") {}
 				  
-Server::Server(int port, std::string password): _serverAdd(this),
-												_port(port),
+Server::Server(int port, std::string password): _port(port),
 												_password(password),
 												_fdServer(-1),
 												_serverName("ircAlPeKa@42")
@@ -44,8 +42,7 @@ Server::Server(int port, std::string password): _serverAdd(this),
 	//server.setServerAdd(&server); //Sets the server class inside to itself 
 }
 
-Server::Server(Server const& other): _serverAdd(other._serverAdd), 
-									 _port(other._port), 
+Server::Server(Server const& other): _port(other._port), 
 									 _password(other._password),
 									 _fdServer(other._fdServer),
 									 _serverName(other._serverName) {}
@@ -58,7 +55,6 @@ Server&	Server::operator=(Server const& other)
 {
 	if (this != &other)
 	{
-		this->_serverAdd = other._serverAdd;
 		this->_port		 = other._port;
 		this->_password	 = other._password;
 		this->_fdServer  = other._fdServer;
@@ -175,6 +171,7 @@ void Server::acceptClient()	// accepts new client
 	memset(serv, 0, NI_MAXSERV);
 	client.setFd(incomingClientFd);													// sets client file descriptor
 	client.setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));// converts ip address to string and sets it
+	client.setServer(this);
 	this->_clients.push_back(client);												// adds client to the vector of clients
 	this->_fds.push_back(NewPoll);													// adds client socket to the pollfd
 
@@ -305,17 +302,6 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		DBG({std::cout << "Handling NICK command" << std::endl; });
 		this->nickCommand(*client, cmd);
 		return ;
-		/*if (!cmd.parameters.empty())
-		{
-			//Client *client = findClient(fd, "");
-			//if (!client->getNickname().empty())
-			//	std::cout << client->getNickname() << std::endl;
-			nickComand(fd, cmd.parameters[0]);
-			//client = findClient(fd, "");
-			//std::cout << client->getNickname() << std::endl;
-		}
-		return;
-		*/
 	}
 	if (c == "USER")
 	{
@@ -326,7 +312,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	if (c == "QUIT")
 	{
 		DBG({std::cout << "Handling QUIT command" << std::endl; });
-		//this->quitCommand(*client, cmd);
+		quit(fd);
 		return ;
 	}
 	
@@ -351,11 +337,13 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	// from here on, only registered clients:
 	if (c == "JOIN")
 	{
-		std::cout << "Get here" << std::endl;
 		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
-			join(fd, cmd.parameters[0]); // would (like in PASS) pass const IrcCommand &cmd to inside join 
-			std::cout << _channels[0].getname() << std::endl;
+			if (cmd.parameters.size() == 2)
+				join(fd, cmd.parameters[0], cmd.parameters[1]);
+			else
+				join(fd, cmd.parameters[0], ""); // would (like in PASS) pass const IrcCommand &cmd to inside join 
+			std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
 		}
 		return;
 	}
@@ -370,6 +358,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		std::cout << "Handling PRIVMSG command" << std::endl;
 		if (!cmd.parameters.empty())
 		{
+			//This doesnt handle multiple spaces or parameters correctly
 			std::string target = cmd.parameters[0];
 			std::string msg = (cmd.parameters.size() > 1) ? cmd.parameters[1] : std::string();
 			// forward to your private message handler (username=target)
@@ -381,16 +370,105 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{
 		if (!cmd.parameters.empty())
 			topic(cmd.parameters[0], fd);
+		else
+		 	topic("", fd);
 		return;
 	}
+	if (c == "KICK") //Needs to be tested so far hasnt kick the user
+	{
+		if (!cmd.parameters.empty())
+		{
+			Channel *channel = findChannel(cmd.parameters[0]);
+			if (channel)
+				channel->kick(cmd.parameters[1], fd);
+			else
+				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+		}
+		return;
+	}
+	if (c == "MODE")
+	{
+		//sets modes for channels and users, modes need to be tested
+		if (!cmd.parameters.empty())
+		{
+			Channel* channel = findChannel(cmd.parameters[0]);
+			if (channel == NULL)
+				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			else
+			{
+				if (cmd.parameters.size() == 2)
+					channel->mode(fd, cmd.parameters[1], "");
+				else if (cmd.parameters.size() == 3)
+					channel->mode(fd, cmd.parameters[1], cmd.parameters[2]);
+			}
+			return ;
+		}
+	}
+	if (c == "INVITE") //Needs to be tested
+	{
+		if (cmd.parameters.empty())
+			return ;
+		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		if (channel == NULL)
+		{
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			return ;
+		}
+		channel->invite(cmd.parameters[0], fd);
+		return ;
+	}
 	
+	//Special Debugging Commands
+	if (c == "OP") //Al: The error handling hasnt been implemented for this function 
+	{	
+		if (cmd.parameters.empty())
+			return ;
+		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		if (channel == NULL)
+		{
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			return ;
+		}
+		if (cmd.parameters[0] == "-u")
+		{
+			channel->UnsetOperator(cmd.parameters[1], fd);
+		}
+		else if (cmd.parameters[0] == "-u")
+		{
+			channel->SetOperator(cmd.parameters[1], fd);
+		}
+		return ;
+	}
+	if (c == "LIST")
+	{
+		if (cmd.parameters.empty())
+		{	//prints out all user channels
+			Client *client = findClient(fd, "");
+			std::map<std::string, char> *userchannels = client->GetChannel();
+			if (userchannels != NULL)
+			{
+				std::cout << client->getNickname() << " this users channels!" << std::endl;
+				for (std::map<std::string, char>::iterator it = userchannels->begin(); it != userchannels->end(); ++it)
+				{
+					std::string channelName = it->first;   // key (channel name)
+					char channelType = it->second;         // value (member 'm' or operator 'o')
+					
+					std::cout << "Channel: " << channelName << " Type: " << channelType << std::endl;
+				}
+			}
+		}
+		else
+		{	//prints out all members of a channel
+			Channel* channel = findChannel(cmd.parameters[0]);
+			std::cout << channel->getMembersize() << std::endl;
+		}
+		return ;
+	}
 
 	// unknown/other commands: handle by sending 421 numeric (unknown commands)
 	this->sendNumeric(fd, 421, client->getNickname(), std::vector<std::string>(1, c),
 				"Unknown command");
 }
-
-
 
 
 
@@ -428,13 +506,6 @@ void	Server::closeFds()
 		close(_fdServer);
 	}
 }
-
-
-//Setters && Getters
-Server*	Server::getServerAdd(void) const { return (this->_serverAdd); }
-
-void	Server::setServerAdd(Server *server) { this->_serverAdd = server; }
-
 
 //Finder Functions 
 
@@ -548,7 +619,7 @@ void Server::tryRegisterClient(Client &client)
 {
 	if (client.isRegistered())
 		return ;
-
+	
 	if (!client.hasPass())
 		return ;
 	if (!client.hasNick())

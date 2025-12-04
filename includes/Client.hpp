@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:57:10 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/11/30 21:30:59 by krabitsc         ###   ########.fr       */
+/*   Updated: 2025/12/02 11:01:15 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,8 @@ class Client
 	std::string 				getNickname(void) const;
 	std::string 				getUsername(void) const;
 	std::string 				getCurrentChannel(void) const;
+	Server*						getServer(void) const;
+	std::string					getPassword(void) const;
 	std::map<std::string, char> *GetChannel(void); //Not const due to returning a pointer
 	bool						hasPass()			const;
 	bool						hasNick()			const;
@@ -75,11 +77,13 @@ class Client
 
 	// Setters
 	void						setFd(int fd);
+	void						setServer(Server *server);
 	void						setIpAdd(std::string ipadd);
 	void						setUsername(std::string newname);
 	void 						setNickname(std::string newname);
 	void 						setChannel(std::map<std::string, char> *newchannels);
 	void 						setCurrentChannel(std::string newchannel);
+	void						setPassword(std::string password);
 	void						setHasPass(bool has);
 	void						setHasNick(bool has);
 	void						setHasUser(bool has);
@@ -90,8 +94,9 @@ class Client
 	// Variables/methods global to the class
 
 	//Client Channel Features
-	void						AddChannel(std::string channelname);
-
+	void						AddChannel(std::string channelname, char type);
+	void						RemoveChannel(std::string channelname);	
+	
 	//Notifications *Still unsure about this part honestly
 	void						addNotification(std::string msg, char type);
 	
