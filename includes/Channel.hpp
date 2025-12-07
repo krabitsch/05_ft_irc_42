@@ -32,6 +32,8 @@ class Channel
 	size_t	getUserlimit(void) const;
 	size_t	getMembersize(void) const;
 	bool 	getInviteonly(void) const;
+	bool isMember(Client* client);
+	std::vector<Client>* getMembers(void);
 
 	//Operator Commands
 	bool IsOperator(int fd);

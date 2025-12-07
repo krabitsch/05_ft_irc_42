@@ -367,14 +367,61 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "PRIVMSG")
 	{
+		/*
+		*************************
+		Still need to implement:
+
+		404     ERR_CANNOTSENDTOCHAN
+                        "<channel name> :Cannot send to channel"
+
+                - Sent to a user who is either (a) not on a channel
+                  which is mode +n or (b) not a chanop (or mode +v) on
+                  a channel which has mode +m set and is trying to send
+                  a PRIVMSG message to that channel.
+		
+		413     ERR_NOTOPLEVEL
+                        "<mask> :No toplevel domain specified"
+		
+		414     ERR_WILDTOPLEVEL
+                        "<mask> :Wildcard in toplevel domain"
+
+                - 412 - 414 are returned by PRIVMSG to indicate that
+                  the message wasn't delivered for some reason.
+                  ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that
+                  are returned when an invalid use of
+                  "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.
+		
+		407     ERR_TOOMANYTARGETS
+                        "<target> :Duplicate recipients. No message \
+
+		*************************
+		*/
+
+
 		std::cout << "Handling PRIVMSG command" << std::endl;
-		if (!cmd.parameters.empty())
+		if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
 		{
-			std::string target = cmd.parameters[0];
-			std::string msg = (cmd.parameters.size() > 1) ? cmd.parameters[1] : std::string();
-			// forward to your private message handler (username=target)
-			privateMsg(target, msg);
+			//411 ERR_NORECIPIENT
+			sendNumeric(fd, 411, this->findClient(fd)->getNickname(), std::vector<std::string>(),
+					"No recipient given (PRIVMSG)");
 		}
+		else if (cmd.parameters.size() == 1)
+		{
+			//412 ERR_NOTEXTTOSEND
+			sendNumeric(fd, 412, this->findClient(fd)->getNickname(), std::vector<std::string>(),
+				":No text to send");
+			return;
+		}
+		else
+		{
+			for (int i = 0; i < cmd.parameters.size() - 1; i++)
+			{
+				std::string target = cmd.parameters[i];
+				std::string msg = cmd.parameters[cmd.parameters.size() - 1];
+				privateMsg(fd, target, msg);
+			}
+		}
+
 		return;
 	}
 	if (c == "TOPIC")
@@ -465,6 +512,17 @@ Client* Server::findClient(const int fd, std::string username)
   	return (NULL);
 }
 
+Client* Server::findClient(const int fd) {
+	int i = 0;
+	while (i <this->_clients.size())
+	{
+		if (fd > 1 && this->_clients[i].getFd() == fd)
+			return (&this->_clients[i]);
+	  i++;
+	}
+  	return (NULL);
+}
+
 
 
 // ****************************************************************
@@ -548,7 +606,6 @@ void Server::tryRegisterClient(Client &client)
 {
 	if (client.isRegistered())
 		return ;
-
 	if (!client.hasPass())
 		return ;
 	if (!client.hasNick())

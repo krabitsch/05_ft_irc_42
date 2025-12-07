@@ -46,9 +46,11 @@ IrcCommand parseMessage(const std::string& raw_message) {
 	std::string message_content;
 
 	if (trailing_pos != std::string::npos) {
+		cmd.has_trailing = true;
 		trailing_param = message.substr(trailing_pos + 2);
 		message_content = message.substr(0, trailing_pos);
 	} else {
+		cmd.has_trailing = false;
 		message_content = message;
 	}
 

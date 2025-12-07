@@ -61,6 +61,23 @@ void Channel::RemoveMember(std::string username)
 	}
 }
 
+bool Channel::isMember(Client* client)
+{
+    if (!client)
+        return false;
+    for (size_t i = 0; i < _members.size(); i++)
+    {
+        if (_members[i].getFd() == client->getFd())
+            return true;
+    }
+    return false;
+}
+
+std::vector<Client>* Channel::getMembers(void)
+{
+    return &_members;
+}
+
 //Set Operator Privilage
 //Step 1: Check if user is already a operator and is already a member
 //Step 2: Add member onto the vector 

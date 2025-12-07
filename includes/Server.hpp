@@ -76,7 +76,8 @@ class Server
 	void		userCommand(Client &client, const IrcCommand &cmd);
 	void		join(int fd, std::string channelname);	 //Creates or joins a channel that exists
 	void		part(int fd);
-	void		privateMsg(std::string username, std::string msg);
+	void		privateMsg(int senderFd, std::string target, std::string msg);
+	std::string makePrivmsg(const std::string &prefix, const std::string &target, const std::string &msg);
 	void		topic(std::string channelname, int clientfd);
 
 	void		broadcastMessage(int from_fd, const std::string& msg);
@@ -94,7 +95,6 @@ class Server
 	void		sendWelcome(Client &client);
 	void		tryRegisterClient(Client &client);
 
-	
 	public:
 	
 	// Constructors/Destructors/Operators Overlords
@@ -121,6 +121,7 @@ class Server
 	// Finder Functions
 	Channel*	findChannel(const std::string &name);
 	Client*		findClient(const int fd, std::string username);
+	Client*		findClient(const int fd);
 
 };
 
