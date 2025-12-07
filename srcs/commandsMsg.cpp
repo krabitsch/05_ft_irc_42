@@ -12,8 +12,6 @@
   //Privmsg 
   //Step 1:Get the username or nickname, look through it from the server, if they dont exist display a message carry on if they do
  
-  //The Question is now for step 2, do you send a direct msg to the user or open a private channel between the two of you
-  //Step 2:Here you would just send it directly to the user 
 
   /*void Server::privateMsg(std::string username, std::string msg)
   {
@@ -21,11 +19,15 @@
     Client *client = findClient(-1, username);
     if (client == NULL)
     {
-      std::cerr << "User " << username << " does not exist in this server!" << std::endl;
+      this->sendNumeric(-1, 401, username, std::vector<std::string>(), "No such nick/channel");
       return ;
     }
+
     //send the msg to the user im not really sure how to do th at XD
-		ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
+    this->sendMessage(client->getFd(), "", "PRIVMSG", std::vector<std::string>(1, username), msg);
+
+    //Old Message
+		/*ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
 		if (sent == -1) 
 		{
 		  std::cerr << "send() error on fd " << client->getFd() << ": " << std::strerror(errno) << std::endl;

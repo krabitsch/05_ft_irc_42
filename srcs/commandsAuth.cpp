@@ -1,7 +1,7 @@
 // Commands_Auth.cpp	 // PASS/NICK/USER/QUIT
 #include "../includes/Server.hpp"
 
-  //Pass
+//Pass
 void	Server::passCommand(Client &client, const IrcCommand &cmd)
 {
 	if (client.isRegistered())
@@ -33,14 +33,13 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 	}
 
 	client.setHasPass(true);
-	//client.setPassword(passwordInput);
-
+	client.setPassword(passwordInput);
+ 	this->sendNotice(client.getFd(), "*", "Password accepted");
 	this->tryRegisterClient(client);
 }
 
-  //Nick
-  //Sets the nickname of the user
-
+//Nick
+//Sets the nickname of the user
 void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 {
 	if (cmd.parameters.empty())
@@ -62,30 +61,17 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	}
 
 	client.setNickname(newNick);
+  	this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick);
 	client.setHasNick(true);
-
 	this->tryRegisterClient(client);
 
 }
 
-void Server::nickComand(int fd, std::string newname)
-{
-	Client *user = findClient(fd, "");
-	if (findClient(-1, newname) != NULL)// Checks if the nickname has already been taken or not
-	{
-	  std::cout << "This nickname is already taken!" << std::endl;  // cout displays in terminal where ircserv runs
-	  return ;
-	}
-	user->setNickname(newname); 
-	std::cout << "Your new nickname is " << newname << std::endl;
-
-}
-
 //User
-//Unsure what this does
 void	Server::userCommand(Client &client, const IrcCommand &cmd)
 {
-	// KR: need to still implement this, for now setHasUser = true, so registration can be completed and other commands tested
+	// KR: need to still implement this, for now setHasUser = true, so registration can be completed and other commands teste
+
 	if (client.isRegistered())
 	{
 		// 462 ERR_ALREADYREGISTRED
@@ -94,14 +80,21 @@ void	Server::userCommand(Client &client, const IrcCommand &cmd)
 		return ;
 	}
 	client.setHasUser(true);
-
+  	this->sendNotice(client.getFd(), "*", "Username accepted");
 	this->tryRegisterClient(client);
 }
 
-  //Quit 
-  //Exits the server 
+//Quit 
+//Exits the server 
 
-  void quit()
-  {
-
-  }
+void Server::quit(int fd)
+{
+	Client *client = findClient(fd, ""); //Finds the client
+	if (client == NULL)
+		return ;
+	this->clearClients(fd); //Clears the client from the server
+	this->sendNotice(fd, "*", "You have quit the server. Goodbye!"); //Sends a notice to the client
+	std::cout << RED << "Client (fd = " << fd << ") Disconnected" << WHITE << std::endl;
+	close(fd); //Closes the connection
+	return ;
+}
