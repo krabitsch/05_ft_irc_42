@@ -83,16 +83,21 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
         std::string privmsgLine = makePrivmsg(senderPrefix, target, msg);
 
         // Forward to every channel member except sender
-        std::vector<Client>* members = chan->getMembers();
-        for (size_t i = 0; i < members->size(); i++)
-        {
-            if ((*members)[i].getFd() != senderFd)
-            {
-                ssize_t sent = send((*members)[i].getFd(), privmsgLine.c_str(), privmsgLine.length(), 0);
-                if (sent == -1)
-                    std::cerr << "send() error on fd " << (*members)[i].getFd() << ": " << std::strerror(errno) << std::endl;
-            }
-        }
+        std::vector<Client *>* members = chan->getMembers();
+		for (size_t i = 0; i < members->size(); i++)
+		{
+    		Client* member = (*members)[i];
+    		if (!member)
+        		continue;
+
+    		if (member->getFd() != senderFd)
+    		{
+        		ssize_t sent = send(member->getFd(), privmsgLine.c_str(), privmsgLine.length(), 0);
+        		if (sent == -1)
+        		    std::cerr << "send() error on fd " << member->getFd()
+							<< ": " << std::strerror(errno) << std::endl;
+    		}
+		}
     }
     else
     {
