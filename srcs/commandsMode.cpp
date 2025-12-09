@@ -147,7 +147,7 @@
 
   //Questions to Ask: Should an operator be able to kick another operator?
 
-  void Channel::kick(std::string username, int fd)
+  void Channel::kick(std::string username, std::string comments, int fd)
   {
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
