@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/04 10:24:01 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/04 11:00:50 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -342,7 +342,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			if (cmd.parameters.size() == 2)
 				join(fd, cmd.parameters[0], cmd.parameters[1]);
 			else
-				join(fd, cmd.parameters[0], ""); // would (like in PASS) pass const IrcCommand &cmd to inside join 
+				join(fd, cmd.parameters[0], "");
 			std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
 		}
 		return;
