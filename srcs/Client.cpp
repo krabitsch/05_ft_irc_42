@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/02 10:58:45 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/04 10:59:42 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,10 @@ Client::Client(const Client &other): _server(other._server),
 									 _channels(other._channels),
 									 _currentChannel(other._currentChannel),
 									 _notifications(other._notifications),
-									 _hasPass(false),
-									 _hasNick(false),
-									 _hasUser(false),
-									 _registered(false)
+									 _hasPass(other._hasPass),
+									 _hasNick(other._hasNick),
+									 _hasUser(other._hasUser),
+									 _registered(other._registered)
 {}
 
 // Destructor:

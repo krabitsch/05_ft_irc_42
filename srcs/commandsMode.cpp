@@ -44,20 +44,20 @@
       }
       else if (param == "-k")
       {
-        if (_password.empty() && !param.empty() || !_password.empty() && !param.empty())
+        if (_password.empty() && !input.empty() || !_password.empty() && !input.empty())
         {
-          if (input.empty())
-          { //Error if theres no password input NOTE:Check error code
-            _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "No avaiable password key given!");
-            return ;
-          }
           _password = input;
           _server->sendNotice(fd, _channelname, "Channel key has been set/changed for the channel " + _channelname);
         }
-        else if (!_password.empty() && param.empty())
+        else if (!_password.empty() && input.empty())
         {
           _password.erase();
           _server->sendNotice(fd, _channelname, "Channel key has been removed from the channel " + _channelname);
+        }
+        else 
+        {
+          _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "No avaiable password key given!");
+          return ;
         }
       }
       else if (param == "-o")
@@ -89,7 +89,12 @@
         //Check Number Validity
         if (num < 0)
           _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Invalid numerical input!"); 
-        if (num < _members.size())
+        if (num == 0)
+        {
+          _userlimit = 0;
+          _server->sendNotice(fd, _channelname, "User limit has been removed for the channel " + _channelname);
+        }
+        else if (num < _members.size())
           _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Too many members are already apart of the channel: Unable to Set Limit!"); //Verify if that is the correct numerical number
         else
         {
