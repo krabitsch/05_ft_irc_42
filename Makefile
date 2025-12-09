@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
+#    By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/11/27 12:10:06 by aruckenb         ###   ########.fr        #
+#    Updated: 2025/11/30 18:47:05 by krabitsc         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,7 +32,7 @@ DEPS 		= $(OBJS:.o=.d)
 CC 	 		= c++
 #CPPFLAGS   	= -Wall -Wextra -Werror -std=c++98 -MMD -MP $(INCLUDES)
 CPPFLAGS   	= -std=c++98 -MMD -MP $(INCLUDES)
-CPPFLAGSDBG = $(CPPFLAGS) -FT_IRC_DEBUG
+CPPFLAGSDBG = $(CPPFLAGS) -DFT_IRC_DEBUG
 BUILD_FLAGS = $(CPPFLAGS)
 RMF		 	= rm -f
 MKDIR 		= mkdir -p

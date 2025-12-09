@@ -5,9 +5,15 @@
 Channel::Channel(Server *server, int fd, std::string name): _channelname(name), _server(server) 
 {
 	Client *client = _server->findClient(fd, "");
-	client->AddChannel(name);
-	AddMember(*client);
+	client->AddChannel(name, 'o');
+	AddMember(client);
+	client->setCurrentChannel(name);
 	_operators.push_back(client->getFd());
+	_inviteonly = false;
+	_topicPriv = false;
+	_password = "";
+	_userlimit = 0;
+	_operatorPriv = true;
 };
 
 //Destructor
@@ -28,16 +34,54 @@ Channel::Channel(const Channel &other): _server(other._server),
 Channel &Channel:: operator=(const Channel &other) 
 {
 	if (this != &other)
-	{ //Need to still add this
+	{
+		this->_server = other._server;
+		this->_channelname = other._channelname;
+		this->_members = other._members;
+		this->_operators = other._operators;
+		this->_operatorPriv = other._operatorPriv;
+		this->_inviteonly = other._inviteonly;
+		this->_topicPriv = other._topicPriv;
+		this->_password = other._password;
+		this->_userlimit = other._userlimit;
 	}
 	return (*this);
 };
 
+//Change Topic
+
+void Channel::channelTopic(std::string newtopic)
+{
+	std::string oldtopic = _channelname;
+    _channelname = newtopic; 
+    
+    int i = 0;
+    while (i < _members.size())
+    {
+		_members[i]->setCurrentChannel(newtopic);
+		_members[i]->RemoveChannel(oldtopic); 
+		if (IsOperator(_members[i]->getFd()) == true)
+			_members[i]->AddChannel(_channelname, 'o');
+		else
+			_members[i]->AddChannel(_channelname, 'm');
+        i++;
+    }
+}
+
+
 //Add Member
 //Step 1: Get client and add it to the map
-void Channel::AddMember(Client user)
+void Channel::AddMember(Client* user)
 {
+	int i = 0;
+	while (i < _members.size())
+	{
+		if (_members[i]->getNickname() == user->getNickname() || _members[i]->getUsername() == user->getUsername())
+			return ;
+		i++;
+	}
 	_members.push_back(user);
+	user->AddChannel(_channelname, 'm');
 }
 
 //Remove Member
@@ -48,12 +92,23 @@ void Channel::RemoveMember(std::string username)
 	int i = 0;
 	while (i < _members.size())
 	{
-		if (_members[i].getNickname() == username || _members[i].getUsername() == username)
+		if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
 		{
-			std::map<std::string, char> *user_channels = _members[i].GetChannel(); //Gets the channel array
-			user_channels->erase(_channelname); //removes the channel
-			_members[i].setChannel(user_channels); //Inserts new channel array
-			_members[i].setCurrentChannel("lobby"); //Set the users current channel to the general or lobby
+			_members[i]->RemoveChannel(_channelname);
+			_members[i]->setCurrentChannel(""); //Set the users current channel to blank
+			if (IsOperator(_members[i]->getFd()) == true) //Remove the user as an operator
+			{
+				size_t i = 0;
+				while (i < _operators.size())
+				{
+					if (_operators[i] == _members[i]->getFd())
+					{
+						_operators.erase(_operators.begin() + i);
+						break ;
+					}
+					i++;
+				}
+			}
 			_members.erase(_members.begin() + i); //removes the user from members
 			return ;
 		}
@@ -80,7 +135,7 @@ bool Channel::IsOperator(int fd) //Checks if the user is an operator or not
 		return false;
 	}
 	else
-		return true; //We can change this if needed
+		return true;
 }
 
 void Channel::SetOperator(std::string username, int fd) //Another Note: This function isnt done we still need to verify that the one executing this comamnd is a user or everyone is an operator
@@ -91,29 +146,28 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 		int i = 0;
 		while (i < _members.size()) //Note: Maybe put this into its own sperate function
 		{
-			if (_members[i].getNickname() == username || _members[i].getUsername() == username)
+			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
 			{
-				if (IsOperator(_members[i].getFd()) == false)
+				if (IsOperator(_members[i]->getFd()) == false)
 				{
-					
-					std::map<std::string, char> *user_channels = _members[i].GetChannel();
+					std::map<std::string, char> *user_channels = _members[i]->GetChannel();
 					(*user_channels)[_channelname] = 'o'; //check if this sets the channel in the client correctly
-					_operators.push_back(_members[i].getFd());
-					std::cout << "User " << username << " is now an operator" << std::endl;
+					_operators.push_back(_members[i]->getFd());
+					_server->sendNotice(_members[i]->getFd(), _channelname, "You are now an operator in " + _channelname + " channel");
 				}
 				else 
 				{
-					std::cout << "User is already an operator for this channel" << std::endl;
+					_server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already an operator in this channel");
 					return ;
 				}
 			}
 			i++;
 		}
-		std::cerr << "User does not exist in this channel" << std::endl;
+		_server->sendNumeric(fd, 441, "", std::vector<std::string>(), "User is not in the channel");
 	}
 	else 
 	{
-		std::cout << "Operator privilege is turned off!" << std::endl;
+		_server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
 	}
 }
 
@@ -130,13 +184,14 @@ void Channel::UnsetOperator(std::string username, int fd)
 		int i = 0;
 		while (i < _members.size())
 		{
-			if (_members[i].getNickname() == username || _members[i].getUsername() == username)
+			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
 			{
-				if (IsOperator(_members[i].getFd()) == true)
+				if (IsOperator(_members[i]->getFd()) == true)
 				{
-					int clientfd = _members[i].getFd();
-					std::map<std::string, char> *user_channels = _members[i].GetChannel();
+					int clientfd = _members[i]->getFd();
+					std::map<std::string, char> *user_channels = _members[i]->GetChannel();
 					(*user_channels)[_channelname] = 'm'; //Set there status back to member
+
 
 					//Creates the new list of operators without the unset member
 					std::vector<int> newoperators;
@@ -148,22 +203,20 @@ void Channel::UnsetOperator(std::string username, int fd)
 						k++;
 					}
 					_operators = newoperators;
-
-					std::cout << "User " << username << " is no longer an operator" << std::endl;
+					_server->sendNotice(clientfd, _channelname, "You are no longer an operator in " + _channelname + " channel");
 				}
 				else 
 				{
-					std::cout << "User is already not an operator in this channel" << std::endl;
+					_server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already not an operator in this channel");
 					return ;
 				}
 			}
 			i++;
 		}
-
 	}
 	else 
 	{
-		std::cout << "You are not an operator in this channel!"	<< std::endl;
+		_server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
 	}
 }
 
@@ -186,4 +239,14 @@ size_t Channel::getMembersize(void) const
 bool Channel::getInviteonly(void) const
 {
 	return (_inviteonly);
+}
+
+bool Channel::getTopicpriv(void) const
+{
+	return (_topicPriv);
+}
+
+std::string	Channel::getPassword(void) const
+{
+	return (_password);
 }
