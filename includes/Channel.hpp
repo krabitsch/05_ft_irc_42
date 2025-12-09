@@ -35,6 +35,8 @@ class Channel
 	bool 	getInviteonly(void) const;
 	bool	getTopicpriv(void) const;
 	std::string	getPassword(void) const;
+	bool isMember(Client* client);
+	std::vector<Client *>* getMembers(void);
 
 	//Operator Commands
 	bool IsOperator(int fd);

@@ -15,6 +15,7 @@ NAME	 	= ircserv
 SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
 			  srcs/Parser.cpp \
+			  srcs/Replies.cpp \
 			  srcs/Client.cpp \
 			  srcs/Channel.cpp \
 			  srcs/commandsAuth.cpp \

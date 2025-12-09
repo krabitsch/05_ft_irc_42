@@ -72,6 +72,13 @@ void	Server::userCommand(Client &client, const IrcCommand &cmd)
 {
 	// KR: need to still implement this, for now setHasUser = true, so registration can be completed and other commands teste
 
+	if (client.isRegistered())
+	{
+		// 462 ERR_ALREADYREGISTRED
+		this->sendNumeric(client.getFd(), 462, client.getNickname(), std::vector<std::string>(),
+					"You are already connected and cannot handshake again"); // libera gives this
+		return ;
+	}
 	client.setHasUser(true);
   	this->sendNotice(client.getFd(), "*", "Username accepted");
 	this->tryRegisterClient(client);
