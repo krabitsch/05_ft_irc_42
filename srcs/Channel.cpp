@@ -237,6 +237,14 @@ void Channel::UnsetOperator(std::string username, int fd)
 	}
 }
 
+void Channel::printMembers(void) //Prints all the members in the channel
+{
+	for (size_t i = 0; i < _members.size(); i++)
+	{
+		std::cout << "Member " << i + 1 << ": " << _members[i]->getNickname() << " (" << _members[i]->getUsername() << ")" << std::endl;
+	}
+}
+
 //Getters
 std::string Channel::getname(void) const
 {

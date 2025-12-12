@@ -27,7 +27,7 @@
     this->sendMessage(client->getFd(), "", "PRIVMSG", std::vector<std::string>(1, username), msg);
 
     //Old Message
-		/*ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
+		ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
 		if (sent == -1) 
 		{
 		  std::cerr << "send() error on fd " << client->getFd() << ": " << std::strerror(errno) << std::endl;
@@ -106,9 +106,9 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
         if (!recipient)
         {
             // ERR_NOSUCHNICK
-			this->sendNumeric(senderFd, 401, this->findClient(senderFd)->getNickname() , std::vector<std::string>(1, target),
+			    this->sendNumeric(senderFd, 401, this->findClient(senderFd)->getNickname() , std::vector<std::string>(1, target),
 					"No such nick/channel");
-			return ;
+			    return ;
         }
 
         // Build sender prefix: nick!user@host

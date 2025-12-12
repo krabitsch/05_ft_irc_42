@@ -37,13 +37,14 @@ class Channel
 	std::string	getPassword(void) const;
 	bool isMember(Client* client);
 	std::vector<Client *>* getMembers(void);
+	void printMembers(void);
 
 	//Operator Commands
 	bool IsOperator(int fd);
 	void SetOperator(std::string username, int fd);
 	void UnsetOperator(std::string username, int fd);
 
-	void kick(std::string username, int fd);
+	void kick(std::string username, std::string comments, int fd);
 	void invite(std::string username, int fd);
 	void mode(int fd, std::string param, std::string input);
 };

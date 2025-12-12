@@ -102,10 +102,16 @@
           _server->sendNotice(fd, _channelname, "User limit has been set for the channel " + _channelname);
         }
       }
+      else 
+      {
+        //ERR_UNKNOWNMODE 
+        _server->sendNumeric(fd, 472, "", std::vector<std::string>(), param + ":is unknown mode char to me");
+      }
     }
     else 
     {
-      _server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
+      //ERR_CHANOPRIVSNEEDED  
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
     }
     return ;
   }
@@ -124,6 +130,7 @@
       {
         if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users
         {
+          //ERR_USERONCHAN 443 //check if correct error code and sentance
           _server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already in the channel");
           return ;
         } 
@@ -132,6 +139,12 @@
 
       //Gets the client information from the server
       Client *client = _server->findClient(-1, username);
+      if (client == NULL)
+      {
+        //ERR_NOSUCHNIC //need to add the number code and sentance
+        _server->sendNumeric(fd, 000, "", std::vector<std::string>(), "nick does not exist");
+
+      }
       AddMember(client); //adds the client onto the channel list
       client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
       std::string msg = username + " you have been invited to " + _channelname + "channel";
@@ -139,7 +152,8 @@
     }
     else 
     {
-      _server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
+      //ERR_NOCHANPRIV
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
     }
   }
 
@@ -152,7 +166,7 @@
 
   //Questions to Ask: Should an operator be able to kick another operator?
 
-  void Channel::kick(std::string username, int fd)
+  void Channel::kick(std::string username, std::string comments, int fd)
   {
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
@@ -167,11 +181,13 @@
         }
         i++;
       }
-      _server->sendNumeric(fd, 441, "", std::vector<std::string>(), "User is not in the channel");
+      //ERR_USERNOTINCHANNEL 441
+      _server->sendNumeric(fd, 441, "", std::vector<std::string>(), username + " " + _channelname +" :They aren't on that channel");
     }
     else 
     {
-      _server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
+      //ERR_CHANOPRIVSNEEDED 482
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
     }
   }
   

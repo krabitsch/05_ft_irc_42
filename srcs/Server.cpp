@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/04 11:00:50 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/12 15:04:24 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,7 +312,10 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	if (c == "QUIT")
 	{
 		DBG({std::cout << "Handling QUIT command" << std::endl; });
-		quit(fd);
+		if (cmd.parameters.empty())
+			quit("", fd);
+		else
+			quit(cmd.parameters[0], fd);
 		return ;
 	}
 	
@@ -336,7 +339,16 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 
 	// from here on, only registered clients:
 	if (c == "JOIN")
-	{
+	{	
+		//Topic Numeric Replies
+		/*Numeric Replies:
+
+       	ERR_NEEDMOREPARAMS              ERR_BANNEDFROMCHAN
+        ERR_INVITEONLYCHAN              ERR_BADCHANNELKEY
+        ERR_CHANNELISFULL               ERR_BADCHANMASK
+        ERR_NOSUCHCHANNEL               ERR_TOOMANYCHANNELS
+        RPL_TOPIC*/
+		
 		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
 			if (cmd.parameters.size() == 2)
@@ -344,6 +356,12 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			else
 				join(fd, cmd.parameters[0], "");
 			std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
+		}
+		else 
+		{
+			// 461 ERR_NEEDMOREPARAMS
+			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "JOIN"),
+						"Not enough parameters");
 		}
 		return;
 	}
@@ -414,32 +432,85 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "TOPIC")
 	{
+		//Topic Numeric Replies
+		/*Numeric Replies:
+
+       	ERR_NEEDMOREPARAMS              ERR_NOTONCHANNEL
+        RPL_NOTOPIC                     RPL_TOPIC
+        ERR_CHANOPRIVSNEEDEDL*/
+		//Extra: Look into if topic is done correctly
+		
 		if (!cmd.parameters.empty())
+		{
 			topic(cmd.parameters[0], fd);
+		}
 		else
 		 	topic("", fd);
 		return;
 	}
-	if (c == "KICK") //Needs to be tested so far hasnt kick the user
+	if (c == "KICK")
 	{
+		//Kick Numeric Replies //AL: Added all of them other then ERR_BADCHANMASK, unsure what that really is
+		/*Numeric Replies:
+
+        ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
+        ERR_BADCHANMASK                 ERR_CHANOPRIVSNEEDED
+    	ERR_NOTONCHANNEL*/
+		
 		if (!cmd.parameters.empty())
 		{
+			if (cmd.parameters.size() < 2)
+			{
+				//ERR_NEEDMOREPARAMS 461
+				this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+				return ;
+			}
 			Channel *channel = findChannel(cmd.parameters[0]);
 			if (channel)
-				channel->kick(cmd.parameters[1], fd);
+			{
+				if (cmd.parameters.size() == 2)
+					channel->kick(cmd.parameters[1], "", fd); //If no comments are included
+				else if (cmd.parameters.size() == 3)
+					channel->kick(cmd.parameters[1], cmd.parameters[2], fd); //if comments are included
+			}
 			else
+			{
+				//ERR_NOSUCHCHANNEL
 				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			}
+			return;
 		}
-		return;
+		else 
+		{
+			//ERR_NEEDMOREPARAMS 461
+			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+			return ;
+		}
 	}
 	if (c == "MODE")
 	{
+		//Mode Numeric Replies
+		/*Numeric Replies:
+
+       
+        ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
+        ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK //Dont think we need this one
+        ERR_NOTONCHANNEL                ERR_KEYSET
+        RPL_BANLIST                     RPL_ENDOFBANLIST //I dont think we need  since we dont have a ban list 
+        ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
+
+        ERR_USERSDONTMATCH              RPL_UMODEIS
+        ERR_UMODEUNKNOWNFLAG*/
+		
 		//sets modes for channels and users, modes need to be tested
 		if (!cmd.parameters.empty())
 		{
 			Channel* channel = findChannel(cmd.parameters[0]);
 			if (channel == NULL)
+			{
+				//ERR_NOSUCHCHANNEL 403
 				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			}
 			else
 			{
 				if (cmd.parameters.size() == 2)
@@ -449,22 +520,42 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			}
 			return ;
 		}
+		else 
+		{
+			//ERR_NEEDMOREPARAMS 461
+			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+			return ;
+		}
 	}
 	if (c == "INVITE") //Needs to be tested
 	{
+		//Invite Numeric Replies
+		/*Numeric Replies:
+
+       
+        ERR_NEEDMOREPARAMS              ERR_NOSUCHNICK
+        ERR_NOTONCHANNEL                ERR_USERONCHANNEL
+        ERR_CHANOPRIVSNEEDED
+        RPL_INVITING                    RPL_AWAY*/
+		
 		if (cmd.parameters.empty())
+		{
+			//ERR_NEEDMOREPARAMS
+			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
 			return ;
-		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		}
+		Channel* channel = findChannel(cmd.parameters[0]); //Check if they create a new channel if one doesnt exist
 		if (channel == NULL)
 		{
+			//ERR_NOSUCHCHANNEL 403
 			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
 			return ;
 		}
-		channel->invite(cmd.parameters[0], fd);
+		channel->invite(cmd.parameters[1], fd);
 		return ;
 	}
 	
-	//Special Debugging Commands
+	//Special Debugging Commands these are custom commands so they dont follow the IRC protocol
 	if (c == "OP") //Al: The error handling hasnt been implemented for this function 
 	{	
 		if (cmd.parameters.empty())
@@ -503,17 +594,22 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 				}
 			}
 		}
+		else if (cmd.parameters[0] == "server")
+		{
+			std::cout << "Amount of channels on server: " << this->_channels.size() << std::endl;
+			std::cout << "Amount of clients on server: " << this->_clients.size() << std::endl;
+		}
 		else
 		{	//prints out all members of a channel
 			Channel* channel = findChannel(cmd.parameters[0]);
 			std::cout << channel->getMembersize() << std::endl;
+			channel->printMembers();
 		}
 		return ;
 	}
 
 	// unknown/other commands: handle by sending 421 numeric (unknown commands)
-	this->sendNumeric(fd, 421, client->getNickname(), std::vector<std::string>(1, c),
-				"Unknown command");
+	this->sendNumeric(fd, 421, client->getNickname(), std::vector<std::string>(1, c), "Unknown command");
 }
 
 
@@ -536,7 +632,6 @@ void	Server::clearClients(int fd)
 			break ;
 		}
 	}
-
 }
 
 void	Server::closeFds()
@@ -582,7 +677,8 @@ Client* Server::findClient(const int fd, std::string username)
   	return (NULL);
 }
 
-Client* Server::findClient(const int fd) {
+Client* Server::findClient(const int fd) 
+{
 	int i = 0;
 	while (i <this->_clients.size())
 	{
@@ -592,8 +688,6 @@ Client* Server::findClient(const int fd) {
 	}
   	return (NULL);
 }
-
-
 
 // ****************************************************************
 // constructing message the server sends in the right format
