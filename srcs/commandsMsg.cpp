@@ -27,7 +27,7 @@
     this->sendMessage(client->getFd(), "", "PRIVMSG", std::vector<std::string>(1, username), msg);
 
     //Old Message
-		/*ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
+		ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
 		if (sent == -1) 
 		{
 		  std::cerr << "send() error on fd " << client->getFd() << ": " << std::strerror(errno) << std::endl;

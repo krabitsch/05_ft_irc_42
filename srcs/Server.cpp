@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/09 15:41:45 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/12 13:37:30 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -448,9 +448,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		 	topic("", fd);
 		return;
 	}
-	if (c == "KICK") //Needs to be tested so far hasnt kick the user
+	if (c == "KICK")
 	{
-		//Kick Numeric Replies
+		//Kick Numeric Replies //AL: Added all of them other then ERR_BADCHANMASK, unsure what that really is
 		/*Numeric Replies:
 
         ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
@@ -461,7 +461,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		{
 			if (cmd.parameters.size() < 2)
 			{
-				//ERR_NEEDMOREPARAMS
+				//ERR_NEEDMOREPARAMS 461
 				this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
 				return ;
 			}
@@ -474,10 +474,18 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 					channel->kick(cmd.parameters[1], cmd.parameters[2], fd); //if comments are included
 			}
 			else
+			{
 				//ERR_NOSUCHCHANNEL
 				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			}
+			return;
 		}
-		return;
+		else 
+		{
+			//ERR_NEEDMOREPARAMS 461
+			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+			return ;
+		}
 	}
 	if (c == "MODE")
 	{
@@ -486,9 +494,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 
        
         ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
-        ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
+        ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK //Dont think we need this one
         ERR_NOTONCHANNEL                ERR_KEYSET
-        RPL_BANLIST                     RPL_ENDOFBANLIST
+        RPL_BANLIST                     RPL_ENDOFBANLIST //I dont think we need  since we dont have a ban list 
         ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
 
         ERR_USERSDONTMATCH              RPL_UMODEIS
@@ -499,7 +507,10 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		{
 			Channel* channel = findChannel(cmd.parameters[0]);
 			if (channel == NULL)
+			{
+				//ERR_NOSUCHCHANNEL 403
 				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			}
 			else
 			{
 				if (cmd.parameters.size() == 2)
@@ -507,6 +518,12 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 				else if (cmd.parameters.size() == 3)
 					channel->mode(fd, cmd.parameters[1], cmd.parameters[2]);
 			}
+			return ;
+		}
+		else 
+		{
+			//ERR_NEEDMOREPARAMS 461
+			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
 			return ;
 		}
 	}
@@ -527,9 +544,10 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
 			return ;
 		}
-		Channel* channel = findChannel(cmd.parameters[0]);
+		Channel* channel = findChannel(cmd.parameters[0]); //Check if they create a new channel if one doesnt exist
 		if (channel == NULL)
 		{
+			//ERR_NOSUCHCHANNEL 403
 			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
 			return ;
 		}
@@ -585,8 +603,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 
 	// unknown/other commands: handle by sending 421 numeric (unknown commands)
-	this->sendNumeric(fd, 421, client->getNickname(), std::vector<std::string>(1, c),
-				"Unknown command");
+	this->sendNumeric(fd, 421, client->getNickname(), std::vector<std::string>(1, c), "Unknown command");
 }
 
 
@@ -609,7 +626,6 @@ void	Server::clearClients(int fd)
 			break ;
 		}
 	}
-
 }
 
 void	Server::closeFds()
