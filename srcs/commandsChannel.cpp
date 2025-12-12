@@ -12,7 +12,7 @@
     {
       Channel _newchannel(this, fd,channelname); //creates the channel
       _channels.push_back(_newchannel);
-      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), " :No such nick/channel");
+      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel"); //fix this!
     }
     else 
     {
@@ -53,6 +53,7 @@
       //If no errors were found add the user, display message, if its a new channel add it to there list
       _client->setCurrentChannel(channelname);
       this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel"); 
+      
       if (!checker) //Adds the channel to the client list
         _channel->AddMember(_client);
     }

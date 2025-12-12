@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/12 13:37:30 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/12 15:04:24 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -594,10 +594,16 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 				}
 			}
 		}
+		else if (cmd.parameters[0] == "server")
+		{
+			std::cout << "Amount of channels on server: " << this->_channels.size() << std::endl;
+			std::cout << "Amount of clients on server: " << this->_clients.size() << std::endl;
+		}
 		else
 		{	//prints out all members of a channel
 			Channel* channel = findChannel(cmd.parameters[0]);
 			std::cout << channel->getMembersize() << std::endl;
+			channel->printMembers();
 		}
 		return ;
 	}

@@ -37,6 +37,7 @@ class Channel
 	std::string	getPassword(void) const;
 	bool isMember(Client* client);
 	std::vector<Client *>* getMembers(void);
+	void printMembers(void);
 
 	//Operator Commands
 	bool IsOperator(int fd);

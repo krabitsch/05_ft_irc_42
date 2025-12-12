@@ -106,9 +106,9 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
         if (!recipient)
         {
             // ERR_NOSUCHNICK
-			this->sendNumeric(senderFd, 401, this->findClient(senderFd)->getNickname() , std::vector<std::string>(1, target),
+			    this->sendNumeric(senderFd, 401, this->findClient(senderFd)->getNickname() , std::vector<std::string>(1, target),
 					"No such nick/channel");
-			return ;
+			    return ;
         }
 
         // Build sender prefix: nick!user@host
