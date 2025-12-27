@@ -52,7 +52,7 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
 	if (target.empty())
 	{
 		//411 ERR_NORECIPIENT
-		sendNumeric(senderFd, 411, this->findClient(senderFd)->getNickname(), std::vector<std::string>(),
+		sendNumeric(senderFd, 411, this->findClientByFd(senderFd)->getNickname(), std::vector<std::string>(),
 				"No recipient given (PRIVMSG)");
 		return;
 	}
@@ -65,7 +65,7 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
         if (!chan)
         {
             // 403 ERR_NOSUCHCHANNEL
-			this->sendNumeric(senderFd, 403, this->findClient(senderFd)->getNickname() , std::vector<std::string>(1, target),
+			this->sendNumeric(senderFd, 403, this->findClientByFd(senderFd)->getNickname() , std::vector<std::string>(1, target),
 					"No such channel");
 			return ;
         }
@@ -73,7 +73,7 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
         if (!chan->isMember(sender))
         {
             // 442 ERR_NOTONCHANNEL
-			this->sendNumeric(senderFd, 442, this->findClient(senderFd)->getNickname() , std::vector<std::string>(1, target),
+			this->sendNumeric(senderFd, 442, this->findClientByFd(senderFd)->getNickname() , std::vector<std::string>(1, target),
 					"You are not on channel");
 			return ;
         }
@@ -106,7 +106,7 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
         if (!recipient)
         {
             // ERR_NOSUCHNICK
-			    this->sendNumeric(senderFd, 401, this->findClient(senderFd)->getNickname() , std::vector<std::string>(1, target),
+			    this->sendNumeric(senderFd, 401, this->findClientByFd(senderFd)->getNickname() , std::vector<std::string>(1, target),
 					"No such nick/channel");
 			    return ;
         }

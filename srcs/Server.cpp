@@ -36,11 +36,7 @@ Server::Server(): _port(-1),
 Server::Server(int port, std::string password): _port(port),
 												_password(password),
 												_fdServer(-1),
-												_serverName("ircAlPeKa@42")
-{
-	// KR: I really don't understand why we need this: instances of Server class have access via this pointer anyway, outside the class no access to that?!
-	//server.setServerAdd(&server); //Sets the server class inside to itself 
-}
+												_serverName("ircAlPeKa@42") {}
 
 Server::Server(Server const& other): _port(other._port), 
 									 _password(other._password),
@@ -55,9 +51,10 @@ Server&	Server::operator=(Server const& other)
 {
 	if (this != &other)
 	{
-		this->_port		 = other._port;
-		this->_password	 = other._password;
-		this->_fdServer  = other._fdServer;
+		this->_port		   = other._port;
+		this->_password	   = other._password;
+		this->_fdServer    = other._fdServer;
+        this->_serverName  = other._serverName;
 	}
 	return (*this);
 }
@@ -116,7 +113,7 @@ void Server::createSocketBindListen()
 
 	// fill in server information
 	struct sockaddr_in		addrServer;
-	struct pollfd			NewPoll;
+	struct pollfd			newPoll;
 	addrServer.sin_family		= AF_INET;		 		// sets address family to ipv4
 	addrServer.sin_port			= htons(this->_port);	// converts the port (host shorts) to network byte order (network shorts, in big endian)
 	addrServer.sin_addr.s_addr	= INADDR_ANY;			// sets address to any local machine address
@@ -131,10 +128,10 @@ void Server::createSocketBindListen()
 		throw(std::runtime_error("Can't listen"));
 
 	// add server related info for poll() function to vector of pollfd, _fds:
-	NewPoll.fd	  	= this->_fdServer;	// adds server socket to the pollfd
-	NewPoll.events  = POLLIN;			// sets event to POLLIN for reading data
-	NewPoll.revents = 0;				// sets revents to 0
-	this->_fds.push_back(NewPoll);		// adds server socket to the pollfd
+	newPoll.fd	  	= this->_fdServer;	// adds server socket to the pollfd
+	newPoll.events  = POLLIN;			// sets event to POLLIN for reading data
+	newPoll.revents = 0;				// sets revents to 0
+	this->_fds.push_back(newPoll);		// adds server socket to the pollfd
 
 }
 
@@ -143,7 +140,7 @@ void Server::acceptClient()	// accepts new client
 	Client 				client;
 	struct sockaddr_in	addrClient;
 	socklen_t			sizeClient = sizeof(addrClient);
-	struct pollfd		NewPoll;
+	struct pollfd		newPoll;
 
 	int incomingClientFd = accept(this->_fdServer, (sockaddr *)&(addrClient), &sizeClient); // accepts new client
 	if (incomingClientFd == -1)
@@ -161,9 +158,9 @@ void Server::acceptClient()	// accepts new client
 	}
 
 	// fill in client information
-	NewPoll.fd	  	= incomingClientFd;	// adds client socket to the pollfd
-	NewPoll.events  = POLLIN;			// sets event to POLLIN for reading data
-	NewPoll.revents = 0;				// sets the revents to 0
+	newPoll.fd	  	= incomingClientFd;	// adds client socket to the pollfd
+	newPoll.events  = POLLIN;			// sets event to POLLIN for reading data
+	newPoll.revents = 0;				// sets the revents to 0
 
 	char host[NI_MAXHOST];
 	char serv[NI_MAXSERV];
@@ -173,7 +170,7 @@ void Server::acceptClient()	// accepts new client
 	client.setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));// converts ip address to string and sets it
 	client.setServer(this);
 	this->_clients.push_back(client);												// adds client to the vector of clients
-	this->_fds.push_back(NewPoll);													// adds client socket to the pollfd
+	this->_fds.push_back(newPoll);													// adds client socket to the pollfd
 
 	sendNotice(incomingClientFd, "AUTH", "*** Looking up your hostname...");
 	int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, NI_NAMEREQD); // require a hostname
@@ -227,7 +224,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	buff[bytes] = '\0';
 	
 	// find client associated with this fd and append (valid) bytes to client's buffer
-	Client*			client 		 = findClient(fd, "");
+	Client*			client 		 = findClientByFd(fd);
 	std::string&	resultBuffer = client->getBuffer();
 	resultBuffer.append(buff, bytes);
 	static const size_t IRC_MAX_MSG = 512;
@@ -256,7 +253,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 
 		IrcCommand command = parseMessage(message);
 		DBG({command.print(); });
-		this->broadcastMessage(fd, message + "\r\n");
+		//this->broadcastMessage(fd, message + "\r\n");
 		this->handleMessage(fd, command);
 		//if (sent == -1)
 		//	std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
@@ -284,7 +281,7 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 void Server::handleMessage(int fd, const IrcCommand &cmd)
 {
 	std::string c = cmd.command;
-	Client*		client = findClient(fd, "");
+	Client*		client = findClientByFd(fd);
 	if (!client)
 		return ;
 
@@ -313,9 +310,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{
 		DBG({std::cout << "Handling QUIT command" << std::endl; });
 		if (cmd.parameters.empty())
-			quit("", fd);
+			quitCommand("", fd);
 		else
-			quit(cmd.parameters[0], fd);
+			quitCommand(cmd.parameters[0], fd);
 		return ;
 	}
 	
@@ -408,13 +405,13 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
 		{
 			//411 ERR_NORECIPIENT
-			sendNumeric(fd, 411, this->findClient(fd)->getNickname(), std::vector<std::string>(),
+			sendNumeric(fd, 411, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
 					"No recipient given (PRIVMSG)");
 		}
 		else if (cmd.parameters.size() == 1)
 		{
 			//412 ERR_NOTEXTTOSEND
-			sendNumeric(fd, 412, this->findClient(fd)->getNickname(), std::vector<std::string>(),
+			sendNumeric(fd, 412, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
 				":No text to send");
 			return;
 		}
@@ -560,7 +557,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{	
 		if (cmd.parameters.empty())
 			return ;
-		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		Channel* channel = findChannel(findClientByFd(fd)->getCurrentChannel());
 		if (channel == NULL)
 		{
 			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
@@ -580,7 +577,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{
 		if (cmd.parameters.empty())
 		{	//prints out all user channels
-			Client *client = findClient(fd, "");
+			Client *client = findClientByFd(fd);
 			std::map<std::string, char> *userchannels = client->GetChannel();
 			if (userchannels != NULL)
 			{
@@ -677,7 +674,7 @@ Client* Server::findClient(const int fd, std::string username)
   	return (NULL);
 }
 
-Client* Server::findClient(const int fd) 
+Client* Server::findClientByFd(const int fd) 
 {
 	int i = 0;
 	while (i <this->_clients.size())

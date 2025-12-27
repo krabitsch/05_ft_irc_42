@@ -12,7 +12,8 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 		return ;
 	}
 
-	if (cmd.parameters.empty()) {
+	if (cmd.parameters.empty())
+    {
 		// 461 ERR_NEEDMOREPARAMS
 		this->sendNumeric(client.getFd(), 461, "*", std::vector<std::string>(1, "PASS"),
 					"Not enough parameters");  // libera gives this
@@ -87,11 +88,11 @@ void	Server::userCommand(Client &client, const IrcCommand &cmd)
 //Quit 
 //Exits the server 
 
-void Server::quit(std::string message, int fd)
+void Server::quitCommand(std::string message, int fd)
 {
 	//Just need to add the custom message feature! - Al
 	
-	Client *client = findClient(fd, ""); //Finds the client
+	Client *client = findClientByFd(fd); //Finds the client
 	if (client == NULL)
 		return ;
 	this->clearClients(fd); //Clears the client from the server
