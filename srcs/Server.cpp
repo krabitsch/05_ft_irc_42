@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/12 15:04:24 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/28 17:28:14 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,8 +105,8 @@ void Server::createSocketBindListen()
 		throw(std::runtime_error("Can't create socket for Server!"));
 
 	// Set socket options as needed: socket option SO_REUSEADDR to reuse the address, socket option O_NONBLOCK for non-blocking socket
-	int en = 1;
-	if(setsockopt(this->_fdServer, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) 
+	int enable = 1;
+	if(setsockopt(this->_fdServer, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) == -1) 
 		throw(std::runtime_error("failed to set option (SO_REUSEADDR) on socket"));
 	if (fcntl(this->_fdServer, F_SETFL, O_NONBLOCK) == -1)
 		throw(std::runtime_error("failed to set option (O_NONBLOCK) on socket"));
@@ -227,38 +227,39 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	Client*			client 		 = findClientByFd(fd);
 	std::string&	resultBuffer = client->getBuffer();
 	resultBuffer.append(buff, bytes);
-	static const size_t IRC_MAX_MSG = 512;
-	if (resultBuffer.size() > IRC_MAX_MSG) // strict RFC enforcement, drop client if msg too long
-	{
-		std::cerr << "Client (fd = " << fd << ") sent too long message (>512 bytes), closing connection" << std::endl;
-		clearClients(fd);
-		close(fd);
-		return ;
-	}
-
-	//std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << result << WHITE;
-			
+	static const size_t IRC_MAX_LINE = 512; // 512 includes CRLF.
 	// extract complete messages (delimited by "\r\n"), parse and handle the command, etc...
-	size_t pos;
-	while ((pos = resultBuffer.find("\r\n")) != std::string::npos)
+	while (true)
 	{
-   		std::string message = resultBuffer.substr(0, pos);
-		resultBuffer.erase(0, pos + 2); // +2 to remove the \r\n
-
-   		//std::cout << "Received complete message: [" << message << "]\n";
-
-		//const char* replyMsg = "Received client msg...\n";
-		//ssize_t sent = send(fd, replyMsg, std::strlen(replyMsg), 0);
-		//ssize_t sent = send(fd, message.c_str(), message.size(), 0);
+		size_t posEOL = resultBuffer.find("\r\n");
+		if (posEOL == std::string::npos)
+		{
+			// no full line yet (no \r\n); avoid unbounded growth by dropping potentially malicious clients if msg too long ( strict RFC enforcement)
+			if (resultBuffer.size() > IRC_MAX_LINE)
+			{
+				sendNumeric(fd, 417, "*", std::vector<std::string>(), "Input line too long"); // 417 = too long line
+				clearClients(fd);
+				close(fd);
+			}
+			break ;
+		}
+		// have a complete line (0 to eol)
+		if (posEOL > IRC_MAX_LINE) // ... but line is too long
+		{
+			sendNumeric(fd, 417, "*", std::vector<std::string>(), "Input line too long");
+			clearClients(fd);
+			close(fd);
+			return ;
+		}
+		// have a complete line (0 to eol) within 512 line limit
+		std::string message = resultBuffer.substr(0, posEOL);
+		resultBuffer.erase(0, posEOL + 2);
 
 		IrcCommand command = parseMessage(message);
 		DBG({command.print(); });
-		//this->broadcastMessage(fd, message + "\r\n");
 		this->handleMessage(fd, command);
-		//if (sent == -1)
-		//	std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
+		//this->broadcastMessage(fd, message + "\r\n");
 	}
-
 }
 
 
@@ -417,7 +418,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		}
 		else
 		{
-			for (int i = 0; i < cmd.parameters.size() - 1; i++)
+			for (size_t i = 0; i < cmd.parameters.size() - 1; i++)
 			{
 				std::string target = cmd.parameters[i];
 				std::string msg = cmd.parameters[cmd.parameters.size() - 1];
@@ -647,7 +648,7 @@ void	Server::closeFds()
 
 //Finder Functions 
 
-Channel* Server::findChannel(const std::string &name)
+Channel*	Server::findChannel(const std::string &name)
 {
   size_t i = 0;
   while (i < _channels.size())
@@ -660,10 +661,10 @@ Channel* Server::findChannel(const std::string &name)
 
 }
 
-Client* Server::findClient(const int fd, std::string username)
+Client*		Server::findClientByNickOrUser(const int fd, std::string username)
 {
-	int i = 0;
-	while (i <this->_clients.size())
+	size_t i = 0;
+	while (i < this->_clients.size())
 	{
 		if (this->_clients[i].getUsername() == username || this->_clients[i].getNickname() == username)
 			return (&this->_clients[i]);
@@ -674,10 +675,10 @@ Client* Server::findClient(const int fd, std::string username)
   	return (NULL);
 }
 
-Client* Server::findClientByFd(const int fd) 
+Client*		Server::findClientByFd(const int fd) 
 {
-	int i = 0;
-	while (i <this->_clients.size())
+	size_t i = 0;
+	while (i < this->_clients.size())
 	{
 		if (fd > 1 && this->_clients[i].getFd() == fd)
 			return (&this->_clients[i]);
@@ -775,7 +776,7 @@ void Server::tryRegisterClient(Client &client)
 	if (!client.hasUser())
 		return ;
 
-	// All conditions met -> mark as registered and send welcome
+	// client not yet registered and all conditions met -> set as registered and send welcome
 	client.setRegistered(true);
 	this->sendWelcome(client);
 }

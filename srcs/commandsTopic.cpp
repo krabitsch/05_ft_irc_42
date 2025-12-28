@@ -10,7 +10,7 @@ void Server::topic(std::string channelname, int clientfd)
   //Changing Channel 
   //Note: that this should only be executed when the TOPIC command has an additional prameter 
   //Check if the channel exists 
-  Client *user = findClient(clientfd, ""); 
+  Client *user = findClientByFd(clientfd); 
 
   if (channelname.empty())
   {

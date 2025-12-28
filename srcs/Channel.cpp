@@ -2,9 +2,9 @@
 #include <iostream>
 
 //Constructor 
-Channel::Channel(Server *server, int fd, std::string name): _channelname(name), _server(server) 
+Channel::Channel(Server *server, int fd, std::string name): _server(server), _channelname(name)
 {
-	Client *client = _server->findClient(fd, "");
+	Client *client = _server->findClientByFd(fd);
 	client->AddChannel(name, 'o');
 	AddMember(client);
 	client->setCurrentChannel(name);
@@ -55,7 +55,7 @@ void Channel::channelTopic(std::string newtopic)
 	std::string oldtopic = _channelname;
     _channelname = newtopic; 
     
-    int i = 0;
+    size_t i = 0;
     while (i < _members.size())
     {
 		_members[i]->setCurrentChannel(newtopic);
@@ -73,7 +73,7 @@ void Channel::channelTopic(std::string newtopic)
 //Step 1: Get client and add it to the map
 void Channel::AddMember(Client* user)
 {
-	int i = 0;
+	size_t i = 0;
 	while (i < _members.size())
 	{
 		if (_members[i]->getNickname() == user->getNickname() || _members[i]->getUsername() == user->getUsername())
@@ -89,7 +89,7 @@ void Channel::AddMember(Client* user)
 //Step 2: Remove client from vector
 void Channel::RemoveMember(std::string username)
 {
-	int i = 0;
+	size_t i = 0;
 	while (i < _members.size())
 	{
 		if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
@@ -142,7 +142,7 @@ bool Channel::IsOperator(int fd) //Checks if the user is an operator or not
 {
 	if (_operatorPriv == true)
 	{
-		int i = 0;
+		size_t i = 0;
 		while (i <  _operators.size())
 		{
 			if (fd == _operators[i])
@@ -160,7 +160,7 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 	//If the user is an operator
 	if (_operatorPriv == true)
 	{
-		int i = 0;
+		size_t i = 0;
 		while (i < _members.size()) //Note: Maybe put this into its own sperate function
 		{
 			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
@@ -198,7 +198,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 	if (IsOperator(fd) == true) //Checks if the user is an operator themselves 
 	{
 		//Unset the operator 
-		int i = 0;
+		size_t i = 0;
 		while (i < _members.size())
 		{
 			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
@@ -212,7 +212,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 
 					//Creates the new list of operators without the unset member
 					std::vector<int> newoperators;
-					int k = 0;
+					size_t k = 0;
 					while (k < _operators.size())
 					{
 						if (_operators[i] != clientfd)

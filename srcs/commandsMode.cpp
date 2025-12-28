@@ -138,7 +138,7 @@
       }
 
       //Gets the client information from the server
-      Client *client = _server->findClient(-1, username);
+      Client *client = _server->findClientByNickOrUser(-1, username);
       if (client == NULL)
       {
         //ERR_NOSUCHNIC //need to add the number code and sentance

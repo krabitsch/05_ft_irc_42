@@ -16,7 +16,7 @@
   /*void Server::privateMsg(std::string username, std::string msg)
   {
     std::cout << "Executing PRIVMSG to " << username << " with message: " << msg << std::endl;
-    Client *client = findClient(-1, username);
+    Client *client = findClientByNickOrUser(-1, username);
     if (client == NULL)
     {
       this->sendNumeric(-1, 401, username, std::vector<std::string>(), "No such nick/channel");
@@ -45,7 +45,7 @@ std::string Server::makePrivmsg(const std::string &prefix, const std::string &ta
 void Server::privateMsg(int senderFd, std::string target, std::string msg)
 {
     // Find sender client
-    Client *sender = findClient(senderFd, "");
+    Client *sender = findClientByFd(senderFd);
     if (!sender)
         return;
 
@@ -102,7 +102,7 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
     else
     {
         // Private PRIVMSG to a nick
-        Client *recipient = findClient(-1, target);
+        Client *recipient = findClientByNickOrUser(-1, target);
         if (!recipient)
         {
             // ERR_NOSUCHNICK
