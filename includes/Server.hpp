@@ -75,7 +75,7 @@ class Server
 	void		nickCommand(Client &client, const IrcCommand &cmd);
 	void		userCommand(Client &client, const IrcCommand &cmd);
 	void		quitCommand(std::string message, int fd);
-	void		join(int fd, std::string channelname, std::string pass);	 //Creates or joins a channel that exists
+	void		join(int fd, std::string channelname, std::string pass); //Creates or joins a channel that exists
 	void		part(int fd);
 	void		privateMsg(int senderFd, std::string target, std::string msg);
 	std::string makePrivmsg(const std::string &prefix, const std::string &target, const std::string &msg);
@@ -85,8 +85,10 @@ class Server
 	void		broadcastMessage(int from_fd, const std::string& msg); // probably don't need this general broadcastMessage (currently unused)
 	void		broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd);
 
+	// NICK helpers:
+	void		broadcastNickChange(Client& client, const std::string& oldNick, const std::string& newNick);
 
-	// 
+
 	void		sendWelcome(Client &client);
 	void		tryRegisterClient(Client &client);
 

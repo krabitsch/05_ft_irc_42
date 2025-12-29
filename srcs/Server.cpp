@@ -53,8 +53,8 @@ Server&	Server::operator=(Server const& other)
 	{
 		this->_port		   = other._port;
 		this->_password	   = other._password;
-		this->_fdServer    = other._fdServer;
-        this->_serverName  = other._serverName;
+		this->_fdServer	   = other._fdServer;
+		this->_serverName  = other._serverName;
 	}
 	return (*this);
 }
@@ -185,15 +185,15 @@ void Server::acceptClient()	// accepts new client
 	sendNotice(incomingClientFd, "AUTH", "*** Checking Ident"); // send fake msgs re Ident (has nothing to do with IRC authentification)
 	sendNotice(incomingClientFd, "AUTH", "*** No Ident response");
 
-	DBG({std::cout << GREEN << "Client (fd = " << incomingClientFd << ") Connected" << WHITE << std::endl;
-		int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, 0);
-		if (result == 0)
-		{
-			std::cout << host << " (Client (fd = " << incomingClientFd << "))"
-					  << " connected FROM port " << ntohs(addrClient.sin_port)
-					  << " TO server port " << _port
-				  	<< std::endl;
-		} });
+	std::cout << GREEN << "Client (fd = " << incomingClientFd << ") Connected" << WHITE << std::endl;
+	//int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, 0);
+	if (result == 0)
+	{
+		std::cout << host << " (Client (fd = " << incomingClientFd << "))"
+				  << " connected FROM port " << ntohs(addrClient.sin_port)
+				  << " TO server port " << _port
+			  	<< std::endl;
+	}
 
 }
 
@@ -262,7 +262,6 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	}
 }
 
-
 void Server::broadcastMessage(int from_fd, const std::string& msg) 
 {
 	for (size_t i = 0; i < _clients.size(); ++i) 
@@ -276,6 +275,31 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 				std::cerr << "send() error on fd " << client_fd << ": " << std::strerror(errno) << std::endl;
 			}
 		}
+	}
+}
+
+void Server::broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd)
+{
+	Channel* channel = findChannel(channelName);
+	if (!channel)
+		return ;
+
+	std::vector<Client*>* members = channel->getMembers();
+	if (!members)
+		return ;
+
+	for (size_t i = 0; i < members->size(); i++)
+	{
+        std::cout << members->size() << std::endl;
+		Client* m = (*members)[i];
+		if (!m)
+			continue ;
+
+		int toFd = m->getFd();
+		if (exceptFd != -1 && toFd == exceptFd) 
+			continue ;
+
+		sendConstructedMsg(toFd, msg); // msg ends with \r\n
 	}
 }
 
@@ -318,12 +342,12 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	
 	DBG({
-    std::cout << YELLOW << "[REG CHECK] Cliend (fd = " << fd << ")"
-              << " PASS=" << (client->hasPass() ? "true" : "false")
-              << " NICK=" << (client->hasNick() ? "true" : "false")
-              << " USER=" << (client->hasUser() ? "true" : "false")
-              << " REGISTERED=" << (client->isRegistered() ? "true" : "false")
-              << WHITE << std::endl; });
+	std::cout << YELLOW << "[REG CHECK] Cliend (fd = " << fd << ")"
+			  << " PASS=" << (client->hasPass() ? "true" : "false")
+			  << " NICK=" << (client->hasNick() ? "true" : "false")
+			  << " USER=" << (client->hasUser() ? "true" : "false")
+			  << " REGISTERED=" << (client->isRegistered() ? "true" : "false")
+			  << WHITE << std::endl; });
 
 	
 	// check if client is registered 
@@ -332,7 +356,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		// 451 ERR_NOTREGISTERED
 		sendNumeric(fd, 451, "*", std::vector<std::string>(),
 					"You have not registered");
-		return;
+		return ;
 	}
 
 	// from here on, only registered clients:
@@ -341,11 +365,11 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Topic Numeric Replies
 		/*Numeric Replies:
 
-       	ERR_NEEDMOREPARAMS              ERR_BANNEDFROMCHAN
-        ERR_INVITEONLYCHAN              ERR_BADCHANNELKEY
-        ERR_CHANNELISFULL               ERR_BADCHANMASK
-        ERR_NOSUCHCHANNEL               ERR_TOOMANYCHANNELS
-        RPL_TOPIC*/
+	   	ERR_NEEDMOREPARAMS			ERR_BANNEDFROMCHAN
+		ERR_INVITEONLYCHAN			ERR_BADCHANNELKEY
+		ERR_CHANNELISFULL			ERR_BADCHANMASK
+		ERR_NOSUCHCHANNEL			ERR_TOOMANYCHANNELS
+		RPL_TOPIC*/
 		
 		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
@@ -375,28 +399,28 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		*************************
 		Still need to implement:
 
-		404     ERR_CANNOTSENDTOCHAN
-                        "<channel name> :Cannot send to channel"
+		404	 ERR_CANNOTSENDTOCHAN
+						"<channel name> :Cannot send to channel"
 
-                - Sent to a user who is either (a) not on a channel
-                  which is mode +n or (b) not a chanop (or mode +v) on
-                  a channel which has mode +m set and is trying to send
-                  a PRIVMSG message to that channel.
+				- Sent to a user who is either (a) not on a channel
+				  which is mode +n or (b) not a chanop (or mode +v) on
+				  a channel which has mode +m set and is trying to send
+				  a PRIVMSG message to that channel.
 		
-		413     ERR_NOTOPLEVEL
-                        "<mask> :No toplevel domain specified"
+		413	 ERR_NOTOPLEVEL
+						"<mask> :No toplevel domain specified"
 		
-		414     ERR_WILDTOPLEVEL
-                        "<mask> :Wildcard in toplevel domain"
+		414	 ERR_WILDTOPLEVEL
+						"<mask> :Wildcard in toplevel domain"
 
-                - 412 - 414 are returned by PRIVMSG to indicate that
-                  the message wasn't delivered for some reason.
-                  ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that
-                  are returned when an invalid use of
-                  "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.
+				- 412 - 414 are returned by PRIVMSG to indicate that
+				  the message wasn't delivered for some reason.
+				  ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that
+				  are returned when an invalid use of
+				  "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.
 		
-		407     ERR_TOOMANYTARGETS
-                        "<target> :Duplicate recipients. No message \
+		407	 ERR_TOOMANYTARGETS
+						"<target> :Duplicate recipients. No message \
 
 		*************************
 		*/
@@ -433,9 +457,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Topic Numeric Replies
 		/*Numeric Replies:
 
-       	ERR_NEEDMOREPARAMS              ERR_NOTONCHANNEL
-        RPL_NOTOPIC                     RPL_TOPIC
-        ERR_CHANOPRIVSNEEDEDL*/
+	   	ERR_NEEDMOREPARAMS			ERR_NOTONCHANNEL
+		RPL_NOTOPIC					RPL_TOPIC
+		ERR_CHANOPRIVSNEEDEDL*/
 		//Extra: Look into if topic is done correctly
 		
 		if (!cmd.parameters.empty())
@@ -451,9 +475,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Kick Numeric Replies //AL: Added all of them other then ERR_BADCHANMASK, unsure what that really is
 		/*Numeric Replies:
 
-        ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
-        ERR_BADCHANMASK                 ERR_CHANOPRIVSNEEDED
-    	ERR_NOTONCHANNEL*/
+		ERR_NEEDMOREPARAMS			ERR_NOSUCHCHANNEL
+		ERR_BADCHANMASK				ERR_CHANOPRIVSNEEDED
+		ERR_NOTONCHANNEL*/
 		
 		if (!cmd.parameters.empty())
 		{
@@ -490,15 +514,15 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Mode Numeric Replies
 		/*Numeric Replies:
 
-       
-        ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
-        ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK //Dont think we need this one
-        ERR_NOTONCHANNEL                ERR_KEYSET
-        RPL_BANLIST                     RPL_ENDOFBANLIST //I dont think we need  since we dont have a ban list 
-        ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
+	   
+		ERR_NEEDMOREPARAMS				RPL_CHANNELMODEIS
+		ERR_CHANOPRIVSNEEDED			ERR_NOSUCHNICK //Dont think we need this one
+		ERR_NOTONCHANNEL				ERR_KEYSET
+		RPL_BANLIST						RPL_ENDOFBANLIST //I dont think we need  since we dont have a ban list 
+		ERR_UNKNOWNMODE					ERR_NOSUCHCHANNEL
 
-        ERR_USERSDONTMATCH              RPL_UMODEIS
-        ERR_UMODEUNKNOWNFLAG*/
+		ERR_USERSDONTMATCH				RPL_UMODEIS
+		ERR_UMODEUNKNOWNFLAG*/
 		
 		//sets modes for channels and users, modes need to be tested
 		if (!cmd.parameters.empty())
@@ -530,11 +554,11 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Invite Numeric Replies
 		/*Numeric Replies:
 
-       
-        ERR_NEEDMOREPARAMS              ERR_NOSUCHNICK
-        ERR_NOTONCHANNEL                ERR_USERONCHANNEL
-        ERR_CHANOPRIVSNEEDED
-        RPL_INVITING                    RPL_AWAY*/
+	   
+		ERR_NEEDMOREPARAMS				ERR_NOSUCHNICK
+		ERR_NOTONCHANNEL				ERR_USERONCHANNEL
+		ERR_CHANOPRIVSNEEDED
+		RPL_INVITING					RPL_AWAY*/
 		
 		if (cmd.parameters.empty())
 		{
@@ -586,7 +610,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 				for (std::map<std::string, char>::iterator it = userchannels->begin(); it != userchannels->end(); ++it)
 				{
 					std::string channelName = it->first;   // key (channel name)
-					char channelType = it->second;         // value (member 'm' or operator 'o')
+					char channelType = it->second;		 // value (member 'm' or operator 'o')
 					
 					std::cout << "Channel: " << channelName << " Type: " << channelType << std::endl;
 				}

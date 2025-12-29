@@ -8,55 +8,58 @@ void Server::join(int fd, std::string channelname, std::string pass)
 {
 	Channel *_channel = findChannel(channelname);
 
-    if (_channel == NULL)
-    {
-      Channel _newchannel(this, fd,channelname); //creates the channel
-      _channels.push_back(_newchannel);
-      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel"); //fix this!
-    }
-    else 
-    {
-    	Client *_client = findClientByFd(fd);
-    	if (_client == NULL)
-    	{
-    		//ERR_NOSUCHNICK
-        	this->sendNumeric(fd, 401, "", std::vector<std::string>(), "nick does not exist");
-        	return ;
-    	}
+	if (_channel == NULL)
+	{
+	  Channel _newchannel(this, fd,channelname); //creates the channel
+	  _channels.push_back(_newchannel);
+	  this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel"); //fix this!
+	}
+	else 
+	{
+		Client *_client = findClientByFd(fd);
+		if (_client == NULL)
+		{
+			//ERR_NOSUCHNICK
+			this->sendNumeric(fd, 401, "", std::vector<std::string>(), "nick does not exist");
+			return ;
+		}
 
-    	//Getting Clients Channel List
-    	std::map<std::string, char>*channelist = _client->GetChannel();
+		//Getting Clients Channel List
+		std::map<std::string, char>*channelist = _client->GetChannel();
 
-    	//Checks if the user has access to the channel already or not if not add it to there channellist
-    	bool checker = (channelist->find(channelname) != channelist->end());
+		//Checks if the user has access to the channel already or not if not add it to there channellist
+		bool checker = (channelist->find(channelname) != channelist->end());
 
-    	//Error Handling
-    	if (_channel->getInviteonly() == true && checker == false)
-    	{
-        	//ERR_INVITEONLYCHAN 473
-        	this->sendNumeric(fd, 473, "", std::vector<std::string>(), "Cannot join channel (+i)"); //You need an invite to join
-        	return ;
-    	}
-      	if (_channel->getUserlimit() == _channel->getMembersize())
-      	{
-        	//ERR_CHANNELISFULL 471
-        	this->sendNumeric(fd, 471, "", std::vector<std::string>(), "Cannot join channel (+l)"); //Channel is full
-        	return ;
-    	}
-    	if (!_channel->getPassword().empty() && _channel->getPassword() != pass)
-    	{
-        	//ERR_BADCHANNELKEY 476
-        	this->sendNumeric(fd, 476, "", std::vector<std::string>(), "Wrong channel key"); //Wrong password when joining 
-        	return ;
-    	}
+		//Error Handling
+		if (_channel->getInviteonly() == true && checker == false)
+		{
+			//ERR_INVITEONLYCHAN 473
+			this->sendNumeric(fd, 473, "", std::vector<std::string>(), "Cannot join channel (+i)"); //You need an invite to join
+			return ;
+		}
+	  	if (_channel->getUserlimit() == _channel->getMembersize())
+	  	{
+			//ERR_CHANNELISFULL 471
+			this->sendNumeric(fd, 471, "", std::vector<std::string>(), "Cannot join channel (+l)"); //Channel is full
+			return ;
+		}
+		if (!_channel->getPassword().empty() && _channel->getPassword() != pass)
+		{
+			//ERR_BADCHANNELKEY 476
+			this->sendNumeric(fd, 476, "", std::vector<std::string>(), "Wrong channel key"); //Wrong password when joining 
+			return ;
+		}
 
-    	//If no errors were found add the user, display message, if its a new channel add it to there list
-    	_client->setCurrentChannel(channelname);
-    	this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel"); 
+		//If no errors were found add the user, display message, if its a new channel add it to there list
+		_client->setCurrentChannel(channelname);
+		//this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel");
+		std::string joinMsg = ":" + _client->getNickname() + " JOIN :" + channelname + "\r\n";
+			broadcastToChannel(channelname, joinMsg, -1); // who joins is broadcasted to members of channel (including self)
 
-    	if (!checker) //Adds the channel to the client list
-    		_channel->AddMember(_client);
-    }
+
+		if (!checker) //Adds the channel to the client list
+			_channel->AddMember(_client);
+	}
 }
 
 //Part //We dont technically need this! decide whether or not we want to implement this feature!

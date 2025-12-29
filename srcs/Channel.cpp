@@ -21,14 +21,14 @@ Channel::~Channel() {};
 
 //Copy Contructor 
 Channel::Channel(const Channel &other): _server(other._server),
-    _channelname(other._channelname),
-    _members(other._members),
-    _operators(other._operators),
-    _operatorPriv(other._operatorPriv),
-    _inviteonly(other._inviteonly),
-    _topicPriv(other._topicPriv),
-    _password(other._password),
-    _userlimit(other._userlimit) {};
+	_channelname(other._channelname),
+	_members(other._members),
+	_operators(other._operators),
+	_operatorPriv(other._operatorPriv),
+	_inviteonly(other._inviteonly),
+	_topicPriv(other._topicPriv),
+	_password(other._password),
+	_userlimit(other._userlimit) {};
 
 //Copy Assign Operator
 Channel &Channel:: operator=(const Channel &other) 
@@ -53,19 +53,19 @@ Channel &Channel:: operator=(const Channel &other)
 void Channel::channelTopic(std::string newtopic)
 {
 	std::string oldtopic = _channelname;
-    _channelname = newtopic; 
-    
-    size_t i = 0;
-    while (i < _members.size())
-    {
+	_channelname = newtopic; 
+	
+	size_t i = 0;
+	while (i < _members.size())
+	{
 		_members[i]->setCurrentChannel(newtopic);
 		_members[i]->RemoveChannel(oldtopic); 
 		if (IsOperator(_members[i]->getFd()) == true)
 			_members[i]->AddChannel(_channelname, 'o');
 		else
 			_members[i]->AddChannel(_channelname, 'm');
-        i++;
-    }
+		i++;
+	}
 }
 
 
@@ -118,19 +118,19 @@ void Channel::RemoveMember(std::string username)
 
 bool Channel::isMember(Client* client)
 {
-    if (!client)
-        return false;
-    for (size_t i = 0; i < _members.size(); i++)
-    {
-        if (_members[i]->getFd() == client->getFd())
-            return true;
-    }
-    return false;
+	if (!client)
+		return false;
+	for (size_t i = 0; i < _members.size(); i++)
+	{
+		if (_members[i]->getFd() == client->getFd())
+			return true;
+	}
+	return false;
 }
 
 std::vector<Client *>* Channel::getMembers(void)
 {
-    return &_members;
+	return &_members;
 }
 
 //Set Operator Privilage
@@ -215,8 +215,8 @@ void Channel::UnsetOperator(std::string username, int fd)
 					size_t k = 0;
 					while (k < _operators.size())
 					{
-						if (_operators[i] != clientfd)
-							newoperators.push_back(_operators[i]);
+						if (_operators[k] != clientfd)
+							newoperators.push_back(_operators[k]);
 						k++;
 					}
 					_operators = newoperators;

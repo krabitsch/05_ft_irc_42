@@ -14,7 +14,7 @@
 
 #include "../includes/Server.hpp"
 
-// PASS: requires server password (./ircserv <port> <password>)
+// PASS COMMAND: requires server password (./ircserv <port> <password>)
 void	Server::passCommand(Client &client, const IrcCommand &cmd)
 {
 	if (client.isRegistered())
@@ -24,7 +24,7 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 		return ;
 	}
 	if (cmd.parameters.empty())
-    {
+	{
 		this->sendNumeric(client.getFd(), 461, "*", std::vector<std::string>(1, "PASS"),
 				"Not enough parameters");  // libera gives this: 461 ERR_NEEDMOREPARAMS
 		return ;
@@ -52,30 +52,45 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 	this->tryRegisterClient(client);
 }
 
-// NICK helper functions (static, file scope functions)
+// NICK COMMAND helper functions (static, file scope functions)
 static bool isNickSpecial(char c)
 {
-    const std::string specials = "[]\\`_^{}|-";
-    return (specials.find(c) != std::string::npos);
+	const std::string specials = "[]\\`_^{}|-";
+	return (specials.find(c) != std::string::npos);
 }
 
 static bool isNickChar(unsigned char c)
 {
-    if (std::isalnum(c))
+	if (std::isalnum(c))
 		return (true);
-    return (isNickSpecial(static_cast<char>(c)));
+	return (isNickSpecial(static_cast<char>(c)));
 }
 
 static bool isNickFirstChar(unsigned char c)
 {
-    if (std::isalpha(c))
+	if (std::isalpha(c))
 		return (true);
-    return (isNickSpecial(static_cast<char>(c)));
+	return (isNickSpecial(static_cast<char>(c)));
 }
 
 static bool isAscii(unsigned char c)
 {
-    return (c <= 0x7F);
+	return (c <= 0x7F);
+}
+
+void Server::broadcastNickChange(Client& client, const std::string& oldNick, const std::string& newNick)
+{
+	// minimal prefix; later you can build nick!user@host
+	std::string prefix = oldNick;
+
+	std::string msg = ":" + prefix + " NICK :" + newNick + "\r\n";
+
+	std::map<std::string, char>* channels = client.GetChannel();
+	if (!channels)
+		return ;
+
+	for (std::map<std::string, char>::iterator it = channels->begin(); it != channels->end(); it++)
+		broadcastToChannel(it->first, msg, -1); // include self too (exceptFd == -1)
 }
 
 
@@ -102,8 +117,8 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 
 	std::string newNick = cmd.parameters[0];
 	
-    if (newNick.size() > 16)
-    	newNick = newNick.substr(0, 16); // libera cuts long nicknames and keeps first 16 chars (no notice about this)
+	if (newNick.size() > 16)
+		newNick = newNick.substr(0, 16); // libera cuts long nicknames and keeps first 16 chars (no notice about this)
 
 	if (client.hasNick() && client.getNickname() == newNick)
 		return ;
@@ -115,16 +130,16 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 			std::vector<std::string>(1, newNick), "Erroneous nickname"); // libera gives this: 432 ERR_ERRONEUSNICKNAME
 		return ;
 	}
-    for (size_t i = 0; i < newNick.size(); i++)
-    {
-        unsigned char ch = static_cast<unsigned char>(newNick[i]);
-        if (!isAscii(ch) || !isNickChar(ch))
-        {
-            this->sendNumeric(client.getFd(), 432, target,
-                std::vector<std::string>(1, newNick), "Erroneous nickname");  // libera gives this: 432 ERR_ERRONEUSNICKNAME
-            return ;
-        }
-    }
+	for (size_t i = 0; i < newNick.size(); i++)
+	{
+		unsigned char ch = static_cast<unsigned char>(newNick[i]);
+		if (!isAscii(ch) || !isNickChar(ch))
+		{
+			this->sendNumeric(client.getFd(), 432, target,
+				std::vector<std::string>(1, newNick), "Erroneous nickname");  // libera gives this: 432 ERR_ERRONEUSNICKNAME
+			return ;
+		}
+	}
 
 	// check if nickname is in use already
 	for (size_t i = 0; i < this->_clients.size(); i++)
@@ -142,6 +157,10 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	client.setNickname(newNick);
   	//this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick); // libera sends no notice 
 	client.setHasNick(true);
+
+	if (client.isRegistered() && !oldNick.empty() && oldNick != newNick)
+		broadcastNickChange(client, oldNick, newNick);
+
 	this->tryRegisterClient(client);
 
 }

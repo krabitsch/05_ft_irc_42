@@ -63,17 +63,17 @@ int	checkInputArgs(int ac, char **av, int* port, std::string* password)
 	if (portVal <= 1023)
 	{
 		std::cerr << "Warning: Ports 1–1023 are reserved (root-only). "
-		          << "Pick a port >= 1024, e.g. 4444." << std::endl;
+				  << "Pick a port >= 1024, e.g. 4444." << std::endl;
 		return (-1);
 	}
 
 	// password (argv[2]) can be any non-empty string 
 	std::string pwdStr(av[2]);
 	// password constraints
-	if (pwdStr.length() == 0 || pwdStr.length() > 20)
+	if (pwdStr.length() == 0 || pwdStr.length() > 50)
 	{
-	    std::cerr << "Error: Password must be 1–20 characters long." << std::endl;
-    	return (-1);
+		std::cerr << "Error: Password must be 1–50 characters long." << std::endl;
+		return (-1);
 	}
 	// disallow whitespaces or control chars
 	for (size_t i = 0; i < pwdStr.size(); i++)
@@ -91,7 +91,7 @@ int	checkInputArgs(int ac, char **av, int* port, std::string* password)
 		}
 	}
 
-	*port     = portVal;
+	*port	 = portVal;
 	*password = pwdStr;
 
 	return (0);
