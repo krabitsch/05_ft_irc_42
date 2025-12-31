@@ -137,7 +137,7 @@ void Server::createSocketBindListen()
 
 void Server::acceptClient()	// accepts new client
 {
-	Client 				client;
+	Client* 			client = new Client();
 	struct sockaddr_in	addrClient;
 	socklen_t			sizeClient = sizeof(addrClient);
 	struct pollfd		newPoll;
@@ -166,9 +166,9 @@ void Server::acceptClient()	// accepts new client
 	char serv[NI_MAXSERV];
 	memset(host, 0, NI_MAXHOST);
 	memset(serv, 0, NI_MAXSERV);
-	client.setFd(incomingClientFd);													// sets client file descriptor
-	client.setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));// converts ip address to string and sets it
-	client.setServer(this);
+	client->setFd(incomingClientFd);													// sets client file descriptor
+	client->setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));// converts ip address to string and sets it
+	client->setServer(this);
 	this->_clients.push_back(client);												// adds client to the vector of clients
 	this->_fds.push_back(newPoll);													// adds client socket to the pollfd
 
@@ -266,7 +266,7 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 {
 	for (size_t i = 0; i < _clients.size(); ++i) 
 	{
-		int client_fd = _clients[i].getFd();
+		int client_fd = _clients[i]->getFd();
 		if (client_fd != from_fd) 
 		{
 			ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
@@ -290,7 +290,8 @@ void Server::broadcastToChannel(const std::string& channelName, const std::strin
 
 	for (size_t i = 0; i < members->size(); i++)
 	{
-        std::cout << members->size() << std::endl;
+        // dbg print:
+        std::cout << "broadcastToChannel: " << channelName << " members=" << members->size() << std::endl;
 		Client* m = (*members)[i];
 		if (!m)
 			continue ;
@@ -377,7 +378,8 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 				join(fd, cmd.parameters[0], cmd.parameters[1]);
 			else
 				join(fd, cmd.parameters[0], "");
-			std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
+			//std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
+            std::cout << "User has joined channel: " << cmd.parameters[0] << std::endl;
 		}
 		else 
 		{
@@ -648,9 +650,10 @@ void	Server::clearClients(int fd)
 	}
 	for(size_t i = 0; i < this->_clients.size(); i++) // removes client from the vector of clients
 	{
-		if (this->_clients[i].getFd() == fd)
+		if (this->_clients[i] && this->_clients[i]->getFd() == fd)
 		{
-			this->_clients.erase(this->_clients.begin() + i);
+			delete this->_clients[i];
+            this->_clients.erase(this->_clients.begin() + i);
 			break ;
 		}
 	}
@@ -658,11 +661,17 @@ void	Server::clearClients(int fd)
 
 void	Server::closeFds()
 {
-	for(size_t i = 0; i < _clients.size(); i++)
-	{
-		std::cout << RED << "Client (fd = " << this->_clients[i].getFd() << ") Disconnected" << WHITE << std::endl;
-		close(_clients[i].getFd());
-	}
+    for (size_t i = 0; i < _clients.size(); i++)
+    {
+        if (_clients[i])
+        {
+            std::cout << RED << "Client (fd = " << _clients[i]->getFd() << ") Disconnected" << WHITE << std::endl;
+            close(_clients[i]->getFd());
+            delete _clients[i];
+        }
+    }
+    _clients.clear();
+
 	if (_fdServer != -1)
 	{
 		std::cout << RED << "Server (fd = " << this->_fdServer << ") Disconnected" << WHITE << std::endl;
@@ -690,11 +699,17 @@ Client*		Server::findClientByNickOrUser(const int fd, std::string username)
 	size_t i = 0;
 	while (i < this->_clients.size())
 	{
-		if (this->_clients[i].getUsername() == username || this->_clients[i].getNickname() == username)
-			return (&this->_clients[i]);
-		else if (fd > 1 && this->_clients[i].getFd() == fd)
-			return (&this->_clients[i]);
-	  i++;
+        Client* cl = this->_clients[i];
+        if (!cl)
+        {
+            i++; 
+            continue ;
+        }
+        if (cl->getUsername() == username || cl->getNickname() == username)
+            return (cl);
+        else if (fd > 1 && cl->getFd() == fd)
+            return cl;
+	    i++;
 	}
   	return (NULL);
 }
@@ -704,8 +719,8 @@ Client*		Server::findClientByFd(const int fd)
 	size_t i = 0;
 	while (i < this->_clients.size())
 	{
-		if (fd > 1 && this->_clients[i].getFd() == fd)
-			return (&this->_clients[i]);
+		if (this->_clients[i] && this->_clients[i]->getFd() == fd)
+            return (this->_clients[i]);
 	  i++;
 	}
   	return (NULL);

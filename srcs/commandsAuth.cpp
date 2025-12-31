@@ -41,8 +41,10 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 	{
 		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
 					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
-		this->clearClients(client.getFd());
-		close(client.getFd());
+		int fdTmp = client.getFd();
+        this->clearClients(fdTmp);
+        std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
+        close(fdTmp);
 		return ;
 	}
 
@@ -144,7 +146,10 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	// check if nickname is in use already
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
-		if (this->_clients[i].getNickname() == newNick && this->_clients[i].getFd() != client.getFd())
+        Client* cl = this->_clients[i];
+        if (!cl)
+            continue ;
+		if (cl->getNickname() == newNick && cl->getFd() != client.getFd())
 		{
 			this->sendNumeric(client.getFd(), 433, target,	
 				std::vector<std::string>(),	"Nickname is already in use"); // 433 ERR_NICKNAMEINUSE
@@ -195,8 +200,10 @@ void Server::quitCommand(std::string message, int fd)
 	if (client == NULL)
 		return ;
 	this->sendNotice(fd, "*", "You have quit the server. Goodbye!"); //Sends a notice to the client
-	this->clearClients(fd); //Clears the client from the server
-	std::cout << RED << "Client (fd = " << fd << ") Disconnected" << WHITE << std::endl;
 	close(fd); //Closes the connection
+    int fdTmp = client->getFd();
+    this->clearClients(fdTmp);
+    std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
+	close(fdTmp);
 	return ;
 }

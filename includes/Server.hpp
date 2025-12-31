@@ -53,7 +53,7 @@ class Server
 	int							_port;
 	std::string					_password;
 	int							_fdServer;
-	std::vector<Client>			_clients; 	// vector of clients
+	std::vector<Client*>		_clients; 	// vector of clients
 	std::vector<struct pollfd>	_fds; 		// vector of pollfd
   	std::vector<Channel>		_channels; 	// A vector of all the channels 
 	
