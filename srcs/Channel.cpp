@@ -5,8 +5,11 @@
 Channel::Channel(Server *server, int fd, std::string name): _server(server), _channelname(name)
 {
 	Client *client = _server->findClientByFd(fd);
+    if (!client)
+        return ;
 	client->AddChannel(name, 'o');
-	AddMember(client);
+	AddMember(client); // AddMember() inserts 'm' into the client map again, so change again below:
+    (*client->GetChannel())[name] = 'o';
 	client->setCurrentChannel(name);
 	_operators.push_back(client->getFd());
 	_inviteonly = false;

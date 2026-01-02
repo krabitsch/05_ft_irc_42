@@ -77,6 +77,8 @@ std::string&		Client::getBuffer()				  { return (this->_resultBuffer); }
 const std::string&	Client::getBuffer()			const { return (this->_resultBuffer); }
 std::string			Client::getNickname()		const { return (this->_nickname); }
 std::string			Client::getUsername() 		const { return (this->_username); }
+std::string 		Client::getHostname(void)   const { return (this->_hostname); }
+std::string 		Client::getIpAdd(void)		const { return (this->_ipClient); }
 std::string			Client::getCurrentChannel()	const { return (this->_currentChannel); }
 std::map<std::string, char>* Client::GetChannel()	  { return (&this->_channels); }
 bool				Client::hasPass()			const { return (this->_hasPass); }
@@ -92,6 +94,7 @@ void	Client::setIpAdd(std::string ipAddr)				{ this->_ipClient = ipAddr; }
 void 	Client::setChannel(std::map<std::string, char> *newchannels) { this->_channels = *newchannels; }
 void	Client::setNickname(std::string newname)			{ this->_nickname = newname; }
 void	Client::setUsername(std::string newname)			{ this->_username = newname; }
+void	Client::setHostname(std::string newname)			{ this->_hostname = newname; }
 void	Client::setCurrentChannel(std::string newchannel)	{ this->_currentChannel = newchannel; }
 void	Client::setHasPass(bool has)						{ this->_hasPass = has; }
 void	Client::setHasNick(bool has)						{ this->_hasNick = has; }
