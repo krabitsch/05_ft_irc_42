@@ -1,6 +1,15 @@
-#include <string>
-#include <vector>
-#include "Client.hpp"
+#ifndef CHANNEL_HPP
+# define CHANNEL_HPP
+
+# ifdef FT_IRC_DEBUG
+  #  define DBG(someCode) do { someCode; } while (0)
+# else
+  #  define DBG(someCode) do { } while (0)
+# endif
+
+# include <string>
+# include <vector>
+# include "Client.hpp"
 
 class Server;
 
@@ -49,3 +58,5 @@ class Channel
 	void	invite(std::string username, int fd);
 	void	mode(int fd, std::string param, std::string input);
 };
+
+#endif

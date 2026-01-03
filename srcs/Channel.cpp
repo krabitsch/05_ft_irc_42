@@ -98,9 +98,9 @@ void Channel::AddMember(Client* user)
 										   // and should be AddChannel should be called by commands (e.g. JOIN) to change status
 										 // would overwrite 'o' status here
 	// add channel to client's channel map only if missing.
-    std::map<std::string, char>* chmap = user->GetChannel();
-    if (chmap && chmap->find(_channelname) == chmap->end())
-        (*chmap)[_channelname] = 'm';  // do NOT overwrite 'o'
+	std::map<std::string, char>* chmap = user->GetChannel();
+	if (chmap && chmap->find(_channelname) == chmap->end())
+		(*chmap)[_channelname] = 'm';  // do NOT overwrite 'o'
 }
 
 //Remove Member

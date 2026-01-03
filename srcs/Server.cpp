@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/03 21:33:15 by krabitsc         ###   ########.fr       */
+/*   Updated: 2026/01/03 22:46:38 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -808,21 +808,41 @@ void	Server::sendNotice(int fd, const std::string &target, const std::string &te
 void	Server::sendWelcome(Client &client)
 {
 	const std::string &nick = client.getNickname();
+	int fd = client.getFd();
 
 	// 001 RPL_WELCOME
-	this->sendNumeric(client.getFd(), 1, nick,std::vector<std::string>(),
-				"Welcome to the ft_irc server " + nick);
+	sendNumeric(fd, 001, nick, std::vector<std::string>(),
+		"Welcome to the ft_irc server " + nick);
 
 	// 002 RPL_YOURHOST
-	this->sendNumeric(client.getFd(), 2, nick, std::vector<std::string>(),
-				"Your host is " + this->_serverName + ", running version 1.0");
+	sendNumeric(fd, 002, nick, std::vector<std::string>(),
+		"Your host is " + _serverName + ", running version 1.0");
 
 	// 003 RPL_CREATED
-	this->sendNumeric(client.getFd(), 3, nick, std::vector<std::string>(),
-				"This server was created 2025-11-30");
+	sendNumeric(fd, 003, nick, std::vector<std::string>(),
+		"This server was created 2025-11-30");
 
+	// 004 RPL_MYINFO
+	// <servername> <version> <usermodes> <channelmodes>
+	// supported user modes: i(nvisible)
+	// supported channel modes (i invite-only, t topic protected, k key/password, o operator, l user limit)
+	std::vector<std::string> params004;
+	params004.push_back(_serverName);
+	params004.push_back("ft_irc-42 1.0");
+	params004.push_back("i");	   // user modes
+	params004.push_back("itkol");  // channel modes
+	sendNumeric(fd, 004, nick, params004, "");
 
+	// 005 RPL_ISUPPORT
+	std::vector<std::string> params005;
+	params005.push_back("CHANTYPES=#");
+	params005.push_back("NICKLEN=16");
+	params005.push_back("USERLEN=32");
+	params005.push_back("PREFIX=(o)@");
+	params005.push_back("CASEMAPPING=ascii");
+	sendNumeric(fd, 005, nick, params005, "are supported by this server");
 }
+
 
 
 void Server::tryRegisterClient(Client &client)
@@ -830,11 +850,7 @@ void Server::tryRegisterClient(Client &client)
 	if (client.isRegistered())
 		return ;
 	
-	if (!client.hasPass())
-		return ;
-	if (!client.hasNick())
-		return ;
-	if (!client.hasUser())
+	if (!client.hasPass() || !client.hasNick() || !client.hasUser())
 		return ;
 
 	// client not yet registered and all conditions met -> set as registered and send welcome

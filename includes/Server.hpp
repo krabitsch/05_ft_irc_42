@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/03 21:10:35 by krabitsc         ###   ########.fr       */
+/*   Updated: 2026/01/03 22:44:55 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,5 @@ class Server
 	Client*		findClientByFd(const int fd);
 
 };
-
-
 
 #endif
