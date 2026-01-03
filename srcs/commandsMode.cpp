@@ -168,6 +168,8 @@
 
   void Channel::kick(std::string username, std::string comments, int fd)
   {
+	(void)comments;
+
 	if (IsOperator(fd) == true) //checks the user executing the command is an operator
 	{
 	  int i = 0;

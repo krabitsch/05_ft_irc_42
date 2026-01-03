@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/28 17:28:14 by krabitsc         ###   ########.fr       */
+/*   Updated: 2026/01/03 21:33:15 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,8 +79,7 @@ void	Server::serverInit()
 			if (this->_fds[i].revents & (POLLHUP | POLLERR | POLLNVAL))
 			{
 				std::cout << RED << "Client (fd = " << this->_fds[i].fd << ") poll error/hangup" << WHITE << std::endl;
-				clearClients(this->_fds[i].fd);
-				close(this->_fds[i].fd);
+				clearClient(this->_fds[i].fd);
 				continue ;
 			}
 
@@ -211,14 +210,12 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 		if (errno == EAGAIN || errno == EWOULDBLOCK) // no data available right now on a non-blocking socket; just ignore.
 			return ;
 		std::cerr << RED << "recv() error on fd " << fd << ": " << std::strerror(errno) << WHITE << std::endl;
-		clearClients(fd);
-		close(fd);
+		clearClient(fd);
 	}
 	if (bytes == 0)
 	{
 		std::cout << RED << "Client (fd = " << fd << ") Disconnected" << WHITE << std::endl;
-		clearClients(fd);
-		close(fd);
+		clearClient(fd);
 		return ;
 	}
 	
@@ -240,8 +237,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 			if (resultBuffer.size() > IRC_MAX_LINE)
 			{
 				sendNumeric(fd, 417, "*", std::vector<std::string>(), "Input line too long"); // 417 = too long line
-				clearClients(fd);
-				close(fd);
+				clearClient(fd);
 			}
 			break ;
 		}
@@ -249,8 +245,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 		if (posEOL > IRC_MAX_LINE) // ... but line is too long
 		{
 			sendNumeric(fd, 417, "*", std::vector<std::string>(), "Input line too long");
-			clearClients(fd);
-			close(fd);
+			clearClient(fd);
 			return ;
 		}
 		// have a complete line (0 to eol) within 512 line limit
@@ -260,7 +255,9 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 		IrcCommand command = parseMessage(message);
 		DBG({command.print(); });
 		this->handleMessage(fd, command);
-		//this->broadcastMessage(fd, message + "\r\n");
+		// if command handling removed the client (QUIT, bad PASS, recv error, etc.) MUST stop using resultBuffer
+		if (findClientByFd(fd) == NULL)
+			return ;
 	}
 }
 
@@ -308,6 +305,9 @@ void Server::broadcastToChannel(const std::string& channelName, const std::strin
 
 void Server::handleMessage(int fd, const IrcCommand &cmd)
 {
+	if (cmd.command.empty())
+	return ; // ignore blank lines / whitespace-only input
+	
 	std::string c = cmd.command;
 	Client*		client = findClientByFd(fd);
 	if (!client)
@@ -337,10 +337,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	if (c == "QUIT")
 	{
 		DBG({std::cout << "Handling QUIT command" << std::endl; });
-		if (cmd.parameters.empty())
-			quitCommand("", fd);
-		else
-			quitCommand(cmd.parameters[0], fd);
+		this->quitCommand(*client, cmd);
 		return ;
 	}
 	
@@ -639,8 +636,13 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 }
 
 
-
-void	Server::clearClients(int fd)
+// clearClient:
+// - removes fd from poll
+// - removes client from all channels
+// - closes socket of that client
+// - deletes Client*
+// - erases from _clients
+void	Server::clearClient(int fd)
 {
 	for(size_t i = 0; i < this->_fds.size(); i++) // removes client from the pollfd
 	{
@@ -658,19 +660,12 @@ void	Server::clearClients(int fd)
 		Client* toBeRemoved = this->_clients[i];
 		if (toBeRemoved && toBeRemoved->getFd() == fd)
 		{
-			const std::string nickTBR = toBeRemoved->getNickname();
-			const std::string userTBR = toBeRemoved->getUsername();
-
-			for (size_t c = 0; c < this->_channels.size(); c++)
+			for (size_t ch = 0; ch < this->_channels.size(); ch++)
 			{
-				if (this->_channels[c])
-				{
-					if (!nickTBR.empty())
-						this->_channels[c]->RemoveMember(nickTBR);
-					if (!userTBR.empty())
-						this->_channels[c]->RemoveMember(userTBR);
-				}
+				if (this->_channels[ch])
+					this->_channels[ch]->RemoveMemberByFd(fd);
 			}
+			close(fd);
 			delete toBeRemoved;
 			this->_clients.erase(this->_clients.begin() + i);
 			break ;
@@ -680,8 +675,8 @@ void	Server::clearClients(int fd)
 
 void	Server::closeFds()
 {
-	// close + delete clients
-	for (size_t i = 0; i < _clients.size(); i++)
+	// close & delete clients
+	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
 		if (this->_clients[i])
 		{
@@ -703,6 +698,9 @@ void	Server::closeFds()
 		std::cout << RED << "Server (fd = " << this->_fdServer << ") Disconnected" << WHITE << std::endl;
 		close(this->_fdServer);
 	}
+	
+	// clear poll fds
+	this->_fds.clear();
 }
 
 //Finder Functions 

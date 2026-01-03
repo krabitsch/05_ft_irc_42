@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/28 19:37:13 by krabitsc         ###   ########.fr       */
+/*   Updated: 2026/01/03 22:06:26 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,10 +41,8 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 	{
 		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
 					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
-		int fdTmp = client.getFd();
-		this->clearClients(fdTmp);
-		std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
-		close(fdTmp);
+		std::cout << RED << "Client (fd = " << client.getFd() << ") Disconnected" << WHITE << std::endl;
+		this->clearClient(client.getFd());
 		return ;
 	}
 
@@ -170,8 +168,36 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 
 }
 
-//User
-void	Server::userCommand(Client &client, const IrcCommand &cmd) // syntax: USER <username> <mode> <unused> :<realname>
+// USER COMMAND helper functions (static, file scope functions)
+static bool isValidUserChar(unsigned char c)
+{
+	if (!std::isprint(c) || c == ' ')
+		return false;
+	if (std::isalnum(c))
+		return (true);
+	return (c == '_' || c == '-' || c == '.');
+}
+
+static bool isValidUsername(const std::string& u)
+{
+	if (u.empty() || u.size() > 32) // pick max username length to be 32 (RFC doesn’t force one)
+		return (false);
+	for (size_t i = 0; i < u.size(); i++)
+	{
+		unsigned char c = static_cast<unsigned char>(u[i]);
+		if (c > 0x7F) // ASCII only
+			return (false);
+		if (!isValidUserChar(c))
+			return (false);
+	}
+	return true;
+}
+
+// USER // syntax: USER <username> <mode> <unused> :<realname>
+// while nickname need to be unique, the username doesn't 
+// libera also accepts (and finishes registration) with input like USER a b c realname 
+// so the implementation below checks it receives 4 params, but only <username> is really stored and used
+void	Server::userCommand(Client &client, const IrcCommand &cmd)
 {
 	if (!client.hasPass())
 	{
@@ -183,20 +209,25 @@ void	Server::userCommand(Client &client, const IrcCommand &cmd) // syntax: USER 
 	if (client.isRegistered())
 	{
 		sendNumeric(client.getFd(), 462, client.getNickname().empty() ? "*" : client.getNickname(),
-					std::vector<std::string>(), "You are already registered");
+					std::vector<std::string>(), "You are already connected and cannot handshake again"); // libera gives this
 		return ;
 	}
 
 	// need 4 params: username, mode, unused, realname
 	if (cmd.parameters.size() < 4 || cmd.parameters[0].empty())
 	{
-		sendNumeric(client.getFd(), 461, "*", std::vector<std::string>(1, "USER"),
+		sendNumeric(client.getFd(), 461, "*", std::vector<std::string>(1, "USER"), // libera gives this
 					"Not enough parameters");
-		return;
+		return ;
 	}
 
-	const std::string &username = cmd.parameters[0];
-	// still to do validate username: no spaces/control chars, ascii, etc.
+	const std::string& username = cmd.parameters[0];
+	if (!isValidUsername(username))
+	{
+		sendNumeric(client.getFd(), 461, "*", std::vector<std::string>(1, "USER"),
+					"Your username is invalid. Please make sure that your username contains only alphanumeric characters"); // libera gives this
+		return ;
+	}
 
 	client.setUsername(username);
 	client.setHasUser(true);
@@ -204,22 +235,37 @@ void	Server::userCommand(Client &client, const IrcCommand &cmd) // syntax: USER 
 	tryRegisterClient(client);
 }
 
-//Quit 
+// QUIT
 //Exits the server 
-
-void Server::quitCommand(std::string message, int fd)
+// can be simply QUIT or QUIT :goodbyeMessage
+void Server::quitCommand(Client &client, const IrcCommand &cmd)
 {
-	//Just need to add the custom message feature! - Al
-	(void)message;
-	
-	Client *client = findClientByFd(fd);
-	if (client == NULL)
-		return ;
-	this->sendNotice(fd, "*", "You have quit the server. Goodbye!"); //Sends a notice to the client
-	close(fd); //Closes the connection
-	int fdTmp = client->getFd();
-	this->clearClients(fdTmp);
-	std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
-	close(fdTmp);
-	return ;
+	const int fd = client.getFd();
+
+	// Extract quit message (trailing is appended as the last parameter, ignoring any others (should there by any))
+	std::string message;
+	if (!cmd.parameters.empty())
+		message = cmd.parameters.back();
+	if (message.empty())
+		message = "Client Quit";
+
+	// Build prefix nick!user@host
+	const std::string nick = client.getNickname().empty() ? "*" : client.getNickname();
+	const std::string user = client.getUsername().empty() ? "unknown" : client.getUsername();
+	const std::string host = client.getHostname();
+	const std::string prefix = nick + "!" + user + "@" + host;
+
+	const std::string quitLine = ":" + prefix + " QUIT :" + message + "\r\n";
+
+	std::map<std::string, char>* chans = client.GetChannel();
+	if (chans)
+	{
+		for (std::map<std::string, char>::iterator it = chans->begin(); it != chans->end(); ++it)
+		{
+			broadcastToChannel(it->first, quitLine, fd); // broadcast to all channels the client is in (excluding the quitter)
+		}
+	}
+
+	std::cout << RED << "Client (fd = " << fd << ") Disconnected" << WHITE << std::endl;
+	clearClient(fd);
 }

@@ -29,6 +29,7 @@ class Channel
 	void					channelTopic(std::string newtopic);
 	void					AddMember(Client* user);
 	void					RemoveMember(std::string username);
+	void					RemoveMemberByFd(int fd);
 	std::string				getname(void) const;
 	size_t		  			getUserlimit(void) const;
 	size_t		  			getMembersize(void) const;

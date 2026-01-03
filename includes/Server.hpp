@@ -6,7 +6,7 @@
 /*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/28 19:51:02 by krabitsc         ###   ########.fr       */
+/*   Updated: 2026/01/03 21:10:35 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,13 +68,13 @@ class Server
 	void		createSocketBindListen();	// server socket creation
 	void		acceptClient(); 			// accept new client
 	void		receiveData(int fd);		// receive new data from a registered client
-	void		clearClients(int fd);		// clear clients
+	void		clearClient(int fd);		// clear clients
 
 	// Commands that need the use of the server
 	void		passCommand(Client &client, const IrcCommand &cmd);
 	void		nickCommand(Client &client, const IrcCommand &cmd);
 	void		userCommand(Client &client, const IrcCommand &cmd);
-	void		quitCommand(std::string message, int fd);
+	void		quitCommand(Client &client, const IrcCommand &cmd);
 	void		join(int fd, std::string channelname, std::string pass); //Creates or joins a channel that exists
 	void		part(int fd);
 	void		privateMsg(int senderFd, std::string target, std::string msg);
