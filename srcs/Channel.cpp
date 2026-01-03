@@ -5,11 +5,11 @@
 Channel::Channel(Server *server, int fd, std::string name): _server(server), _channelname(name)
 {
 	Client *client = _server->findClientByFd(fd);
-    if (!client)
-        return ;
+	if (!client)
+		return ;
 	client->AddChannel(name, 'o');
 	AddMember(client); // AddMember() inserts 'm' into the client map again, so change again below:
-    (*client->GetChannel())[name] = 'o';
+	(*client->GetChannel())[name] = 'o';
 	client->setCurrentChannel(name);
 	_operators.push_back(client->getFd());
 	_inviteonly = false;
@@ -76,6 +76,16 @@ void Channel::channelTopic(std::string newtopic)
 //Step 1: Get client and add it to the map
 void Channel::AddMember(Client* user)
 {
+	if (!user)
+		return ;
+
+	for (size_t i = 0; i < _members.size(); i++)
+	{
+		// check if already in channel (by fd (unique), not username or nickname)
+		if (_members[i] && _members[i]->getFd() == user->getFd())
+			return;
+	}
+	/*
 	size_t i = 0;
 	while (i < _members.size())
 	{
@@ -83,8 +93,10 @@ void Channel::AddMember(Client* user)
 			return ;
 		i++;
 	}
+	*/
 	_members.push_back(user);
-	user->AddChannel(_channelname, 'm');
+	user->AddChannel(_channelname, 'm'); // maybe rather do this via Channel constructor and/or let Server decide roles
+										 // would overwrite 'o' status here
 }
 
 //Remove Member

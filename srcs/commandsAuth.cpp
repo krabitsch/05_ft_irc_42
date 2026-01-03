@@ -42,9 +42,9 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
 					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
 		int fdTmp = client.getFd();
-        this->clearClients(fdTmp);
-        std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
-        close(fdTmp);
+		this->clearClients(fdTmp);
+		std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
+		close(fdTmp);
 		return ;
 	}
 
@@ -146,9 +146,9 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	// check if nickname is in use already
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
-        Client* cl = this->_clients[i];
-        if (!cl)
-            continue ;
+		Client* cl = this->_clients[i];
+		if (!cl)
+			continue ;
 		if (cl->getNickname() == newNick && cl->getFd() != client.getFd())
 		{
 			this->sendNumeric(client.getFd(), 433, target,	
@@ -173,19 +173,35 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 //User
 void	Server::userCommand(Client &client, const IrcCommand &cmd) // syntax: USER <username> <mode> <unused> :<realname>
 {
-	// KR: need to still implement this, for now setHasUser = true, so registration can be completed and other commands teste
-	(void)cmd;
+	if (!client.hasPass())
+	{
+		sendNumeric(client.getFd(), 451, "*", std::vector<std::string>(),
+					"Password required");
+		return ;
+	}
 
 	if (client.isRegistered())
 	{
-		// 462 ERR_ALREADYREGISTRED
-		this->sendNumeric(client.getFd(), 462, client.getNickname(), std::vector<std::string>(),
-					"You are already connected and cannot handshake again"); // libera gives this
+		sendNumeric(client.getFd(), 462, client.getNickname().empty() ? "*" : client.getNickname(),
+					std::vector<std::string>(), "You are already registered");
 		return ;
 	}
+
+	// need 4 params: username, mode, unused, realname
+	if (cmd.parameters.size() < 4 || cmd.parameters[0].empty())
+	{
+		sendNumeric(client.getFd(), 461, "*", std::vector<std::string>(1, "USER"),
+					"Not enough parameters");
+		return;
+	}
+
+	const std::string &username = cmd.parameters[0];
+	// still to do validate username: no spaces/control chars, ascii, etc.
+
+	client.setUsername(username);
 	client.setHasUser(true);
-  	this->sendNotice(client.getFd(), "*", "Username accepted");
-	this->tryRegisterClient(client);
+	// sendNotice(client.getFd(), "*", "Username accepted"); // libera sends no NOTICE
+	tryRegisterClient(client);
 }
 
 //Quit 
@@ -201,9 +217,9 @@ void Server::quitCommand(std::string message, int fd)
 		return ;
 	this->sendNotice(fd, "*", "You have quit the server. Goodbye!"); //Sends a notice to the client
 	close(fd); //Closes the connection
-    int fdTmp = client->getFd();
-    this->clearClients(fdTmp);
-    std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
+	int fdTmp = client->getFd();
+	this->clearClients(fdTmp);
+	std::cout << RED << "Client (fd = " << fdTmp << ") Disconnected" << WHITE << std::endl;
 	close(fdTmp);
 	return ;
 }

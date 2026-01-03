@@ -157,7 +157,7 @@ void Server::acceptClient()	// accepts new client
 	}
 
 	// create Client instance (as pointer) and fill in client information
-    Client*  client = new Client();
+	Client*  client = new Client();
 	newPoll.fd	  	= incomingClientFd;	// adds client socket to the pollfd
 	newPoll.events  = POLLIN;			// sets event to POLLIN for reading data
 	newPoll.revents = 0;				// sets the revents to 0
@@ -176,14 +176,14 @@ void Server::acceptClient()	// accepts new client
 	int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, NI_NAMEREQD); // require a hostname
 	if (result == 0)
 	{
-        client->setHostname(host);
+		client->setHostname(host);
 		sendNotice(incomingClientFd, "AUTH", "*** Found your hostname: " + client->getHostname());
 	}
 	else
-    {
-        client->setHostname(client->getIpAdd()); // or host string from inet_ntop
+	{
+		client->setHostname(client->getIpAdd()); // or host string from inet_ntop
 		sendNotice(incomingClientFd, "AUTH", "*** Couldn't look up your hostname");
-    }
+	}
 	sendNotice(incomingClientFd, "AUTH", "*** Checking Ident"); // send fake msgs re Ident (has nothing to do with IRC authentification)
 	sendNotice(incomingClientFd, "AUTH", "*** No Ident response");
 
@@ -290,10 +290,10 @@ void Server::broadcastToChannel(const std::string& channelName, const std::strin
 	if (!members)
 		return ;
 
+	// dbg print:
+	std::cout << "broadcastToChannel: " << channelName << " members=" << members->size() << std::endl;
 	for (size_t i = 0; i < members->size(); i++)
 	{
-        // dbg print:
-        std::cout << "broadcastToChannel: " << channelName << " members=" << members->size() << std::endl;
 		Client* m = (*members)[i];
 		if (!m)
 			continue ;
@@ -381,7 +381,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			else
 				join(fd, cmd.parameters[0], "");
 			//std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
-            std::cout << "User has joined channel: " << cmd.parameters[0] << std::endl;
+			std::cout << "User has joined channel: " << cmd.parameters[0] << std::endl;
 		}
 		else 
 		{
@@ -644,7 +644,7 @@ void	Server::clearClients(int fd)
 {
 	for(size_t i = 0; i < this->_fds.size(); i++) // removes client from the pollfd
 	{
-        // remove client fd from poll list
+		// remove client fd from poll list
 		if (this->_fds[i].fd == fd)
 		{
 			this->_fds.erase(this->_fds.begin() + i);
@@ -652,52 +652,52 @@ void	Server::clearClients(int fd)
 		}
 	}
 
-    // find client-to-be-removed pointer in _clients, remove from all channels first, then remove
-    for (size_t i = 0; i < this->_clients.size(); i++)
-    {
-        Client* toBeRemoved = this->_clients[i];
-        if (toBeRemoved && toBeRemoved->getFd() == fd)
-        {
-            const std::string nickTBR = toBeRemoved->getNickname();
-            const std::string userTBR = toBeRemoved->getUsername();
+	// find client-to-be-removed pointer in _clients, remove from all channels first, then remove
+	for (size_t i = 0; i < this->_clients.size(); i++)
+	{
+		Client* toBeRemoved = this->_clients[i];
+		if (toBeRemoved && toBeRemoved->getFd() == fd)
+		{
+			const std::string nickTBR = toBeRemoved->getNickname();
+			const std::string userTBR = toBeRemoved->getUsername();
 
-            for (size_t c = 0; c < this->_channels.size(); c++)
-            {
-                if (this->_channels[c])
-                {
-                    if (!nickTBR.empty())
-                        this->_channels[c]->RemoveMember(nickTBR);
-                    if (!userTBR.empty())
-                        this->_channels[c]->RemoveMember(userTBR);
-                }
-            }
-            delete toBeRemoved;
-            this->_clients.erase(this->_clients.begin() + i);
-            break ;
-        }
-    }
+			for (size_t c = 0; c < this->_channels.size(); c++)
+			{
+				if (this->_channels[c])
+				{
+					if (!nickTBR.empty())
+						this->_channels[c]->RemoveMember(nickTBR);
+					if (!userTBR.empty())
+						this->_channels[c]->RemoveMember(userTBR);
+				}
+			}
+			delete toBeRemoved;
+			this->_clients.erase(this->_clients.begin() + i);
+			break ;
+		}
+	}
 }
 
 void	Server::closeFds()
 {
-    // close + delete clients
-    for (size_t i = 0; i < _clients.size(); i++)
-    {
-        if (this->_clients[i])
-        {
-            std::cout << RED << "Client (fd = " << this->_clients[i]->getFd() << ") Disconnected" << WHITE << std::endl;
-            close(this->_clients[i]->getFd());
-            delete (this->_clients[i]);
-        }
-    }
-    this->_clients.clear();
+	// close + delete clients
+	for (size_t i = 0; i < _clients.size(); i++)
+	{
+		if (this->_clients[i])
+		{
+			std::cout << RED << "Client (fd = " << this->_clients[i]->getFd() << ") Disconnected" << WHITE << std::endl;
+			close(this->_clients[i]->getFd());
+			delete (this->_clients[i]);
+		}
+	}
+	this->_clients.clear();
 
-    // delete channels (Server owns them)
-    for (size_t i = 0; i < this->_channels.size(); i++)
-        delete (this->_channels[i]);
-    this->_channels.clear();
+	// delete channels (Server owns them)
+	for (size_t i = 0; i < this->_channels.size(); i++)
+		delete (this->_channels[i]);
+	this->_channels.clear();
 
-    // close server socket
+	// close server socket
 	if (this->_fdServer != -1)
 	{
 		std::cout << RED << "Server (fd = " << this->_fdServer << ") Disconnected" << WHITE << std::endl;
@@ -709,12 +709,12 @@ void	Server::closeFds()
 
 Channel*	Server::findChannel(const std::string &name)
 {
-    for (size_t i = 0; i < _channels.size(); i++)
-    {
-        if (this->_channels[i] && this->_channels[i]->getname() == name)
-            return (this->_channels[i]);
-    }
-    return (NULL);
+	for (size_t i = 0; i < _channels.size(); i++)
+	{
+		if (this->_channels[i] && this->_channels[i]->getname() == name)
+			return (this->_channels[i]);
+	}
+	return (NULL);
 }
 
 
@@ -723,17 +723,17 @@ Client*		Server::findClientByNickOrUser(const int fd, std::string username)
 	size_t i = 0;
 	while (i < this->_clients.size())
 	{
-        Client* cl = this->_clients[i];
-        if (!cl)
-        {
-            i++; 
-            continue ;
-        }
-        if (cl->getUsername() == username || cl->getNickname() == username)
-            return (cl);
-        else if (fd > 1 && cl->getFd() == fd)
-            return cl;
-	    i++;
+		Client* cl = this->_clients[i];
+		if (!cl)
+		{
+			i++; 
+			continue ;
+		}
+		if (cl->getUsername() == username || cl->getNickname() == username)
+			return (cl);
+		else if (fd > 1 && cl->getFd() == fd)
+			return cl;
+		i++;
 	}
   	return (NULL);
 }
@@ -744,7 +744,7 @@ Client*		Server::findClientByFd(const int fd)
 	while (i < this->_clients.size())
 	{
 		if (this->_clients[i] && this->_clients[i]->getFd() == fd)
-            return (this->_clients[i]);
+			return (this->_clients[i]);
 	  i++;
 	}
   	return (NULL);

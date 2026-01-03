@@ -66,8 +66,8 @@ class Client
 	const std::string&			getBuffer() const;
 	std::string 				getNickname(void) const;
 	std::string 				getUsername(void) const;
-    std::string 				getHostname(void) const;
-    std::string 				getIpAdd(void) const;
+	std::string 				getHostname(void) const;
+	std::string 				getIpAdd(void) const;
 	std::string 				getCurrentChannel(void) const;
 	Server*						getServer(void) const;
 	std::string					getPassword(void) const;
@@ -83,7 +83,7 @@ class Client
 	void						setIpAdd(std::string ipadd);
 	void						setUsername(std::string newname);
 	void 						setNickname(std::string newname);
-    void 						setHostname(std::string newname);
+	void 						setHostname(std::string newname);
 	void 						setChannel(std::map<std::string, char> *newchannels);
 	void 						setCurrentChannel(std::string newchannel);
 	void						setPassword(std::string password);
