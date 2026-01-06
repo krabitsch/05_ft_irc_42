@@ -12,6 +12,7 @@ Channel::Channel(Server *server, int fd, std::string name): _channelname(name), 
 	_inviteonly = false;
 	_topicPriv = false;
 	_password = "";
+	_topic = "";
 	_userlimit = 0;
 	_operatorPriv = true;
 };
@@ -28,7 +29,7 @@ Channel::Channel(const Channel &other): _server(other._server),
     _inviteonly(other._inviteonly),
     _topicPriv(other._topicPriv),
     _password(other._password),
-    _userlimit(other._userlimit) {};
+    _userlimit(other._userlimit), _topic(other._topic) {};
 
 //Copy Assign Operator
 Channel &Channel:: operator=(const Channel &other) 
@@ -44,6 +45,7 @@ Channel &Channel:: operator=(const Channel &other)
 		this->_topicPriv = other._topicPriv;
 		this->_password = other._password;
 		this->_userlimit = other._userlimit;
+		this->_topic = other._topic;
 	}
 	return (*this);
 };
@@ -251,6 +253,11 @@ std::string Channel::getname(void) const
 	return (_channelname);
 }
 
+std::string Channel::getTopic(void) const
+{
+	return (_topic);
+}
+
 size_t Channel::getUserlimit(void) const
 {
 	return (_userlimit);
@@ -274,4 +281,11 @@ bool Channel::getTopicpriv(void) const
 std::string	Channel::getPassword(void) const
 {
 	return (_password);
+}
+
+
+//Setters
+void Channel::setTopic(std::string word)
+{
+	_topic = word;	
 }

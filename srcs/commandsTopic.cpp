@@ -20,6 +20,8 @@ void Server::topic(std::string channelname, int clientfd)
   }
 
   Channel *channel_type = findChannel(user->getCurrentChannel());
+
+  //Add Topic Changes here!
   if (channel_type == NULL) //Checkes if the channel doesnt exist
   {
     this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");

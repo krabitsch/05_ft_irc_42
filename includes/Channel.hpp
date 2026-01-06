@@ -11,7 +11,8 @@ class Channel
 	std::string _channelname; //Name of the channel i.e. the topic
 	std::vector<Client *> _members; //This is a basic map that will contain all the nicknames of the clients who are apart of the channel
 	std::vector<int> _operators; //Array of fds belonging to which members are operators
-	
+	std::string _topic;
+
 	//Mode Settings
 	bool _operatorPriv;
 	bool _inviteonly;
@@ -30,6 +31,7 @@ class Channel
 	void AddMember(Client* user);
 	void RemoveMember(std::string username);
 	std::string getname(void) const;
+	std::string getTopic(void) const;
 	size_t	getUserlimit(void) const;
 	size_t	getMembersize(void) const;
 	bool 	getInviteonly(void) const;
@@ -42,6 +44,7 @@ class Channel
 	//Operator Commands
 	bool IsOperator(int fd);
 	void SetOperator(std::string username, int fd);
+	void setTopic(std::string word);
 	void UnsetOperator(std::string username, int fd);
 
 	void kick(std::string username, std::string comments, int fd);
