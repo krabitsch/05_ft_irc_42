@@ -36,18 +36,8 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 		return ;
 	}
 
-	const std::string &passwordInput = cmd.parameters[0];
-	if (passwordInput != this->_password)
-	{
-		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
-					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
-		std::cout << RED << "Client (fd = " << client.getFd() << ") Disconnected" << WHITE << std::endl;
-		this->clearClient(client.getFd());
-		return ;
-	}
-
 	client.setHasPass(true);
-	client.setPassword(passwordInput);
+	client.setPassword(cmd.parameters[0]);
  	//this->sendNotice(client.getFd(), "*", "Password accepted"); // libera sends no notice 
 	this->tryRegisterClient(client);
 }
@@ -164,7 +154,8 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	if (client.isRegistered() && !oldNick.empty() && oldNick != newNick)
 		broadcastNickChange(client, oldNick, newNick);
 
-	this->tryRegisterClient(client);
+	if (!client.isRegistered())
+		this->tryRegisterClient(client);
 
 }
 

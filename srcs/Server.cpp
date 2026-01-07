@@ -396,37 +396,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "PRIVMSG")
 	{
-
-		std::cout << "Handling PRIVMSG command" << std::endl;
-		if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
-		{
-			//411 ERR_NORECIPIENT
-			sendNumeric(fd, 411, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
-					"No recipient given (PRIVMSG)");
-		}
-		else if (cmd.parameters.size() == 1)
-		{
-			//412 ERR_NOTEXTTOSEND
-			sendNumeric(fd, 412, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
-				":No text to send");
-			return;
-		}
-		else if (cmd.parameters.size() > 6)
-		{
-			//407 ERR_TOOMANYTARGETS
-			sendNumeric(fd, 407, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
-				":Too many recipients. No message delivered");
-		}
-		else
-		{
-			for (size_t i = 0; i < cmd.parameters.size() - 1; i++)
-			{
-				std::string target = cmd.parameters[i];
-				std::string msg = cmd.parameters[cmd.parameters.size() - 1];
-				privateMsg(fd, target, msg);
-			}
-		}
-
+		this->privmsgCommand(*client, cmd);
 		return;
 	}
 	if (c == "TOPIC")
@@ -828,6 +798,15 @@ void Server::tryRegisterClient(Client &client)
 	
 	if (!client.hasPass() || !client.hasNick() || !client.hasUser())
 		return ;
+
+	if (client.getPassword() != this->_password)
+	{
+		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
+					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
+		std::cout << RED << "Client (fd = " << client.getFd() << ") Disconnected" << WHITE << std::endl;
+		//this->clearClient(client.getFd());
+		return ;
+	}
 
 	// client not yet registered and all conditions met -> set as registered and send welcome
 	client.setRegistered(true);
