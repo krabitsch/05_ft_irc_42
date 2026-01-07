@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/12 15:04:24 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/07 10:48:26 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -441,16 +441,14 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Extra: Look into if topic is done correctly
 		
 		if (!cmd.parameters.empty())
-		{
 			topic(cmd.parameters[0], fd);
-		}
 		else
 		 	topic("", fd);
 		return;
 	}
 	if (c == "KICK")
 	{
-		//Kick Numeric Replies //AL: Added all of them other then ERR_BADCHANMASK, unsure what that really is
+		//Kick Numeric Replies
 		/*Numeric Replies:
 
         ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL

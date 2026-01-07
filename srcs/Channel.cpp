@@ -75,13 +75,18 @@ void Channel::channelTopic(std::string newtopic)
 //Step 1: Get client and add it to the map
 void Channel::AddMember(Client* user)
 {
+	std::cout << "Add Member 1 " << user->getNickname() << std::endl;
 	int i = 0;
 	while (i < _members.size())
 	{
-		if (_members[i]->getNickname() == user->getNickname() || _members[i]->getUsername() == user->getUsername())
+		if (_members[i]->getFd() == user->getFd())
+		{
+			std::cout << "early exit" << std::endl;	
 			return ;
+		}
 		i++;
 	}
+	std::cout << "Added Member!" << std::endl;
 	_members.push_back(user);
 	user->AddChannel(_channelname, 'm');
 }
@@ -94,7 +99,7 @@ void Channel::RemoveMember(std::string username)
 	int i = 0;
 	while (i < _members.size())
 	{
-		if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
+		if (_members[i]->getNickname() == username)
 		{
 			_members[i]->RemoveChannel(_channelname);
 			_members[i]->setCurrentChannel(""); //Set the users current channel to blank

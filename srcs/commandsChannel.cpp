@@ -4,6 +4,8 @@
   //Join
   //Switching Channels and joining the one in the prameter 
 
+//JOIN Needs to be fixed when joining the channel the user isnt added to the channel list of the client
+
   void Server::join(int fd, std::string channelname, std::string pass)
   {
     Channel *_channel = findChannel(channelname);
@@ -54,8 +56,8 @@
       _client->setCurrentChannel(channelname);
       this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel"); 
       
-      if (!checker) //Adds the channel to the client list
-        _channel->AddMember(_client);
+      if (!checker) //Adds the channel to the client list !isnt is here 
+        _channel->AddMember(_client); 
     }
   }
 
