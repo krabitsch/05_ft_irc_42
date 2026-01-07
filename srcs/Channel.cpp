@@ -17,6 +17,20 @@ Channel::Channel(Server *server, int fd, std::string name): _channelname(name), 
 	_operatorPriv = true;
 };
 
+Channel::Channel(Server *server, int fd, std::string name, std::string pass): _channelname(name), _server(server), _password(pass) 
+{
+	Client *client = _server->findClient(fd, "");
+	client->AddChannel(name, 'o');
+	AddMember(client);
+	client->setCurrentChannel(name);
+	_operators.push_back(client->getFd());
+	_inviteonly = false;
+	_topicPriv = false;
+	_topic = "";
+	_userlimit = 0;
+	_operatorPriv = true;
+};
+
 //Destructor
 Channel::~Channel() {};
 
@@ -49,26 +63,6 @@ Channel &Channel:: operator=(const Channel &other)
 	}
 	return (*this);
 };
-
-//Change Topic
-
-void Channel::channelTopic(std::string newtopic)
-{
-	std::string oldtopic = _channelname;
-    _channelname = newtopic; 
-    
-    int i = 0;
-    while (i < _members.size())
-    {
-		_members[i]->setCurrentChannel(newtopic);
-		_members[i]->RemoveChannel(oldtopic); 
-		if (IsOperator(_members[i]->getFd()) == true)
-			_members[i]->AddChannel(_channelname, 'o');
-		else
-			_members[i]->AddChannel(_channelname, 'm');
-        i++;
-    }
-}
 
 
 //Add Member
@@ -293,4 +287,9 @@ std::string	Channel::getPassword(void) const
 void Channel::setTopic(std::string word)
 {
 	_topic = word;	
+}
+
+void Channel::setPassword(std::string word)
+{
+	_password = word;	
 }

@@ -121,10 +121,3 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
             std::cerr << "send() error on fd " << recipient->getFd() << ": " << std::strerror(errno) << std::endl;
     }
 }
-
-  //Notice
-  //Idk what that is ask someone, maybe the client check if they received any request or notifications 
-  void notice()
-  {
-    
-  }

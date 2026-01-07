@@ -22,12 +22,12 @@ class Channel
 
 	public:
 	Channel(Server *server, int fd, std::string name);
+	Channel(Server *server, int fd, std::string name, std::string pass);
 	~Channel();
 	Channel(const Channel &other);
 	Channel &operator=(const Channel &other);
 
 	//Member Functions
-	void channelTopic(std::string newtopic);
 	void AddMember(Client* user);
 	void RemoveMember(std::string username);
 	std::string getname(void) const;
@@ -41,10 +41,18 @@ class Channel
 	std::vector<Client *>* getMembers(void);
 	void printMembers(void);
 
+	//Mode Commands
+	int modeI(int fd, std::string param);
+	int modeT(int fd, std::string param);
+	int modeO(int fd, std::string param);
+	int modeK(int fd, std::string param, std::string input);
+	int modeL(int fd, std::string param, std::string input);
+
 	//Operator Commands
 	bool IsOperator(int fd);
 	void SetOperator(std::string username, int fd);
 	void setTopic(std::string word);
+	void setPassword(std::string word);
 	void UnsetOperator(std::string username, int fd);
 
 	void kick(std::string username, std::string comments, int fd);

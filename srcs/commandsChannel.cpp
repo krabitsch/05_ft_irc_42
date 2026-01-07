@@ -4,7 +4,7 @@
   //Join
   //Switching Channels and joining the one in the prameter 
 
-//JOIN Needs to be fixed when joining the channel the user isnt added to the channel list of the client
+  //JOIN Needs to be fixed when joining the channel the user isnt added to the channel list of the client
 
   void Server::join(int fd, std::string channelname, std::string pass)
   {
@@ -12,8 +12,16 @@
 
     if (_channel == NULL)
     {
-      Channel _newchannel(this, fd,channelname); //creates the channel
-      _channels.push_back(_newchannel);
+      if (!pass.empty())
+      {
+        Channel _newchannel(this, fd,channelname, pass); //creates the channel with passkey
+        _channels.push_back(_newchannel);
+      }
+      else
+      {
+        Channel _newchannel(this, fd,channelname); //creates the channel
+        _channels.push_back(_newchannel);
+      }
       this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel"); //fix this!
     }
     else 
@@ -57,13 +65,30 @@
       this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel"); 
       
       if (!checker) //Adds the channel to the client list !isnt is here 
-        _channel->AddMember(_client); 
+        _channel->AddMember(_client);
     }
   }
 
-  //Part //We dont technically need this! decide whether or not we want to implement this feature!
-  //leaves the channel you are currently on!
-  void Server::part(int fd)
+  //Part //leaves the channel you are currently on!
+  void Server::part(int fd, std::string channelname)
   {
+    Client *client = findClient(fd, ""); //Finds the client
+    if (client == NULL) //error handling but client does exist
+    {
+      this->sendNumeric(fd, 401, "", std::vector<std::string>(), "nick does not exist");
+      return ;
+    }
+
+    Channel *channel_type = findChannel(channelname);
+    if (channel_type == NULL) //Checkes if the channel doesnt exist
+    {
+      this->sendNumeric(fd, 403, "", std::vector<std::string>(), channelname+ " :No such channel");
+      return ;
+    }
+    this->sendNotice(fd, channel_type->getname(), client->getNickname() + " has left the channel");
+    channel_type->RemoveMember(client->getNickname()); //Removes the member from the channel
+    client->RemoveChannel(client->getCurrentChannel()); //Removes the channel from the clients list
+    client->setCurrentChannel(""); //Sets there current channel to nothing
+    return ;
     
   }

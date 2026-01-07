@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:57:10 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/02 11:01:15 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/07 15:10:15 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,14 +41,11 @@ class Client
 
 	std::map<std::string, char>	_channels;		//Which channels the user is a part of and the char is either an m (member) or o (operator)
 	std::string					_currentChannel;//Should this exist or not is there a better way
-	std::map<char, std::string>	_notifications;	//Map containing invite to channel or private msg, as well as a char to indicate what type of notification it is
 	
 	bool		_hasPass;
 	bool		_hasNick;
 	bool		_hasUser;
 	bool		_registered;
-
-
 	
 	public:
 	
@@ -89,16 +86,11 @@ class Client
 	void						setHasUser(bool has);
 	void						setRegistered(bool is);
 
-	//Notifications *Still unsure about this part honestly
-
 	// Variables/methods global to the class
 
 	//Client Channel Features
 	void						AddChannel(std::string channelname, char type);
 	void						RemoveChannel(std::string channelname);	
-	
-	//Notifications *Still unsure about this part honestly
-	void						addNotification(std::string msg, char type);
 	
 	
 };

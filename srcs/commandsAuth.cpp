@@ -64,7 +64,6 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
   	this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick);
 	client.setHasNick(true);
 	this->tryRegisterClient(client);
-
 }
 
 //User
