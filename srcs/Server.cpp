@@ -283,7 +283,7 @@ void Server::broadcastToChannel(const std::string& channelName, const std::strin
 	if (!channel)
 		return ;
 
-	std::vector<Client*>* members = channel->getMembers();
+	std::vector<Client *>* members = channel->getMembers();
 	if (!members)
 		return ;
 
@@ -396,36 +396,6 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "PRIVMSG")
 	{
-		/*
-		*************************
-		Still need to implement:
-
-		404	 ERR_CANNOTSENDTOCHAN
-						"<channel name> :Cannot send to channel"
-
-				- Sent to a user who is either (a) not on a channel
-				  which is mode +n or (b) not a chanop (or mode +v) on
-				  a channel which has mode +m set and is trying to send
-				  a PRIVMSG message to that channel.
-		
-		413	 ERR_NOTOPLEVEL
-						"<mask> :No toplevel domain specified"
-		
-		414	 ERR_WILDTOPLEVEL
-						"<mask> :Wildcard in toplevel domain"
-
-				- 412 - 414 are returned by PRIVMSG to indicate that
-				  the message wasn't delivered for some reason.
-				  ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that
-				  are returned when an invalid use of
-				  "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.
-		
-		407	 ERR_TOOMANYTARGETS
-						"<target> :Duplicate recipients. No message \
-
-		*************************
-		*/
-
 
 		std::cout << "Handling PRIVMSG command" << std::endl;
 		if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
@@ -440,6 +410,12 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			sendNumeric(fd, 412, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
 				":No text to send");
 			return;
+		}
+		else if (cmd.parameters.size() > 6)
+		{
+			//407 ERR_TOOMANYTARGETS
+			sendNumeric(fd, 407, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
+				":Too many recipients. No message delivered");
 		}
 		else
 		{
