@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commandsAuth.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/03 22:42:59 by krabitsc         ###   ########.fr       */
+/*   Updated: 2026/01/13 11:15:48 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,18 +36,8 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 		return ;
 	}
 
-	const std::string &passwordInput = cmd.parameters[0];
-	if (passwordInput != this->_password)
-	{
-		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
-					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
-		std::cout << RED << "Client (fd = " << client.getFd() << ") Disconnected" << WHITE << std::endl;
-		this->clearClient(client.getFd());
-		return ;
-	}
-
 	client.setHasPass(true);
-	client.setPassword(passwordInput);
+	client.setPassword(cmd.parameters[0]);
  	//this->sendNotice(client.getFd(), "*", "Password accepted"); // libera sends no notice 
 	this->tryRegisterClient(client);
 }
@@ -164,7 +154,9 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	if (client.isRegistered() && !oldNick.empty() && oldNick != newNick)
 		broadcastNickChange(client, oldNick, newNick);
 
-	this->tryRegisterClient(client);
+	if (!client.isRegistered())
+		this->tryRegisterClient(client);
+
 }
 
 // USER COMMAND helper functions (static, file scope functions)

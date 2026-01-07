@@ -7,33 +7,42 @@
 #include <cerrno>
 #include <cstring>
 
-  // Commands_Msg.cpp	  // PRIVMSG/NOTICE
+// PRIVMSG command
+void Server::privmsgCommand(Client &client, const IrcCommand &cmd){
 
-  //Privmsg 
-  //Step 1:Get the username or nickname, look through it from the server, if they dont exist display a message carry on if they do
- 
-
-  /*void Server::privateMsg(std::string username, std::string msg)
-  {
-	std::cout << "Executing PRIVMSG to " << username << " with message: " << msg << std::endl;
-	Client *client = findClientByNickOrUser(-1, username);
-	if (client == NULL)
+	int fd = client.getFd();
+	DBG({std::cout << "Handling PRIVMSG command" << std::endl});
+	if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
 	{
-	  this->sendNumeric(-1, 401, username, std::vector<std::string>(), "No such nick/channel");
-	  return ;
+		//411 ERR_NORECIPIENT
+		sendNumeric(fd, 411, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
+				"No recipient given (PRIVMSG)");
+	}
+	else if (cmd.parameters.size() == 1)
+	{
+		//412 ERR_NOTEXTTOSEND
+		sendNumeric(fd, 412, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
+			":No text to send");
+		return;
+	}
+	else if (cmd.parameters.size() > 6)
+	{
+		//407 ERR_TOOMANYTARGETS
+		sendNumeric(fd, 407, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
+			":Too many recipients. No message delivered");
+	}
+	else
+	{
+		for (size_t i = 0; i < cmd.parameters.size() - 1; i++)
+		{
+			std::string target = cmd.parameters[i];
+			std::string msg = cmd.parameters[cmd.parameters.size() - 1];
+			privateMsg(fd, target, msg);
+		}
 	}
 
-	//send the msg to the user im not really sure how to do th at XD
-	this->sendMessage(client->getFd(), "", "PRIVMSG", std::vector<std::string>(1, username), msg);
-
-	//Old Message
-		ssize_t sent = send(client->getFd(), msg.c_str(), msg.size(), 0);
-		if (sent == -1) 
-		{
-		  std::cerr << "send() error on fd " << client->getFd() << ": " << std::strerror(errno) << std::endl;
-		}
-  }*/
- // PRIVMSG - Send a message to a user or channel
+	return;
+}
 
 std::string Server::makePrivmsg(const std::string &prefix, const std::string &target, const std::string &msg)
 {
