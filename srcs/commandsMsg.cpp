@@ -124,16 +124,9 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
 		std::string senderPrefix = sender->getNickname() + "!" + sender->getUsername() + "@localhost";
 		std::string privmsgLine = makePrivmsg(senderPrefix, target, msg);
 
-		// Send message to recipient
-		ssize_t sent = send(recipient->getFd(), privmsgLine.c_str(), privmsgLine.length(), 0);
-		if (sent == -1)
-			std::cerr << "send() error on fd " << recipient->getFd() << ": " << std::strerror(errno) << std::endl;
-	}
+        // Send message to recipient
+        ssize_t sent = send(recipient->getFd(), privmsgLine.c_str(), privmsgLine.length(), 0);
+        if (sent == -1)
+            std::cerr << "send() error on fd " << recipient->getFd() << ": " << std::strerror(errno) << std::endl;
+    }
 }
-
-  //Notice
-  //Idk what that is ask someone, maybe the client check if they received any request or notifications 
-  void notice()
-  {
-	
-  }

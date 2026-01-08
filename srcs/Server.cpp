@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/03 22:46:38 by krabitsc         ###   ########.fr       */
+/*   Updated: 2026/01/08 11:43:52 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -377,7 +377,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 				join(fd, cmd.parameters[0], cmd.parameters[1]);
 			else
 				join(fd, cmd.parameters[0], "");
-			//std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;
+			DBG({std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;});
 			std::cout << "User has joined channel: " << cmd.parameters[0] << std::endl;
 		}
 		else 
@@ -390,8 +390,12 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "PART")
 	{
-		// your part() currently takes only fd; if you need channel name, change signature
-		part(fd);
+		if (!cmd.parameters.empty())
+			part(fd, cmd.parameters[0]);
+		else
+		{	// 461 ERR_NEEDMOREPARAMS
+			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "PART"),"Not enough parameters");
+		}
 		return;
 	}
 	if (c == "PRIVMSG")
@@ -409,17 +413,18 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		ERR_CHANOPRIVSNEEDEDL*/
 		//Extra: Look into if topic is done correctly
 		
-		if (!cmd.parameters.empty())
-		{
-			topic(cmd.parameters[0], fd);
-		}
+		if (!cmd.parameters.empty() && cmd.parameters.size() == 2)
+			topic(cmd.parameters[0], cmd.parameters[1], fd);
+		else if (!cmd.parameters.empty() && cmd.parameters.size() == 1)
+		 	topic(cmd.parameters[0], "", fd);
 		else
-		 	topic("", fd);
+			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "TOPIC"),
+						"Not enough parameters");
 		return;
 	}
 	if (c == "KICK")
 	{
-		//Kick Numeric Replies //AL: Added all of them other then ERR_BADCHANMASK, unsure what that really is
+		//Kick Numeric Replies
 		/*Numeric Replies:
 
 		ERR_NEEDMOREPARAMS			ERR_NOSUCHCHANNEL
@@ -431,7 +436,8 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			if (cmd.parameters.size() < 2)
 			{
 				//ERR_NEEDMOREPARAMS 461
-				this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+				this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "KICK"),
+						"Not enough parameters");
 				return ;
 			}
 			Channel *channel = findChannel(cmd.parameters[0]);
@@ -445,14 +451,15 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			else
 			{
 				//ERR_NOSUCHCHANNEL
-				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+				this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			}
 			return;
 		}
 		else 
 		{
 			//ERR_NEEDMOREPARAMS 461
-			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "KICK"),
+						"Not enough parameters");
 			return ;
 		}
 	}
@@ -478,8 +485,10 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			if (channel == NULL)
 			{
 				//ERR_NOSUCHCHANNEL 403
-				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+				this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			}
+			else if (cmd.parameters.size() == 1)
+				channel->mode(fd, "", ""); //If no mode parameters are given
 			else
 			{
 				if (cmd.parameters.size() == 2)
@@ -492,7 +501,8 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		else 
 		{
 			//ERR_NEEDMOREPARAMS 461
-			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
+						"Not enough parameters");
 			return ;
 		}
 	}
@@ -510,14 +520,15 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		if (cmd.parameters.empty())
 		{
 			//ERR_NEEDMOREPARAMS
-			this->sendNumeric(fd, 461, "", std::vector<std::string>(), "Not enough parameters");
+			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "INVITE"),
+						"Not enough parameters");
 			return ;
 		}
 		Channel* channel = findChannel(cmd.parameters[0]); //Check if they create a new channel if one doesnt exist
 		if (channel == NULL)
 		{
 			//ERR_NOSUCHCHANNEL 403
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			return ;
 		}
 		channel->invite(cmd.parameters[1], fd);
@@ -532,7 +543,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		Channel* channel = findChannel(findClientByFd(fd)->getCurrentChannel());
 		if (channel == NULL)
 		{
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			return ;
 		}
 		if (cmd.parameters[0] == "-u")
