@@ -1,4 +1,4 @@
-// Commands_Topic.cpp    // TOPIC
+// Commands_Topic.cpp	// TOPIC
 #include "../includes/Server.hpp"
 
 
@@ -14,8 +14,8 @@ void Server::topic(std::string channelname, std::string maintopic, int clientfd)
   Channel *channel_type = findChannel(user->getCurrentChannel());
   if (channel_type == NULL) //Checkes if the channel doesnt exist
   {
-    this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");
-    return ;
+	this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");
+	return ;
   }
 
   if (maintopic.empty())

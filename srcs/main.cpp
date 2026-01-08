@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:56:54 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/01 11:53:45 by aruckenb         ###   ########.fr       */
+/*   Updated: 2025/12/28 16:48:40 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,13 @@
 // ./ircserv 4444 1234
 // start client in separate terminal window, running:
 // nc -C localhost 4444
-// -C flag ensures nc sends \r\n (not just \n)
+// -C flag ensures nc sends \r\n (not just \n);  \r\n is CRLF (Carriage Return + Line Feed)
 
 #include "../includes/Parser.hpp"
 #include "../includes/Server.hpp"
 #include <cerrno>
 #include <climits>
+#include <cctype>
 
 
 int	checkInputArgs(int ac, char **av, int* port, std::string* password)
@@ -62,7 +63,7 @@ int	checkInputArgs(int ac, char **av, int* port, std::string* password)
 	if (portVal <= 1023)
 	{
 		std::cerr << "Warning: Ports 1–1023 are reserved (root-only). "
-		          << "Pick a port >= 1024, e.g. 4444." << std::endl;
+				  << "Pick a port >= 1024, e.g. 4444." << std::endl;
 		return (-1);
 	}
 
@@ -71,11 +72,26 @@ int	checkInputArgs(int ac, char **av, int* port, std::string* password)
 	// password constraints
 	if (pwdStr.length() == 0 || pwdStr.length() > 50)
 	{
-	    std::cerr << "Error: Password must be 1–50 characters long." << std::endl;
-    	return (-1);
+		std::cerr << "Error: Password must be 1–50 characters long." << std::endl;
+		return (-1);
+	}
+	// disallow whitespaces or control chars
+	for (size_t i = 0; i < pwdStr.size(); i++)
+	{
+		unsigned char ch = static_cast<unsigned char>(pwdStr[i]);
+		if (std::isspace(ch))
+		{
+			std::cerr << "Error: Password must not contain whitespace." << std::endl;
+			return (-1);
+		}
+		if (std::iscntrl(ch))
+		{
+			std::cerr << "Error: Password must not contain control characters." << std::endl;
+			return (-1);
+		}
 	}
 
-	*port     = portVal;
+	*port	 = portVal;
 	*password = pwdStr;
 
 	return (0);

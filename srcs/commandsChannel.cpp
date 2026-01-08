@@ -1,8 +1,8 @@
-  // Commands_Channel.cpp  // JOIN/PART/NAMES
-  #include "../includes/Server.hpp"
+// Commands_Channel.cpp  // JOIN/PART/NAMES
+#include "../includes/Server.hpp"
 
-  //Join
-  //Switching Channels and joining the one in the prameter 
+//Join
+//Switching Channels and joining the one in the prameter 
 
   //JOIN Needs to be fixed when joining the channel the user isnt added to the channel list of the client
 
@@ -34,12 +34,15 @@
         return ;
       }
 
-      //Getting Clients Channel List
-      std::map<std::string, char>*channelist = _client->GetChannel();
+	if (channel == NULL)
+	{
+		Channel* newChannel = new Channel(this, fd, channelname);
+		this->_channels.push_back(newChannel);
+		channel = newChannel;
 
-      //Checks if the user has access to the channel already or not if not add it to there channellist
-      bool checker = (channelist->find(channelname) != channelist->end());
-
+		std::string joinMsg = ":" + client->getNickname() + " JOIN " + channelname + "\r\n";
+		broadcastToChannel(channelname, joinMsg, -1); // broadcast to all channel mmembers (including self)
+    
       //Error Handling
       if (_channel->getInviteonly() == true && checker == false)
       {

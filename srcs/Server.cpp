@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 09:26:18 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/03 22:46:38 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,11 +36,7 @@ Server::Server(): _port(-1),
 Server::Server(int port, std::string password): _port(port),
 												_password(password),
 												_fdServer(-1),
-												_serverName("ircAlPeKa@42")
-{
-	// KR: I really don't understand why we need this: instances of Server class have access via this pointer anyway, outside the class no access to that?!
-	//server.setServerAdd(&server); //Sets the server class inside to itself 
-}
+												_serverName("ircAlPeKa@42") {}
 
 Server::Server(Server const& other): _port(other._port), 
 									 _password(other._password),
@@ -55,9 +51,10 @@ Server&	Server::operator=(Server const& other)
 {
 	if (this != &other)
 	{
-		this->_port		 = other._port;
-		this->_password	 = other._password;
-		this->_fdServer  = other._fdServer;
+		this->_port		   = other._port;
+		this->_password	   = other._password;
+		this->_fdServer	   = other._fdServer;
+		this->_serverName  = other._serverName;
 	}
 	return (*this);
 }
@@ -82,8 +79,7 @@ void	Server::serverInit()
 			if (this->_fds[i].revents & (POLLHUP | POLLERR | POLLNVAL))
 			{
 				std::cout << RED << "Client (fd = " << this->_fds[i].fd << ") poll error/hangup" << WHITE << std::endl;
-				clearClients(this->_fds[i].fd);
-				close(this->_fds[i].fd);
+				clearClient(this->_fds[i].fd);
 				continue ;
 			}
 
@@ -108,15 +104,15 @@ void Server::createSocketBindListen()
 		throw(std::runtime_error("Can't create socket for Server!"));
 
 	// Set socket options as needed: socket option SO_REUSEADDR to reuse the address, socket option O_NONBLOCK for non-blocking socket
-	int en = 1;
-	if(setsockopt(this->_fdServer, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) 
+	int enable = 1;
+	if(setsockopt(this->_fdServer, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) == -1) 
 		throw(std::runtime_error("failed to set option (SO_REUSEADDR) on socket"));
 	if (fcntl(this->_fdServer, F_SETFL, O_NONBLOCK) == -1)
 		throw(std::runtime_error("failed to set option (O_NONBLOCK) on socket"));
 
 	// fill in server information
 	struct sockaddr_in		addrServer;
-	struct pollfd			NewPoll;
+	struct pollfd			newPoll;
 	addrServer.sin_family		= AF_INET;		 		// sets address family to ipv4
 	addrServer.sin_port			= htons(this->_port);	// converts the port (host shorts) to network byte order (network shorts, in big endian)
 	addrServer.sin_addr.s_addr	= INADDR_ANY;			// sets address to any local machine address
@@ -131,19 +127,18 @@ void Server::createSocketBindListen()
 		throw(std::runtime_error("Can't listen"));
 
 	// add server related info for poll() function to vector of pollfd, _fds:
-	NewPoll.fd	  	= this->_fdServer;	// adds server socket to the pollfd
-	NewPoll.events  = POLLIN;			// sets event to POLLIN for reading data
-	NewPoll.revents = 0;				// sets revents to 0
-	this->_fds.push_back(NewPoll);		// adds server socket to the pollfd
+	newPoll.fd	  	= this->_fdServer;	// adds server socket to the pollfd
+	newPoll.events  = POLLIN;			// sets event to POLLIN for reading data
+	newPoll.revents = 0;				// sets revents to 0
+	this->_fds.push_back(newPoll);		// adds server socket to the pollfd
 
 }
 
 void Server::acceptClient()	// accepts new client
 {
-	Client 				client;
 	struct sockaddr_in	addrClient;
 	socklen_t			sizeClient = sizeof(addrClient);
-	struct pollfd		NewPoll;
+	struct pollfd		newPoll;
 
 	int incomingClientFd = accept(this->_fdServer, (sockaddr *)&(addrClient), &sizeClient); // accepts new client
 	if (incomingClientFd == -1)
@@ -160,43 +155,46 @@ void Server::acceptClient()	// accepts new client
 		return ;
 	}
 
-	// fill in client information
-	NewPoll.fd	  	= incomingClientFd;	// adds client socket to the pollfd
-	NewPoll.events  = POLLIN;			// sets event to POLLIN for reading data
-	NewPoll.revents = 0;				// sets the revents to 0
+	// create Client instance (as pointer) and fill in client information
+	Client*  client = new Client();
+	newPoll.fd	  	= incomingClientFd;	// adds client socket to the pollfd
+	newPoll.events  = POLLIN;			// sets event to POLLIN for reading data
+	newPoll.revents = 0;				// sets the revents to 0
 
 	char host[NI_MAXHOST];
 	char serv[NI_MAXSERV];
 	memset(host, 0, NI_MAXHOST);
 	memset(serv, 0, NI_MAXSERV);
-	client.setFd(incomingClientFd);													// sets client file descriptor
-	client.setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));// converts ip address to string and sets it
-	client.setServer(this);
+	client->setFd(incomingClientFd);													// sets client file descriptor
+	client->setIpAdd(inet_ntop(AF_INET, &(addrClient.sin_addr), host, sizeof(host)));// converts ip address to string and sets it
+	client->setServer(this);
 	this->_clients.push_back(client);												// adds client to the vector of clients
-	this->_fds.push_back(NewPoll);													// adds client socket to the pollfd
+	this->_fds.push_back(newPoll);													// adds client socket to the pollfd
 
 	sendNotice(incomingClientFd, "AUTH", "*** Looking up your hostname...");
 	int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, NI_NAMEREQD); // require a hostname
 	if (result == 0)
 	{
-		std::string hostname(host);
-		sendNotice(incomingClientFd, "AUTH", "*** Found your hostname: " + hostname);
+		client->setHostname(host);
+		sendNotice(incomingClientFd, "AUTH", "*** Found your hostname: " + client->getHostname());
 	}
 	else
+	{
+		client->setHostname(client->getIpAdd()); // or host string from inet_ntop
 		sendNotice(incomingClientFd, "AUTH", "*** Couldn't look up your hostname");
-	
+	}
 	sendNotice(incomingClientFd, "AUTH", "*** Checking Ident"); // send fake msgs re Ident (has nothing to do with IRC authentification)
 	sendNotice(incomingClientFd, "AUTH", "*** No Ident response");
 
-	DBG({std::cout << GREEN << "Client (fd = " << incomingClientFd << ") Connected" << WHITE << std::endl;
-		int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, 0);
-		if (result == 0)
-		{
-			std::cout << host << " (Client (fd = " << incomingClientFd << "))"
-					  << " connected FROM port " << ntohs(addrClient.sin_port)
-					  << " TO server port " << _port
-				  	<< std::endl;
-		} });
+	std::cout << GREEN << "Client (fd = " << incomingClientFd << ") Connected" << WHITE << std::endl;
+	//int result = getnameinfo((sockaddr*)&addrClient, sizeof(addrClient), host, NI_MAXHOST, serv, NI_MAXSERV, 0);
+	if (result == 0)
+	{
+		std::cout << host << " (Client (fd = " << incomingClientFd << "))"
+				  << " connected FROM port " << ntohs(addrClient.sin_port)
+				  << " TO server port " << _port
+			  	<< std::endl;
+	}
 
 }
 
@@ -212,14 +210,12 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 		if (errno == EAGAIN || errno == EWOULDBLOCK) // no data available right now on a non-blocking socket; just ignore.
 			return ;
 		std::cerr << RED << "recv() error on fd " << fd << ": " << std::strerror(errno) << WHITE << std::endl;
-		clearClients(fd);
-		close(fd);
+		clearClient(fd);
 	}
 	if (bytes == 0)
 	{
 		std::cout << RED << "Client (fd = " << fd << ") Disconnected" << WHITE << std::endl;
-		clearClients(fd);
-		close(fd);
+		clearClient(fd);
 		return ;
 	}
 	
@@ -227,49 +223,49 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	buff[bytes] = '\0';
 	
 	// find client associated with this fd and append (valid) bytes to client's buffer
-	Client*			client 		 = findClient(fd, "");
+	Client*			client 		 = findClientByFd(fd);
 	std::string&	resultBuffer = client->getBuffer();
 	resultBuffer.append(buff, bytes);
-	static const size_t IRC_MAX_MSG = 512;
-	if (resultBuffer.size() > IRC_MAX_MSG) // strict RFC enforcement, drop client if msg too long
-	{
-		std::cerr << "Client (fd = " << fd << ") sent too long message (>512 bytes), closing connection" << std::endl;
-		clearClients(fd);
-		close(fd);
-		return ;
-	}
-
-	//std::cout << YELLOW << "Client (fd = " << fd << ") Data: " << WHITE << result << WHITE;
-			
+	static const size_t IRC_MAX_LINE = 512; // 512 includes CRLF.
 	// extract complete messages (delimited by "\r\n"), parse and handle the command, etc...
-	size_t pos;
-	while ((pos = resultBuffer.find("\r\n")) != std::string::npos)
+	while (true)
 	{
-   		std::string message = resultBuffer.substr(0, pos);
-		resultBuffer.erase(0, pos + 2); // +2 to remove the \r\n
-
-   		//std::cout << "Received complete message: [" << message << "]\n";
-
-		//const char* replyMsg = "Received client msg...\n";
-		//ssize_t sent = send(fd, replyMsg, std::strlen(replyMsg), 0);
-		//ssize_t sent = send(fd, message.c_str(), message.size(), 0);
+		size_t posEOL = resultBuffer.find("\r\n");
+		if (posEOL == std::string::npos)
+		{
+			// no full line yet (no \r\n); avoid unbounded growth by dropping potentially malicious clients if msg too long ( strict RFC enforcement)
+			if (resultBuffer.size() > IRC_MAX_LINE)
+			{
+				sendNumeric(fd, 417, "*", std::vector<std::string>(), "Input line too long"); // 417 = too long line
+				clearClient(fd);
+			}
+			break ;
+		}
+		// have a complete line (0 to eol)
+		if (posEOL > IRC_MAX_LINE) // ... but line is too long
+		{
+			sendNumeric(fd, 417, "*", std::vector<std::string>(), "Input line too long");
+			clearClient(fd);
+			return ;
+		}
+		// have a complete line (0 to eol) within 512 line limit
+		std::string message = resultBuffer.substr(0, posEOL);
+		resultBuffer.erase(0, posEOL + 2);
 
 		IrcCommand command = parseMessage(message);
 		DBG({command.print(); });
-		this->broadcastMessage(fd, message + "\r\n");
 		this->handleMessage(fd, command);
-		//if (sent == -1)
-		//	std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
+		// if command handling removed the client (QUIT, bad PASS, recv error, etc.) MUST stop using resultBuffer
+		if (findClientByFd(fd) == NULL)
+			return ;
 	}
-
 }
-
 
 void Server::broadcastMessage(int from_fd, const std::string& msg) 
 {
 	for (size_t i = 0; i < _clients.size(); ++i) 
 	{
-		int client_fd = _clients[i].getFd();
+		int client_fd = _clients[i]->getFd();
 		if (client_fd != from_fd) 
 		{
 			ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
@@ -281,10 +277,39 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 	}
 }
 
+void Server::broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd)
+{
+	Channel* channel = findChannel(channelName);
+	if (!channel)
+		return ;
+
+	std::vector<Client*>* members = channel->getMembers();
+	if (!members)
+		return ;
+
+	// dbg print:
+	std::cout << "broadcastToChannel: " << channelName << " members=" << members->size() << std::endl;
+	for (size_t i = 0; i < members->size(); i++)
+	{
+		Client* m = (*members)[i];
+		if (!m)
+			continue ;
+
+		int toFd = m->getFd();
+		if (exceptFd != -1 && toFd == exceptFd) 
+			continue ;
+
+		sendConstructedMsg(toFd, msg); // msg ends with \r\n
+	}
+}
+
 void Server::handleMessage(int fd, const IrcCommand &cmd)
 {
+	if (cmd.command.empty())
+	return ; // ignore blank lines / whitespace-only input
+	
 	std::string c = cmd.command;
-	Client*		client = findClient(fd, "");
+	Client*		client = findClientByFd(fd);
 	if (!client)
 		return ;
 
@@ -312,20 +337,17 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	if (c == "QUIT")
 	{
 		DBG({std::cout << "Handling QUIT command" << std::endl; });
-		if (cmd.parameters.empty())
-			quit("", fd);
-		else
-			quit(cmd.parameters[0], fd);
+		this->quitCommand(*client, cmd);
 		return ;
 	}
 	
 	DBG({
-    std::cout << YELLOW << "[REG CHECK] Cliend (fd = " << fd << ")"
-              << " PASS=" << (client->hasPass() ? "true" : "false")
-              << " NICK=" << (client->hasNick() ? "true" : "false")
-              << " USER=" << (client->hasUser() ? "true" : "false")
-              << " REGISTERED=" << (client->isRegistered() ? "true" : "false")
-              << WHITE << std::endl; });
+	std::cout << YELLOW << "[REG CHECK] Cliend (fd = " << fd << ")"
+			  << " PASS=" << (client->hasPass() ? "true" : "false")
+			  << " NICK=" << (client->hasNick() ? "true" : "false")
+			  << " USER=" << (client->hasUser() ? "true" : "false")
+			  << " REGISTERED=" << (client->isRegistered() ? "true" : "false")
+			  << WHITE << std::endl; });
 
 	
 	// check if client is registered 
@@ -334,7 +356,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		// 451 ERR_NOTREGISTERED
 		sendNumeric(fd, 451, "*", std::vector<std::string>(),
 					"You have not registered");
-		return;
+		return ;
 	}
 
 	// from here on, only registered clients:
@@ -343,11 +365,11 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Topic Numeric Replies
 		/*Numeric Replies:
 
-       	ERR_NEEDMOREPARAMS              ERR_BANNEDFROMCHAN
-        ERR_INVITEONLYCHAN              ERR_BADCHANNELKEY
-        ERR_CHANNELISFULL               ERR_BADCHANMASK
-        ERR_NOSUCHCHANNEL               ERR_TOOMANYCHANNELS
-        RPL_TOPIC*/
+	   	ERR_NEEDMOREPARAMS			ERR_BANNEDFROMCHAN
+		ERR_INVITEONLYCHAN			ERR_BADCHANNELKEY
+		ERR_CHANNELISFULL			ERR_BADCHANMASK
+		ERR_NOSUCHCHANNEL			ERR_TOOMANYCHANNELS
+		RPL_TOPIC*/
 		
 		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
@@ -356,6 +378,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			else
 				join(fd, cmd.parameters[0], "");
 			DBG({std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;});
+			std::cout << "User has joined channel: " << cmd.parameters[0] << std::endl;
 		}
 		else 
 		{
@@ -380,28 +403,28 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		/**************************
 		Still need to implement:
 
-		404     ERR_CANNOTSENDTOCHAN
-                        "<channel name> :Cannot send to channel"
+		404	 ERR_CANNOTSENDTOCHAN
+						"<channel name> :Cannot send to channel"
 
-                - Sent to a user who is either (a) not on a channel
-                  which is mode +n or (b) not a chanop (or mode +v) on
-                  a channel which has mode +m set and is trying to send
-                  a PRIVMSG message to that channel.
+				- Sent to a user who is either (a) not on a channel
+				  which is mode +n or (b) not a chanop (or mode +v) on
+				  a channel which has mode +m set and is trying to send
+				  a PRIVMSG message to that channel.
 		
-		413     ERR_NOTOPLEVEL
-                        "<mask> :No toplevel domain specified"
+		413	 ERR_NOTOPLEVEL
+						"<mask> :No toplevel domain specified"
 		
-		414     ERR_WILDTOPLEVEL
-                        "<mask> :Wildcard in toplevel domain"
+		414	 ERR_WILDTOPLEVEL
+						"<mask> :Wildcard in toplevel domain"
 
-                - 412 - 414 are returned by PRIVMSG to indicate that
-                  the message wasn't delivered for some reason.
-                  ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that
-                  are returned when an invalid use of
-                  "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.
+				- 412 - 414 are returned by PRIVMSG to indicate that
+				  the message wasn't delivered for some reason.
+				  ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that
+				  are returned when an invalid use of
+				  "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.
 		
-		407     ERR_TOOMANYTARGETS
-                        "<target> :Duplicate recipients. No message \
+		407	 ERR_TOOMANYTARGETS
+						"<target> :Duplicate recipients. No message \
 
 		*************************
 		*/
@@ -411,19 +434,19 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
 		{
 			//411 ERR_NORECIPIENT
-			sendNumeric(fd, 411, this->findClient(fd)->getNickname(), std::vector<std::string>(),
+			sendNumeric(fd, 411, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
 					"No recipient given (PRIVMSG)");
 		}
 		else if (cmd.parameters.size() == 1)
 		{
 			//412 ERR_NOTEXTTOSEND
-			sendNumeric(fd, 412, this->findClient(fd)->getNickname(), std::vector<std::string>(),
+			sendNumeric(fd, 412, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
 				":No text to send");
 			return;
 		}
 		else
 		{
-			for (int i = 0; i < cmd.parameters.size() - 1; i++)
+			for (size_t i = 0; i < cmd.parameters.size() - 1; i++)
 			{
 				std::string target = cmd.parameters[i];
 				std::string msg = cmd.parameters[cmd.parameters.size() - 1];
@@ -438,9 +461,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Topic Numeric Replies
 		/*Numeric Replies:
 
-       	ERR_NEEDMOREPARAMS              ERR_NOTONCHANNEL
-        RPL_NOTOPIC                     RPL_TOPIC
-        ERR_CHANOPRIVSNEEDEDL*/
+	   	ERR_NEEDMOREPARAMS			ERR_NOTONCHANNEL
+		RPL_NOTOPIC					RPL_TOPIC
+		ERR_CHANOPRIVSNEEDEDL*/
 		//Extra: Look into if topic is done correctly
 		
 		if (!cmd.parameters.empty() && cmd.parameters.size() == 2)
@@ -457,9 +480,9 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Kick Numeric Replies
 		/*Numeric Replies:
 
-        ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
-        ERR_BADCHANMASK                 ERR_CHANOPRIVSNEEDED
-    	ERR_NOTONCHANNEL*/
+		ERR_NEEDMOREPARAMS			ERR_NOSUCHCHANNEL
+		ERR_BADCHANMASK				ERR_CHANOPRIVSNEEDED
+		ERR_NOTONCHANNEL*/
 		
 		if (!cmd.parameters.empty())
 		{
@@ -498,15 +521,15 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Mode Numeric Replies
 		/*Numeric Replies:
 
-       
-        ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
-        ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK //Dont think we need this one
-        ERR_NOTONCHANNEL                ERR_KEYSET
-        RPL_BANLIST                     RPL_ENDOFBANLIST //I dont think we need  since we dont have a ban list 
-        ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
+	   
+		ERR_NEEDMOREPARAMS				RPL_CHANNELMODEIS
+		ERR_CHANOPRIVSNEEDED			ERR_NOSUCHNICK //Dont think we need this one
+		ERR_NOTONCHANNEL				ERR_KEYSET
+		RPL_BANLIST						RPL_ENDOFBANLIST //I dont think we need  since we dont have a ban list 
+		ERR_UNKNOWNMODE					ERR_NOSUCHCHANNEL
 
-        ERR_USERSDONTMATCH              RPL_UMODEIS
-        ERR_UMODEUNKNOWNFLAG*/
+		ERR_USERSDONTMATCH				RPL_UMODEIS
+		ERR_UMODEUNKNOWNFLAG*/
 		
 		//sets modes for channels and users, modes need to be tested
 		if (!cmd.parameters.empty())
@@ -541,11 +564,11 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		//Invite Numeric Replies
 		/*Numeric Replies:
 
-       
-        ERR_NEEDMOREPARAMS              ERR_NOSUCHNICK
-        ERR_NOTONCHANNEL                ERR_USERONCHANNEL
-        ERR_CHANOPRIVSNEEDED
-        RPL_INVITING                    RPL_AWAY*/
+	   
+		ERR_NEEDMOREPARAMS				ERR_NOSUCHNICK
+		ERR_NOTONCHANNEL				ERR_USERONCHANNEL
+		ERR_CHANOPRIVSNEEDED
+		RPL_INVITING					RPL_AWAY*/
 		
 		if (cmd.parameters.empty())
 		{
@@ -570,7 +593,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{	
 		if (cmd.parameters.empty())
 			return ;
-		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
+		Channel* channel = findChannel(findClientByFd(fd)->getCurrentChannel());
 		if (channel == NULL)
 		{
 			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
@@ -590,7 +613,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	{
 		if (cmd.parameters.empty())
 		{	//prints out all user channels
-			Client *client = findClient(fd, "");
+			Client *client = findClientByFd(fd);
 			std::map<std::string, char> *userchannels = client->GetChannel();
 			if (userchannels != NULL)
 			{
@@ -598,7 +621,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 				for (std::map<std::string, char>::iterator it = userchannels->begin(); it != userchannels->end(); ++it)
 				{
 					std::string channelName = it->first;   // key (channel name)
-					char channelType = it->second;         // value (member 'm' or operator 'o')
+					char channelType = it->second;		 // value (member 'm' or operator 'o')
 					
 					std::cout << "Channel: " << channelName << " Type: " << channelType << std::endl;
 				}
@@ -623,21 +646,37 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 }
 
 
-
-void	Server::clearClients(int fd)
+// clearClient:
+// - removes fd from poll
+// - removes client from all channels
+// - closes socket of that client
+// - deletes Client*
+// - erases from _clients
+void	Server::clearClient(int fd)
 {
 	for(size_t i = 0; i < this->_fds.size(); i++) // removes client from the pollfd
 	{
+		// remove client fd from poll list
 		if (this->_fds[i].fd == fd)
 		{
 			this->_fds.erase(this->_fds.begin() + i);
 			break ;
 		}
 	}
-	for(size_t i = 0; i < this->_clients.size(); i++) // removes client from the vector of clients
+
+	// find client-to-be-removed pointer in _clients, remove from all channels first, then remove
+	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
-		if (this->_clients[i].getFd() == fd)
+		Client* toBeRemoved = this->_clients[i];
+		if (toBeRemoved && toBeRemoved->getFd() == fd)
 		{
+			for (size_t ch = 0; ch < this->_channels.size(); ch++)
+			{
+				if (this->_channels[ch])
+					this->_channels[ch]->RemoveMemberByFd(fd);
+			}
+			close(fd);
+			delete toBeRemoved;
 			this->_clients.erase(this->_clients.begin() + i);
 			break ;
 		}
@@ -646,54 +685,74 @@ void	Server::clearClients(int fd)
 
 void	Server::closeFds()
 {
-	for(size_t i = 0; i < _clients.size(); i++)
+	// close & delete clients
+	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
-		std::cout << RED << "Client (fd = " << this->_clients[i].getFd() << ") Disconnected" << WHITE << std::endl;
-		close(_clients[i].getFd());
+		if (this->_clients[i])
+		{
+			std::cout << RED << "Client (fd = " << this->_clients[i]->getFd() << ") Disconnected" << WHITE << std::endl;
+			close(this->_clients[i]->getFd());
+			delete (this->_clients[i]);
+		}
 	}
-	if (_fdServer != -1)
+	this->_clients.clear();
+
+	// delete channels (Server owns them)
+	for (size_t i = 0; i < this->_channels.size(); i++)
+		delete (this->_channels[i]);
+	this->_channels.clear();
+
+	// close server socket
+	if (this->_fdServer != -1)
 	{
 		std::cout << RED << "Server (fd = " << this->_fdServer << ") Disconnected" << WHITE << std::endl;
-		close(_fdServer);
+		close(this->_fdServer);
 	}
+	
+	// clear poll fds
+	this->_fds.clear();
 }
 
 //Finder Functions 
 
-Channel* Server::findChannel(const std::string &name)
+Channel*	Server::findChannel(const std::string &name)
 {
-  size_t i = 0;
-  while (i < _channels.size())
-  {
-	  if (this->_channels[i].getname() == name)
-		return (&this->_channels[i]);
-	i++;
-  }
-  return NULL;
-
+	for (size_t i = 0; i < _channels.size(); i++)
+	{
+		if (this->_channels[i] && this->_channels[i]->getname() == name)
+			return (this->_channels[i]);
+	}
+	return (NULL);
 }
 
-Client* Server::findClient(const int fd, std::string username)
+
+Client*		Server::findClientByNickOrUser(const int fd, std::string username)
 {
-	int i = 0;
-	while (i <this->_clients.size())
+	size_t i = 0;
+	while (i < this->_clients.size())
 	{
-		if (this->_clients[i].getUsername() == username || this->_clients[i].getNickname() == username)
-			return (&this->_clients[i]);
-		else if (fd > 1 && this->_clients[i].getFd() == fd)
-			return (&this->_clients[i]);
-	  i++;
+		Client* cl = this->_clients[i];
+		if (!cl)
+		{
+			i++; 
+			continue ;
+		}
+		if (cl->getUsername() == username || cl->getNickname() == username)
+			return (cl);
+		else if (fd > 1 && cl->getFd() == fd)
+			return cl;
+		i++;
 	}
   	return (NULL);
 }
 
-Client* Server::findClient(const int fd) 
+Client*		Server::findClientByFd(const int fd) 
 {
-	int i = 0;
-	while (i <this->_clients.size())
+	size_t i = 0;
+	while (i < this->_clients.size())
 	{
-		if (fd > 1 && this->_clients[i].getFd() == fd)
-			return (&this->_clients[i]);
+		if (this->_clients[i] && this->_clients[i]->getFd() == fd)
+			return (this->_clients[i]);
 	  i++;
 	}
   	return (NULL);
@@ -759,21 +818,41 @@ void	Server::sendNotice(int fd, const std::string &target, const std::string &te
 void	Server::sendWelcome(Client &client)
 {
 	const std::string &nick = client.getNickname();
+	int fd = client.getFd();
 
 	// 001 RPL_WELCOME
-	this->sendNumeric(client.getFd(), 1, nick,std::vector<std::string>(),
-				"Welcome to the ft_irc server " + nick);
+	sendNumeric(fd, 001, nick, std::vector<std::string>(),
+		"Welcome to the ft_irc server " + nick);
 
 	// 002 RPL_YOURHOST
-	this->sendNumeric(client.getFd(), 2, nick, std::vector<std::string>(),
-				"Your host is " + this->_serverName + ", running version 1.0");
+	sendNumeric(fd, 002, nick, std::vector<std::string>(),
+		"Your host is " + _serverName + ", running version 1.0");
 
 	// 003 RPL_CREATED
-	this->sendNumeric(client.getFd(), 3, nick, std::vector<std::string>(),
-				"This server was created 2025-11-30");
+	sendNumeric(fd, 003, nick, std::vector<std::string>(),
+		"This server was created 2025-11-30");
 
+	// 004 RPL_MYINFO
+	// <servername> <version> <usermodes> <channelmodes>
+	// supported user modes: i(nvisible)
+	// supported channel modes (i invite-only, t topic protected, k key/password, o operator, l user limit)
+	std::vector<std::string> params004;
+	params004.push_back(_serverName);
+	params004.push_back("ft_irc-42 1.0");
+	params004.push_back("i");	   // user modes
+	params004.push_back("itkol");  // channel modes
+	sendNumeric(fd, 004, nick, params004, "");
 
+	// 005 RPL_ISUPPORT
+	std::vector<std::string> params005;
+	params005.push_back("CHANTYPES=#");
+	params005.push_back("NICKLEN=16");
+	params005.push_back("USERLEN=32");
+	params005.push_back("PREFIX=(o)@");
+	params005.push_back("CASEMAPPING=ascii");
+	sendNumeric(fd, 005, nick, params005, "are supported by this server");
 }
+
 
 
 void Server::tryRegisterClient(Client &client)
@@ -781,14 +860,10 @@ void Server::tryRegisterClient(Client &client)
 	if (client.isRegistered())
 		return ;
 	
-	if (!client.hasPass())
-		return ;
-	if (!client.hasNick())
-		return ;
-	if (!client.hasUser())
+	if (!client.hasPass() || !client.hasNick() || !client.hasUser())
 		return ;
 
-	// All conditions met -> mark as registered and send welcome
+	// client not yet registered and all conditions met -> set as registered and send welcome
 	client.setRegistered(true);
 	this->sendWelcome(client);
 }

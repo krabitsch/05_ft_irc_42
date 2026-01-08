@@ -2,11 +2,13 @@
 #include <iostream>
 
 //Constructor 
-Channel::Channel(Server *server, int fd, std::string name): _channelname(name), _server(server) 
+Channel::Channel(Server *server, int fd, std::string name): _server(server), _channelname(name)
 {
-	Client *client = _server->findClient(fd, "");
-	client->AddChannel(name, 'o');
+	Client *client = _server->findClientByFd(fd);
+	if (!client)
+		return ;
 	AddMember(client);
+	client->AddChannel(name, 'o'); // KR: now for a newly created channel, the client becomes 'o' (on calling Constructor of Channel)
 	client->setCurrentChannel(name);
 	_operators.push_back(client->getFd());
 	_inviteonly = false;
@@ -64,33 +66,40 @@ Channel &Channel:: operator=(const Channel &other)
 	return (*this);
 };
 
-
 //Add Member
 //Step 1: Get client and add it to the map
 void Channel::AddMember(Client* user)
 {
 	DBG({std::cout << "Adding Member" << user->getNickname() << std::endl;});
 	int i = 0;
-	while (i < _members.size())
+	if (!user)
+		return ;
+
+	for (size_t i = 0; i < _members.size(); i++)
 	{
-		if (_members[i]->getFd() == user->getFd())
-		{
-			DBG({std::cout << "early exit" << std::endl;});
-			return ;
-		}
-		i++;
+    DBG({std::cout << "early exit" << std::endl;});
+		if (_members[i] && _members[i]->getFd() == user->getFd())
+			return;
 	}
+
 	DBG({std::cout << "Added Member!" << std::endl;});
 	_members.push_back(user);
-	user->AddChannel(_channelname, 'm');
+	//user->AddChannel(_channelname, 'm'); // KR: removed this: is set to 'o' via Channel constructor (if new channel)
+										   // and should be AddChannel should be called by commands (e.g. JOIN) to change status
+										 // would overwrite 'o' status here
+	// add channel to client's channel map only if missing.
+	std::map<std::string, char>* chmap = user->GetChannel();
+	if (chmap && chmap->find(_channelname) == chmap->end())
+		(*chmap)[_channelname] = 'm';  // do NOT overwrite 'o'
 }
 
 //Remove Member
 //Step 1: Check if client exist in the channel or not
 //Step 2: Remove client from vector
+// KR: careful! I replaced logic by RemoveMemberByFd() below 
 void Channel::RemoveMember(std::string username)
 {
-	int i = 0;
+	size_t i = 0;
 	while (i < _members.size())
 	{
 		if (_members[i]->getNickname() == username)
@@ -100,7 +109,7 @@ void Channel::RemoveMember(std::string username)
 			if (IsOperator(_members[i]->getFd()) == true) //Remove the user as an operator
 			{
 				size_t i = 0;
-				while (i < _operators.size())
+				while (i < _operators.size()) // KR: again index i?!
 				{
 					if (_operators[i] == _members[i]->getFd())
 					{
@@ -117,21 +126,48 @@ void Channel::RemoveMember(std::string username)
 	}
 }
 
+// matches logic of above RemoveMember() function, but with fd (which for sure is unique)
+void	Channel::RemoveMemberByFd(int fd)
+{
+	for (size_t i = 0; i < _members.size(); i++)
+	{
+		if (_members[i] && _members[i]->getFd() == fd)
+		{
+			_members[i]->RemoveChannel(_channelname); //Set the users current channel to blank
+			_members[i]->setCurrentChannel(""); //Remove the user as an operator
+
+			// remove from operators list too
+			for (size_t k = 0; k < _operators.size(); k++)
+			{
+				if (_operators[k] == fd)
+				{
+					_operators.erase(_operators.begin() + k);
+					break ;
+				}
+			}
+
+			_members.erase(_members.begin() + i);
+			return ;
+		}
+	}
+}
+
+
 bool Channel::isMember(Client* client)
 {
-    if (!client)
-        return false;
-    for (size_t i = 0; i < _members.size(); i++)
-    {
-        if (_members[i]->getFd() == client->getFd())
-            return true;
-    }
-    return false;
+	if (!client)
+		return false;
+	for (size_t i = 0; i < _members.size(); i++)
+	{
+		if (_members[i]->getFd() == client->getFd())
+			return true;
+	}
+	return false;
 }
 
 std::vector<Client *>* Channel::getMembers(void)
 {
-    return &_members;
+	return &_members;
 }
 
 //Set Operator Privilage
@@ -143,7 +179,7 @@ bool Channel::IsOperator(int fd) //Checks if the user is an operator or not
 {
 	if (_operatorPriv == true)
 	{
-		int i = 0;
+		size_t i = 0;
 		while (i <  _operators.size())
 		{
 			if (fd == _operators[i])
@@ -161,7 +197,7 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 	//If the user is an operator
 	if (_operatorPriv == true)
 	{
-		int i = 0;
+		size_t i = 0;
 		while (i < _members.size()) //Note: Maybe put this into its own sperate function
 		{
 			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
@@ -199,7 +235,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 	if (IsOperator(fd) == true) //Checks if the user is an operator themselves 
 	{
 		//Unset the operator 
-		int i = 0;
+		size_t i = 0;
 		while (i < _members.size())
 		{
 			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
@@ -213,11 +249,11 @@ void Channel::UnsetOperator(std::string username, int fd)
 
 					//Creates the new list of operators without the unset member
 					std::vector<int> newoperators;
-					int k = 0;
+					size_t k = 0;
 					while (k < _operators.size())
 					{
-						if (_operators[i] != clientfd)
-							newoperators.push_back(_operators[i]);
+						if (_operators[k] != clientfd)
+							newoperators.push_back(_operators[k]);
 						k++;
 					}
 					_operators = newoperators;

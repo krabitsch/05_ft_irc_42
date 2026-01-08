@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/07 15:15:08 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/03 22:44:55 by krabitsc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@
 # include "Parser.hpp"
 # include "Replies.hpp"
 # include <sstream>
+# include <cctype>
 
 # define RED	"\e[1;31m"
 # define WHITE  "\e[0;37m"
@@ -52,9 +53,9 @@ class Server
 	int							_port;
 	std::string					_password;
 	int							_fdServer;
-	std::vector<Client>			_clients; 	// vector of clients
+	std::vector<Client*>		_clients; 	// vector of clients
 	std::vector<struct pollfd>	_fds; 		// vector of pollfd
-  	std::vector<Channel>		_channels; 	// A vector of all the channels 
+  	std::vector<Channel*>		_channels; 	// A vector of all the channels 
 	
 	std::string					_serverName; 
 	
@@ -67,23 +68,27 @@ class Server
 	void		createSocketBindListen();	// server socket creation
 	void		acceptClient(); 			// accept new client
 	void		receiveData(int fd);		// receive new data from a registered client
-	void		clearClients(int fd);		// clear clients
+	void		clearClient(int fd);		// clear clients
 
 	// Commands that need the use of the server
 	void		passCommand(Client &client, const IrcCommand &cmd);
 	void		nickCommand(Client &client, const IrcCommand &cmd);
 	void		userCommand(Client &client, const IrcCommand &cmd);
-	void		join(int fd, std::string channelname, std::string pass);	 //Creates or joins a channel that exists
-	void  		part(int fd, std::string channelname);
-	void		quit(std::string message, int fd);
+	void		quitCommand(Client &client, const IrcCommand &cmd);
+	void		join(int fd, std::string channelname, std::string pass); //Creates or joins a channel that exists
+	void		part(int fd, std::string channelname);
 	void		privateMsg(int senderFd, std::string target, std::string msg);
 	std::string makePrivmsg(const std::string &prefix, const std::string &target, const std::string &msg);
 	void		topic(std::string channelname, std::string maintopic, int clientfd);
 
-	void		broadcastMessage(int from_fd, const std::string& msg);
 	void		handleMessage(int fd, const IrcCommand &cmd);
+	void		broadcastMessage(int from_fd, const std::string& msg); // probably don't need this general broadcastMessage (currently unused)
+	void		broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd);
 
-	// 
+	// NICK helpers:
+	void		broadcastNickChange(Client& client, const std::string& oldNick, const std::string& newNick);
+
+
 	void		sendWelcome(Client &client);
 	void		tryRegisterClient(Client &client);
 
@@ -118,11 +123,9 @@ class Server
 
 	// Finder Functions
 	Channel*	findChannel(const std::string &name);
-	Client*		findClient(const int fd, std::string username);
-	Client*		findClient(const int fd);
+	Client*		findClientByNickOrUser(const int fd, std::string username);
+	Client*		findClientByFd(const int fd);
 
 };
-
-
 
 #endif
