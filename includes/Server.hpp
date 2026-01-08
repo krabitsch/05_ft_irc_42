@@ -75,6 +75,7 @@ class Server
 	void		nickCommand(Client &client, const IrcCommand &cmd);
 	void		userCommand(Client &client, const IrcCommand &cmd);
 	void		quitCommand(Client &client, const IrcCommand &cmd);
+	void		privmsgCommand(Client &client, const IrcCommand &cmd);
 	void		join(int fd, std::string channelname, std::string pass); //Creates or joins a channel that exists
 	void		part(int fd, std::string channelname);
 	void		privateMsg(int senderFd, std::string target, std::string msg);
