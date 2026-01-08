@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: krabitsc <krabitsc@student.42.fr>          +#+  +:+       +#+         #
+#    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2025/12/28 11:28:08 by krabitsc         ###   ########.fr        #
+#    Updated: 2026/01/08 13:43:13 by aruckenb         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,7 @@ NAME	 	= ircserv
 
 SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
+			  srcs/utils.cpp \
 			  srcs/Parser.cpp \
 			  srcs/Replies.cpp \
 			  srcs/Client.cpp \
@@ -22,7 +23,8 @@ SRCS 	 	= srcs/main.cpp \
 			  srcs/commandsChannel.cpp \
 			  srcs/commandsMode.cpp \
 			  srcs/commandsMsg.cpp \
-			  srcs/commandsTopic.cpp
+			  srcs/commandsTopic.cpp \
+			  srcs/commandsExe.cpp
 
 INCLUDES    = -I ./includes	  
 			  
@@ -31,8 +33,8 @@ OBJDIR 		= build
 OBJS        = $(SRCS:srcs/%.cpp=$(OBJDIR)/%.o)
 DEPS 		= $(OBJS:.o=.d)
 CC 	 		= c++
-#CPPFLAGS   	= -Wall -Wextra -Werror -std=c++98 -MMD -MP $(INCLUDES)
-CPPFLAGS   	= -std=c++98 -MMD -MP $(INCLUDES)
+CPPFLAGS   	= -Wall -Wextra -Werror -std=c++98 -MMD -MP $(INCLUDES)
+#CPPFLAGS   	= -std=c++98 -MMD -MP $(INCLUDES)
 CPPFLAGSDBG = $(CPPFLAGS) -DFT_IRC_DEBUG
 BUILD_FLAGS = $(CPPFLAGS)
 RMF		 	= rm -f

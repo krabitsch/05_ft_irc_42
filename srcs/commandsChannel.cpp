@@ -62,8 +62,8 @@
 
       //If no errors were found add the user, display message, if its a new channel add it to there list
       _client->setCurrentChannel(channelname);
-      this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel"); 
-      
+      this->sendNotice(_client->getFd(), channelname, _client->getNickname() + " has joined the channel");
+      this->broadcastToChannel(channelname, _client->getNickname() + " has joined the channel\n", -1);
       if (!checker) //Adds the channel to the client list !isnt is here 
         _channel->AddMember(_client);
     }
@@ -85,7 +85,7 @@
       this->sendNumeric(fd, 403, "", std::vector<std::string>(), channelname + " :No such channel");
       return ;
     }
-    this->sendNotice(fd, channel_type->getname(), client->getNickname() + " has left the channel");
+    this->broadcastToChannel(channelname, client->getNickname() + " has left the channel\n", -1);
     channel_type->RemoveMember(client->getNickname()); //Removes the member from the channel
     client->RemoveChannel(client->getCurrentChannel()); //Removes the channel from the clients list
     client->setCurrentChannel(""); //Sets there current channel to nothing
