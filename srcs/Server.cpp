@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/13 11:16:04 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/13 11:16:21 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -374,12 +374,17 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		
 		if (!cmd.parameters.empty()) // move this logic inside the command handling
 		{
+			if (cmd.parameters[0][0] != '#')
+			{
+				// 403 ERR_NOSUCHCHANNEL
+				this->sendNumeric(fd, 403, cmd.parameters[0], std::vector<std::string>(),"No such channel");
+				return;
+			}
 			if (cmd.parameters.size() == 2)
 				join(fd, cmd.parameters[0], cmd.parameters[1]);
 			else
 				join(fd, cmd.parameters[0], "");
 			DBG({std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;});
-			std::cout << "User has joined channel: " << cmd.parameters[0] << std::endl;
 		}
 		else 
 		{

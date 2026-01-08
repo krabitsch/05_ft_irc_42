@@ -14,8 +14,8 @@ void Server::topic(std::string channelname, std::string maintopic, int clientfd)
   Channel *channel_type = findChannel(user->getCurrentChannel());
   if (channel_type == NULL) //Checkes if the channel doesnt exist
   {
-	this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");
-	return ;
+    this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");
+    return ;
   }
 
   if (maintopic.empty())
@@ -23,19 +23,19 @@ void Server::topic(std::string channelname, std::string maintopic, int clientfd)
     if (channel_type->getTopic().empty()) //Error msg if the channel topic is already empty
       this->sendNumeric(clientfd, 331, "", std::vector<std::string>(), "No topic is set for this channel");
     else
-      this->sendNotice(clientfd, channel_type->getname(), "Current channel topic is: " + channel_type->getTopic());
+      this->broadcastToChannel(channel_type->getname(), "Current channel topic is: " + channel_type->getTopic() + "\n", -1);
     return ;
   }
 
   if (channel_type->getTopicpriv() == false) //allows anyone is change the topic
   {
     channel_type->setTopic(maintopic);
-    this->sendNotice(clientfd, channel_type->getname(), "Channel topic has been changed to: " + maintopic);
+    this->broadcastToChannel(channel_type->getname(), "Channel topic has been changed to: " + maintopic + "\n", -1);
   }
   else if (channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == true || channel_type->getTopicpriv() == false)
   {
     channel_type->setTopic(maintopic);
-    this->sendNotice(clientfd, channel_type->getname(), "Channel topic has been changed to: " + maintopic);
+    this->broadcastToChannel(channel_type->getname(), "Channel topic has been changed to: " + maintopic + "\n", -1);
   }
   else if (channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == false)
   {

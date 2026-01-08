@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 11:20:47 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/08 12:40:31 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,6 @@ class Server
 
 	void		handleMessage(int fd, const IrcCommand &cmd);
 	void		broadcastMessage(int from_fd, const std::string& msg); // probably don't need this general broadcastMessage (currently unused)
-	void		broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd);
 
 	// NICK helpers:
 	void		broadcastNickChange(Client& client, const std::string& oldNick, const std::string& newNick);
@@ -103,10 +102,11 @@ class Server
 
 	// Public member functions/ methods
 
-	// constructing the messages the server sends in the right format AL: Made these public since i dont see a difference
+	// constructing the messages the server sends in the right format
 	void		sendConstructedMsg(int fd, const std::string &line);
 	void		sendMessage(int fd, const std::string &prefix, const std::string &command,
 					const std::vector<std::string> &params, const std::string &trailing);
+	void		broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd); //Make it public
 	void		sendNumeric(int fd, int code, const std::string &target,
 					const std::vector<std::string> &params, const std::string &trailing);
 	void		sendNotice(int fd, const std::string &target, const std::string &text);
