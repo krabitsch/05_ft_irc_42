@@ -1,5 +1,6 @@
   // Commands_Mode.cpp	 // MODE/INVITE/KICK (subset)
   #include "../includes/Server.hpp"
+#include <cstddef>
   #include <cstdlib>
   #include <sstream>
   #include <sys/select.h>
@@ -12,14 +13,15 @@
   //- o: Give/take channel operator privilege
   //- l: Set/remove the user limit to channel 
 
-  int Channel::modeI(int fd, std::string param)
+  int Channel::modeI(int fd
+    , std::string param)
   {
     if (param == "-i") //false
     {
       if (_inviteonly == true)
       {
         _inviteonly = false;
-        _server->sendNotice(fd, _channelname, "Invite only mode has been removed from the channel");
+        _server->broadcastToChannel(_channelname, "Invite only mode has been removed from the channel\n", -1);
       }
       else
         _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
@@ -30,7 +32,7 @@
       if (_inviteonly == false)
       {
         _inviteonly = true;
-        _server->sendNotice(fd, _channelname, "Invite only mode has been turned on for the channel " + _channelname);
+        _server->broadcastToChannel(_channelname, "Invite only mode has been turned on for " + _channelname + "\n", -1);
       }
       else
         _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
@@ -45,7 +47,7 @@
     {
       if (_topicPriv == true)
       {
-        _server->sendNotice(fd, _channelname, "Topic privilege has been removed from the channel");
+        _server->broadcastToChannel(_channelname, "Topic privilege has been removed from " + _channelname + "\n", -1);
         _topicPriv = false;
       }
       else
@@ -57,7 +59,7 @@
       if (_topicPriv == false)
       {
         _topicPriv = true;
-        _server->sendNotice(fd, _channelname, "Topic privilege has been set for the channel " + _channelname);
+        _server->broadcastToChannel(_channelname, "Topic privilege has been set for " + _channelname + "\n", -1);
       }
       else
         _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname + " :Channel key already set");
@@ -72,7 +74,7 @@
     {
       if (_operatorPriv == true)
       {
-        _server->sendNotice(fd, _channelname, "Operator privilege has been removed from the channel");
+        _server->broadcastToChannel(_channelname, "Operator privilege has been removed from " + _channelname + "\n", -1);
         _operatorPriv = false;
       }
       else
@@ -84,7 +86,7 @@
       if (_operatorPriv == false)
       {
         _operatorPriv = true;
-        _server->sendNotice(fd, _channelname, "Operator privilege has been set for the channel " + _channelname);
+        _server->broadcastToChannel(_channelname, "Operator privilege has been set for the channel " + _channelname + "\n", -1);
       }
       else
         _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
@@ -100,7 +102,7 @@
       if (!_password.empty())
       {
         _password.erase();
-        _server->sendNotice(fd, _channelname, "Channel key has been removed from the channel " + _channelname);
+        _server->broadcastToChannel(_channelname, "Channel key has been removed from the channel " + _channelname + "\n", -1);
       }
       else
         _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
@@ -108,10 +110,10 @@
     }
     else if (param == "+k") //Set password
     {
-      if (_password.empty() && !input.empty() || !_password.empty() && !input.empty())
+      if ((_password.empty() && !input.empty()) || (!_password.empty() && !input.empty()))
       {
         _password = input;
-        _server->sendNotice(fd, _channelname, "Channel key has been set/changed for the channel " + _channelname);
+        _server->broadcastToChannel(_channelname, "Channel key has been set/changed for the channel " + _channelname + "\n", -1);
       }
       else 
       { //Custom error for empty input
@@ -129,7 +131,7 @@
       if (_userlimit > 0)
       {
         _userlimit = 0;
-        _server->sendNotice(fd, _channelname, "User limit has been removed from the channel " + _channelname);
+        _server->broadcastToChannel(_channelname, "User limit has been removed from " + _channelname + "\n", -1);
       }
       else
         _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
@@ -137,7 +139,7 @@
     }
     else if (param == "+l") //sets a user limit
     {
-      int num = 0;//Here we would convert the numerical string value into an int
+      size_t num = 0;//Here we would convert the numerical string value into an int
 
       if (input.empty())
       { //Custom error for empty input
@@ -156,7 +158,7 @@
       else
       {
         _userlimit = num;
-        _server->sendNotice(fd, _channelname, "User limit has been set for the channel " + _channelname);
+        _server->broadcastToChannel(_channelname, "User limit has been set for " + _channelname + "\n", -1);
       }
       return (1);
     }
@@ -190,15 +192,12 @@
   }
 
   //Invite - Invite a client of the current channel
-  //Step 1:Use either the client nickname or username 
-  //Step 2:Enter a loop until the user either accepts the invite or rejects it //Remove the loop and just let them have access to the channel
-  //Step 3:If client accepts it add to client that he now has access to the channel, and add the user into the channel
 
   void Channel::invite(std::string username, int fd)
   {
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
-      int i = 0;
+      size_t i = 0;
       while (i < _members.size()) //checks all the members if the channel
       {
         if (_members[i]->getNickname() == username) //compares the user written to possible users
@@ -210,12 +209,14 @@
         i++;
       }
 
-	  //Gets the client information from the server
-	  Client *client = _server->findClientByNickOrUser(-1, username);
-	  if (client == NULL)
-	  {
-		  //ERR_NOSUCHNIC //need to add the number code and sentance
-		  _server->sendNumeric(fd, 000, "", std::vector<std::string>(), "nick does not exist");
+      //Gets the client information from the server
+      Client *client = _server->findClientByNickOrUser(-1, username);
+      if (client == NULL)
+      {
+        //ERR_NOSUCHNIC //need to add the number code and sentance
+        _server->sendNumeric(fd, 000, "", std::vector<std::string>(), "nick does not exist");
+        return ;
+      }
       AddMember(client); //adds the client onto the channel list
       client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
       std::string msg = username + " you have been invited to " + _channelname + "channel";
@@ -227,15 +228,8 @@
       _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
     }
   }
-  }
-  //KICK - Ejecting a client from the channel
-  //The Kick interacts with the channel, with no channel you are unable to kick
-  //Step 1: First we need if the client & Channel & Operator exists
-  //Step 2: Check if they are all apart of the channel and have access to it, 
-  //Step 3: Declare in the channel that they are getting kick simple std::cout message
-  //Step 4: Remove the user from the channel 
 
-  //Questions to Ask: Should an operator be able to kick another operator?
+  //KICK - Ejecting a client from the channel
 
   void Channel::kick(std::string username, std::string comments, int fd)
   {
@@ -243,13 +237,13 @@
 
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
-      int i = 0;
+      size_t i = 0;
       while (i < _members.size()) //checks all the members if the channel
       {
         if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users
         {
           RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
-          _server->sendNotice(fd, _channelname, username + " has been kicked from the channel");
+          _server->broadcastToChannel(_channelname, username + " has been kicked from " + _channelname + "\n", -1);
           return ;
         }
         i++;
