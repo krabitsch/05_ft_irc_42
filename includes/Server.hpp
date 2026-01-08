@@ -76,10 +76,10 @@ class Server
 	void		userCommand(Client &client, const IrcCommand &cmd);
 	void		quitCommand(Client &client, const IrcCommand &cmd);
 	void		join(int fd, std::string channelname, std::string pass); //Creates or joins a channel that exists
-	void		part(int fd);
+	void		part(int fd, std::string channelname);
 	void		privateMsg(int senderFd, std::string target, std::string msg);
 	std::string makePrivmsg(const std::string &prefix, const std::string &target, const std::string &msg);
-	void		topic(std::string channelname, int clientfd);
+	void		topic(std::string channelname, std::string maintopic, int clientfd);
 
 	void		handleMessage(int fd, const IrcCommand &cmd);
 	void		broadcastMessage(int from_fd, const std::string& msg); // probably don't need this general broadcastMessage (currently unused)

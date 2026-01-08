@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:59:44 by krabitsc          #+#    #+#             */
-/*   Updated: 2025/12/04 10:59:42 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/07 15:10:34 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ Client::Client(): _server(NULL),
 				  _password(""),
 				  _channels(),
 				  _currentChannel(""),
-				  _notifications(),
 				  _hasPass(false),
 				  _hasNick(false),
 				  _hasUser(false),
@@ -38,7 +37,6 @@ Client::Client(const Client &other): _server(other._server),
 									 _password(other._password),
 									 _channels(other._channels),
 									 _currentChannel(other._currentChannel),
-									 _notifications(other._notifications),
 									 _hasPass(other._hasPass),
 									 _hasNick(other._hasNick),
 									 _hasUser(other._hasUser),
@@ -62,7 +60,6 @@ Client&	Client::operator=(const Client& other)
 		this->_password		 	= other._password;
 		this->_channels		 	= other._channels;
 		this->_currentChannel	= other._currentChannel;
-		this->_notifications	= other._notifications;
 		this->_hasPass		 	= other._hasPass;
 		this->_hasNick		 	= other._hasNick;
 		this->_hasUser		 	= other._hasUser;
@@ -109,11 +106,6 @@ void	Client::setPassword(std::string password)			{ this->_password = password; }
 //Accepts client in the server if they dont already exist 
 
 //Setters/Getters and an insert function
-void Client::addNotification(std::string msg, char type)
-{
-	_notifications.insert(std::make_pair(type, msg));
-}
-
 void Client::AddChannel(std::string channelname, char type)
 {
 	_channels.insert(std::make_pair(channelname, type));	

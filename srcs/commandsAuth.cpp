@@ -165,7 +165,6 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 		broadcastNickChange(client, oldNick, newNick);
 
 	this->tryRegisterClient(client);
-
 }
 
 // USER COMMAND helper functions (static, file scope functions)

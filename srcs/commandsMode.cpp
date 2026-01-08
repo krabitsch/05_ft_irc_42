@@ -1,7 +1,8 @@
   // Commands_Mode.cpp	 // MODE/INVITE/KICK (subset)
   #include "../includes/Server.hpp"
   #include <cstdlib>
-#include <sstream>
+  #include <sstream>
+  #include <sys/select.h>
 
   //Mode - Change the Channels Mode
   //Flags
@@ -11,109 +12,179 @@
   //- o: Give/take channel operator privilege
   //- l: Set/remove the user limit to channel 
 
+  int Channel::modeI(int fd, std::string param)
+  {
+    if (param == "-i") //false
+    {
+      if (_inviteonly == true)
+      {
+        _inviteonly = false;
+        _server->sendNotice(fd, _channelname, "Invite only mode has been removed from the channel");
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+      return (1);
+    }
+    else if (param == "+i") //true
+    {
+      if (_inviteonly == false)
+      {
+        _inviteonly = true;
+        _server->sendNotice(fd, _channelname, "Invite only mode has been turned on for the channel " + _channelname);
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+      return (1);
+    }
+    return (0);
+  }
+
+  int Channel::modeT(int fd, std::string param)
+  {
+    if (param == "-t") //false
+    {
+      if (_topicPriv == true)
+      {
+        _server->sendNotice(fd, _channelname, "Topic privilege has been removed from the channel");
+        _topicPriv = false;
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname + " :Channel key already set");
+      return (1);
+    }
+    else if (param == "+t") //true
+    {
+      if (_topicPriv == false)
+      {
+        _topicPriv = true;
+        _server->sendNotice(fd, _channelname, "Topic privilege has been set for the channel " + _channelname);
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname + " :Channel key already set");
+      return (1);
+    }
+    return (0);
+  }
+
+  int Channel::modeO(int fd, std::string param)
+  {
+    if (param == "-o") //false
+    {
+      if (_operatorPriv == true)
+      {
+        _server->sendNotice(fd, _channelname, "Operator privilege has been removed from the channel");
+        _operatorPriv = false;
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+      return (1);
+    }
+    else if (param == "+o") //true
+    {
+      if (_operatorPriv == false)
+      {
+        _operatorPriv = true;
+        _server->sendNotice(fd, _channelname, "Operator privilege has been set for the channel " + _channelname);
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+      return (1);
+    }
+    return (0);
+  }
+
+  int Channel::modeK(int fd, std::string param, std::string input)
+  {
+    if (param == "-k") //Unset password
+    {
+      if (!_password.empty())
+      {
+        _password.erase();
+        _server->sendNotice(fd, _channelname, "Channel key has been removed from the channel " + _channelname);
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+    }
+    else if (param == "+k") //Set password
+    {
+      if (_password.empty() && !input.empty() || !_password.empty() && !input.empty())
+      {
+        _password = input;
+        _server->sendNotice(fd, _channelname, "Channel key has been set/changed for the channel " + _channelname);
+      }
+      else 
+      { //Custom error for empty input
+        _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "No available password key given!");
+      }
+    }
+    return (0);
+  }
+
+  int Channel::modeL(int fd, std::string param, std::string input)
+  {
+    if (param == "-l") //removes user limit
+    {
+      if (_userlimit > 0)
+      {
+        _userlimit = 0;
+        _server->sendNotice(fd, _channelname, "User limit has been removed from the channel " + _channelname);
+      }
+      else
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+      return (1);
+    }
+    else if (param == "+l") //sets a user limit
+    {
+      int num = 0;//Here we would convert the numerical string value into an int
+
+      if (input.empty())
+      { //Custom error for empty input
+        _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "No numerical input given!"); 
+        return (1);
+      }
+
+      std::stringstream convert(input); //Converts string to int
+      convert >> num;
+
+      //Check Number Validity
+      if (num <= 0)
+        _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Invalid numerical input!"); 
+      else if (num < _members.size())
+        _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Too many members are already apart of the channel: Unable to Set Limit!"); //Verify if that is the correct numerical number
+      else
+      {
+        _userlimit = num;
+        _server->sendNotice(fd, _channelname, "User limit has been set for the channel " + _channelname);
+      }
+      return (1);
+    }
+    return (0);
+  }
+
   void Channel::mode(int fd, std::string param, std::string input)//the input is one of the flags 
   {
-	//Set certain status in the channel
-	if (IsOperator(fd))
-	{
-	  if (param == "-i")
-	  {
-		if (_inviteonly == true)
-		{
-			_inviteonly = false;
-			_server->sendNotice(fd, _channelname, "Invite only mode has been removed from the channel");
-		}
-		else
-		{
-			_inviteonly = true;
-			_server->sendNotice(fd, _channelname, "Invite only mode has been turned on for the channel " + _channelname);
-		}
-	  }
-	  else if (param == "-t")
-	  {
-		if (_topicPriv == true)
-		{
-			_server->sendNotice(fd, _channelname, "Topic privilege has been removed from the channel");
-			_topicPriv = false;
-		}
-		else
-		{
-			_server->sendNotice(fd, _channelname, "Topic privilege has been set for the channel " + _channelname);
-			_topicPriv = true; 
-		}
-	  }
-	  else if (param == "-k")
-	  {
-		if (_password.empty() && !input.empty() || !_password.empty() && !input.empty())
-		{
-		  _password = input;
-		  _server->sendNotice(fd, _channelname, "Channel key has been set/changed for the channel " + _channelname);
-		}
-		else if (!_password.empty() && input.empty())
-		{
-		  _password.erase();
-		  _server->sendNotice(fd, _channelname, "Channel key has been removed from the channel " + _channelname);
-		}
-		else 
-		{
-		  _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "No avaiable password key given!");
-		  return ;
-		}
-	  }
-	  else if (param == "-o")
-	  {
-		if (_operatorPriv == true)
-		{
-			_server->sendNotice(fd, _channelname, "Operator privilege has been removed from the channel");
-			_operatorPriv = false;
-		}
-		else
-		{
-			_operatorPriv = true;
-			_server->sendNotice(fd, _channelname, "Operator privilege has been set for the channel " + _channelname);
-		 }
-	  }
-	  else if (param == "-l") //takes a string convert it into an int or size_t
-	  {
-		int num = 0;//Here we would convert the numerical string value into an int
+    //Set certain status in the channel
+    if (IsOperator(fd))
+    {
+      if (modeI(fd, param) == 1)
+        return ;
+      if (modeT(fd, param) == 1)
+        return ;
+      if (modeO(fd, param) == 1)
+        return ;
+      if (modeK(fd, param, input) == 1)
+        return ;
+      if (modeL(fd, param, input) == 1)
+        return ;
 
-		if (input.empty())
-		{
-		  _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "No numerical input given!"); 
-		  return;
-		}
-
-		std::stringstream convert(input); //Converts string to int
-		convert >> num;
-
-		//Check Number Validity
-		if (num < 0)
-		  _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Invalid numerical input!"); 
-		if (num == 0)
-		{
-		  _userlimit = 0;
-		  _server->sendNotice(fd, _channelname, "User limit has been removed for the channel " + _channelname);
-		}
-		else if (num < _members.size())
-		  _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "Too many members are already apart of the channel: Unable to Set Limit!"); //Verify if that is the correct numerical number
-		else
-		{
-		  _userlimit = num;
-		  _server->sendNotice(fd, _channelname, "User limit has been set for the channel " + _channelname);
-		}
-	  }
-	  else 
-	  {
-		//ERR_UNKNOWNMODE 
-		_server->sendNumeric(fd, 472, "", std::vector<std::string>(), param + ":is unknown mode char to me");
-	  }
-	}
-	else 
-	{
-	  //ERR_CHANOPRIVSNEEDED  
-	  _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
-	}
-	return ;
+     //ERR_UNKNOWNMODE 
+      _server->sendNumeric(fd, 472, "", std::vector<std::string>(), param + ":is unknown mode char to me");
+    }
+    else 
+    { //ERR_CHANOPRIVSNEEDED  
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
+    }
+    return ;
   }
 
   //Invite - Invite a client of the current channel
@@ -123,38 +194,36 @@
 
   void Channel::invite(std::string username, int fd)
   {
-	if (IsOperator(fd) == true) //checks the user executing the command is an operator
-	{
-	  int i = 0;
-	  while (i < _members.size()) //checks all the members if the channel
-	  {
-		if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users
-		{
-		  //ERR_USERONCHAN 443 //check if correct error code and sentance
-		  _server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already in the channel");
-		  return ;
-		} 
-		i++;
-	  }
+    if (IsOperator(fd) == true) //checks the user executing the command is an operator
+    {
+      int i = 0;
+      while (i < _members.size()) //checks all the members if the channel
+      {
+        if (_members[i]->getNickname() == username) //compares the user written to possible users
+        {
+          //ERR_USERONCHAN 443 //check if correct error code and sentance
+          _server->sendNumeric(fd, 443, "", std::vector<std::string>(), username + _channelname + " :is already on channel");
+          return ;
+        } 
+        i++;
+      }
 
 	  //Gets the client information from the server
 	  Client *client = _server->findClientByNickOrUser(-1, username);
 	  if (client == NULL)
 	  {
-		//ERR_NOSUCHNIC //need to add the number code and sentance
-		_server->sendNumeric(fd, 000, "", std::vector<std::string>(), "nick does not exist");
-
-	  }
-	  AddMember(client); //adds the client onto the channel list
-	  client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
-	  std::string msg = username + " you have been invited to " + _channelname + "channel";
-	  client->addNotification(msg, 'i'); //give them a notification that they have been invited
-	}
-	else 
-	{
-	  //ERR_NOCHANPRIV
-	  _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
-	}
+		  //ERR_NOSUCHNIC //need to add the number code and sentance
+		  _server->sendNumeric(fd, 000, "", std::vector<std::string>(), "nick does not exist");
+      AddMember(client); //adds the client onto the channel list
+      client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
+      std::string msg = username + " you have been invited to " + _channelname + "channel";
+      _server->sendNotice(client->getFd(), _channelname, msg); //sends the notice to the client
+    }
+    else 
+    {
+      //ERR_NOCHANPRIV
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
+    }
   }
 
   //KICK - Ejecting a client from the channel

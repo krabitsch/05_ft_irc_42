@@ -14,6 +14,21 @@ Channel::Channel(Server *server, int fd, std::string name): _server(server), _ch
 	_inviteonly = false;
 	_topicPriv = false;
 	_password = "";
+	_topic = "";
+	_userlimit = 0;
+	_operatorPriv = true;
+};
+
+Channel::Channel(Server *server, int fd, std::string name, std::string pass): _channelname(name), _server(server), _password(pass) 
+{
+	Client *client = _server->findClient(fd, "");
+	client->AddChannel(name, 'o');
+	AddMember(client);
+	client->setCurrentChannel(name);
+	_operators.push_back(client->getFd());
+	_inviteonly = false;
+	_topicPriv = false;
+	_topic = "";
 	_userlimit = 0;
 	_operatorPriv = true;
 };
@@ -23,14 +38,14 @@ Channel::~Channel() {};
 
 //Copy Contructor 
 Channel::Channel(const Channel &other): _server(other._server),
-	_channelname(other._channelname),
-	_members(other._members),
-	_operators(other._operators),
-	_operatorPriv(other._operatorPriv),
-	_inviteonly(other._inviteonly),
-	_topicPriv(other._topicPriv),
-	_password(other._password),
-	_userlimit(other._userlimit) {};
+    _channelname(other._channelname),
+    _members(other._members),
+    _operators(other._operators),
+    _operatorPriv(other._operatorPriv),
+    _inviteonly(other._inviteonly),
+    _topicPriv(other._topicPriv),
+    _password(other._password),
+    _userlimit(other._userlimit), _topic(other._topic) {};
 
 //Copy Assign Operator
 Channel &Channel:: operator=(const Channel &other) 
@@ -46,53 +61,28 @@ Channel &Channel:: operator=(const Channel &other)
 		this->_topicPriv = other._topicPriv;
 		this->_password = other._password;
 		this->_userlimit = other._userlimit;
+		this->_topic = other._topic;
 	}
 	return (*this);
 };
-
-//Change Topic
-
-void Channel::channelTopic(std::string newtopic)
-{
-	std::string oldtopic = _channelname;
-	_channelname = newtopic; 
-	
-	size_t i = 0;
-	while (i < _members.size())
-	{
-		_members[i]->setCurrentChannel(newtopic);
-		_members[i]->RemoveChannel(oldtopic); 
-		if (IsOperator(_members[i]->getFd()) == true)
-			_members[i]->AddChannel(_channelname, 'o');
-		else
-			_members[i]->AddChannel(_channelname, 'm');
-		i++;
-	}
-}
-
 
 //Add Member
 //Step 1: Get client and add it to the map
 void Channel::AddMember(Client* user)
 {
+	DBG({std::cout << "Adding Member" << user->getNickname() << std::endl;});
+	int i = 0;
 	if (!user)
 		return ;
 
 	for (size_t i = 0; i < _members.size(); i++)
 	{
-		// check if already in channel (by fd (unique), not username or nickname)
+    DBG({std::cout << "early exit" << std::endl;});
 		if (_members[i] && _members[i]->getFd() == user->getFd())
 			return;
 	}
-	/*
-	size_t i = 0;
-	while (i < _members.size())
-	{
-		if (_members[i]->getNickname() == user->getNickname() || _members[i]->getUsername() == user->getUsername())
-			return ;
-		i++;
-	}
-	*/
+
+	DBG({std::cout << "Added Member!" << std::endl;});
 	_members.push_back(user);
 	//user->AddChannel(_channelname, 'm'); // KR: removed this: is set to 'o' via Channel constructor (if new channel)
 										   // and should be AddChannel should be called by commands (e.g. JOIN) to change status
@@ -112,7 +102,7 @@ void Channel::RemoveMember(std::string username)
 	size_t i = 0;
 	while (i < _members.size())
 	{
-		if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) // KR: should do: if (_members[i])
+		if (_members[i]->getNickname() == username)
 		{
 			_members[i]->RemoveChannel(_channelname);
 			_members[i]->setCurrentChannel(""); //Set the users current channel to blank
@@ -298,6 +288,11 @@ std::string Channel::getname(void) const
 	return (_channelname);
 }
 
+std::string Channel::getTopic(void) const
+{
+	return (_topic);
+}
+
 size_t Channel::getUserlimit(void) const
 {
 	return (_userlimit);
@@ -321,4 +316,16 @@ bool Channel::getTopicpriv(void) const
 std::string	Channel::getPassword(void) const
 {
 	return (_password);
+}
+
+
+//Setters
+void Channel::setTopic(std::string word)
+{
+	_topic = word;	
+}
+
+void Channel::setPassword(std::string word)
+{
+	_password = word;	
 }
