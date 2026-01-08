@@ -19,7 +19,7 @@ Channel::Channel(Server *server, int fd, std::string name): _server(server), _ch
 	_operatorPriv = true;
 };
 
-Channel::Channel(Server *server, int fd, std::string name, std::string pass): _channelname(name), _server(server), _password(pass) 
+Channel::Channel(Server *server, int fd, std::string name, std::string pass): _server(server), _channelname(name), _password(pass) 
 {
 	Client *client = _server->findClientByNickOrUser(fd, "");
 	client->AddChannel(name, 'o');
@@ -37,15 +37,17 @@ Channel::Channel(Server *server, int fd, std::string name, std::string pass): _c
 Channel::~Channel() {};
 
 //Copy Contructor 
-Channel::Channel(const Channel &other): _server(other._server),
+Channel::Channel(const Channel &other): 
+	_server(other._server),
     _channelname(other._channelname),
     _members(other._members),
     _operators(other._operators),
-    _operatorPriv(other._operatorPriv),
-    _inviteonly(other._inviteonly),
-    _topicPriv(other._topicPriv),
-    _password(other._password),
-    _userlimit(other._userlimit), _topic(other._topic) {};
+	_topic(other._topic),
+	 _operatorPriv(other._operatorPriv),
+	_inviteonly(other._inviteonly),
+	_topicPriv(other._topicPriv),
+	_password(other._password),
+	_userlimit(other._userlimit) {};
 
 //Copy Assign Operator
 Channel &Channel:: operator=(const Channel &other) 
@@ -71,7 +73,6 @@ Channel &Channel:: operator=(const Channel &other)
 void Channel::AddMember(Client* user)
 {
 	DBG({std::cout << "Adding Member" << user->getNickname() << std::endl;});
-	int i = 0;
 	if (!user)
 		return ;
 

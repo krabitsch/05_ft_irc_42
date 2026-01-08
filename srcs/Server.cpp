@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 12:33:52 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/08 13:41:02 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,7 +198,6 @@ void Server::acceptClient()	// accepts new client
 
 }
 
-
 void	Server::receiveData(int fd)	// receives new data from a registered client
 {
 	char buff[1024];
@@ -261,48 +260,6 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 	}
 }
 
-void Server::broadcastMessage(int from_fd, const std::string& msg) 
-{
-	for (size_t i = 0; i < _clients.size(); ++i) 
-	{
-		int client_fd = _clients[i]->getFd();
-		if (client_fd != from_fd) 
-		{
-			ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
-			if (sent == -1) 
-			{
-				std::cerr << "send() error on fd " << client_fd << ": " << std::strerror(errno) << std::endl;
-			}
-		}
-	}
-}
-
-void Server::broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd)
-{
-	Channel* channel = findChannel(channelName);
-	if (!channel)
-		return ;
-
-	std::vector<Client *>* members = channel->getMembers();
-	if (!members)
-		return ;
-
-	// dbg print:
-	std::cout << "broadcastToChannel: " << channelName << " members=" << members->size() << std::endl;
-	for (size_t i = 0; i < members->size(); i++)
-	{
-		Client* m = (*members)[i];
-		if (!m)
-			continue ;
-
-		int toFd = m->getFd();
-		if (exceptFd != -1 && toFd == exceptFd) 
-			continue ;
-
-		sendConstructedMsg(toFd, msg); // msg ends with \r\n
-	}
-}
-
 void Server::handleMessage(int fd, const IrcCommand &cmd)
 {
 	if (cmd.command.empty())
@@ -362,46 +319,13 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	// from here on, only registered clients:
 	if (c == "JOIN")
 	{	
-		//Topic Numeric Replies
-		/*Numeric Replies:
-
-	   	ERR_NEEDMOREPARAMS			ERR_BANNEDFROMCHAN
-		ERR_INVITEONLYCHAN			ERR_BADCHANNELKEY
-		ERR_CHANNELISFULL			ERR_BADCHANMASK
-		ERR_NOSUCHCHANNEL			ERR_TOOMANYCHANNELS
-		RPL_TOPIC*/
-		
-		if (!cmd.parameters.empty()) // move this logic inside the command handling
-		{
-			if (cmd.parameters[0][0] != '#')
-			{
-				// 403 ERR_NOSUCHCHANNEL
-				this->sendNumeric(fd, 403, cmd.parameters[0], std::vector<std::string>(),"No such channel");
-				return;
-			}
-			if (cmd.parameters.size() == 2)
-				join(fd, cmd.parameters[0], cmd.parameters[1]);
-			else
-				join(fd, cmd.parameters[0], "");
-			DBG({std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;});
-		}
-		else 
-		{
-			// 461 ERR_NEEDMOREPARAMS
-			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "JOIN"),
-						"Not enough parameters");
-		}
-		return;
+		joinCommand(fd, cmd);
+		return ;
 	}
 	if (c == "PART")
 	{
-		if (!cmd.parameters.empty())
-			part(fd, cmd.parameters[0]);
-		else
-		{	// 461 ERR_NEEDMOREPARAMS
-			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "PART"),"Not enough parameters");
-		}
-		return;
+		partCommand(fd, cmd);
+		return ;
 	}
 	if (c == "PRIVMSG")
 	{
@@ -410,133 +334,22 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "TOPIC")
 	{
-		//Topic Numeric Replies
-		/*Numeric Replies:
-
-	   	ERR_NEEDMOREPARAMS			ERR_NOTONCHANNEL
-		RPL_NOTOPIC					RPL_TOPIC
-		ERR_CHANOPRIVSNEEDEDL*/
-		//Extra: Look into if topic is done correctly
-		
-		if (!cmd.parameters.empty() && cmd.parameters.size() == 2)
-			topic(cmd.parameters[0], cmd.parameters[1], fd);
-		else if (!cmd.parameters.empty() && cmd.parameters.size() == 1)
-		 	topic(cmd.parameters[0], "", fd);
-		else
-			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "TOPIC"),
-						"Not enough parameters");
-		return;
+		topicCommand(fd, cmd);
+		return ;
 	}
 	if (c == "KICK")
 	{
-		//Kick Numeric Replies
-		/*Numeric Replies:
-
-		ERR_NEEDMOREPARAMS			ERR_NOSUCHCHANNEL
-		ERR_BADCHANMASK				ERR_CHANOPRIVSNEEDED
-		ERR_NOTONCHANNEL*/
-		
-		if (!cmd.parameters.empty())
-		{
-			if (cmd.parameters.size() < 2)
-			{
-				//ERR_NEEDMOREPARAMS 461
-				this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "KICK"),
-						"Not enough parameters");
-				return ;
-			}
-			Channel *channel = findChannel(cmd.parameters[0]);
-			if (channel)
-			{
-				if (cmd.parameters.size() == 2)
-					channel->kick(cmd.parameters[1], "", fd); //If no comments are included
-				else if (cmd.parameters.size() == 3)
-					channel->kick(cmd.parameters[1], cmd.parameters[2], fd); //if comments are included
-			}
-			else
-			{
-				//ERR_NOSUCHCHANNEL
-				this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
-			}
-			return;
-		}
-		else 
-		{
-			//ERR_NEEDMOREPARAMS 461
-			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "KICK"),
-						"Not enough parameters");
-			return ;
-		}
+		kickCommand(fd, cmd);
+		return ;
 	}
 	if (c == "MODE")
 	{
-		//Mode Numeric Replies
-		/*Numeric Replies:
-
-	   
-		ERR_NEEDMOREPARAMS				RPL_CHANNELMODEIS
-		ERR_CHANOPRIVSNEEDED			ERR_NOSUCHNICK //Dont think we need this one
-		ERR_NOTONCHANNEL				ERR_KEYSET
-		RPL_BANLIST						RPL_ENDOFBANLIST //I dont think we need  since we dont have a ban list 
-		ERR_UNKNOWNMODE					ERR_NOSUCHCHANNEL
-
-		ERR_USERSDONTMATCH				RPL_UMODEIS
-		ERR_UMODEUNKNOWNFLAG*/
-		
-		//sets modes for channels and users, modes need to be tested
-		if (!cmd.parameters.empty())
-		{
-			Channel* channel = findChannel(cmd.parameters[0]);
-			if (channel == NULL)
-			{
-				//ERR_NOSUCHCHANNEL 403
-				this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
-			}
-			else if (cmd.parameters.size() == 1)
-				channel->mode(fd, "", ""); //If no mode parameters are given
-			else
-			{
-				if (cmd.parameters.size() == 2)
-					channel->mode(fd, cmd.parameters[1], "");
-				else if (cmd.parameters.size() == 3)
-					channel->mode(fd, cmd.parameters[1], cmd.parameters[2]);
-			}
-			return ;
-		}
-		else 
-		{
-			//ERR_NEEDMOREPARAMS 461
-			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
-						"Not enough parameters");
-			return ;
-		}
+		modeCommand(fd, cmd);
+		return ;
 	}
-	if (c == "INVITE") //Needs to be tested
+	if (c == "INVITE")
 	{
-		//Invite Numeric Replies
-		/*Numeric Replies:
-
-	   
-		ERR_NEEDMOREPARAMS				ERR_NOSUCHNICK
-		ERR_NOTONCHANNEL				ERR_USERONCHANNEL
-		ERR_CHANOPRIVSNEEDED
-		RPL_INVITING					RPL_AWAY*/
-		
-		if (cmd.parameters.empty())
-		{
-			//ERR_NEEDMOREPARAMS
-			this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "INVITE"),
-						"Not enough parameters");
-			return ;
-		}
-		Channel* channel = findChannel(cmd.parameters[0]); //Check if they create a new channel if one doesnt exist
-		if (channel == NULL)
-		{
-			//ERR_NOSUCHCHANNEL 403
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
-			return ;
-		}
-		channel->invite(cmd.parameters[1], fd);
+		inviteCommand(fd, cmd);
 		return ;
 	}
 	
@@ -709,102 +522,6 @@ Client*		Server::findClientByFd(const int fd)
 	}
   	return (NULL);
 }
-
-// ****************************************************************
-// constructing message the server sends in the right format
-// ****************************************************************
-
-void	Server::sendConstructedMsg(int fd, const std::string &line)
-{
-	ssize_t sent = send(fd, line.c_str(), line.size(), 0);
-	if (sent == -1)
-		std::cerr << "send() error on fd " << fd << ": " << std::strerror(errno) << std::endl;
-}
-
-void	Server::sendMessage(int fd, const std::string &prefix, const std::string &command, 
-							const std::vector<std::string> &params, const std::string &trailing)
-{
-	std::ostringstream oss; // read IRC message syntax into oss:
-							// syntax: [:prefix] <command OR numeric> <params> :<optional text> (ends with \r\n)
-	if (!prefix.empty())
-		oss << ":" << prefix << " ";
-	oss << command;
-	for (size_t i = 0; i < params.size(); i++)
-	{
-		if (!params[i].empty())
-			oss << " " << params[i];
-	}
-
-	if (!trailing.empty())
-		oss << " :" << trailing;
-
-	oss << "\r\n";
-
-	std::string line = oss.str();
-	this->sendConstructedMsg(fd, line);
-}
-// RFC1459: numeric reply must be sent as one message consisting of the sender prefix, the three digit numeric, and the target of the reply.
-void	Server::sendNumeric(int fd, int code, const std::string &target, 
-							const std::vector<std::string> &params, const std::string &trailing)
-{
-	std::ostringstream cmd;
-	cmd.width(3);
-	cmd.fill('0');
-	cmd << code; // e.g. 1 -> "001"
-
-	std::vector<std::string> fullParams;
-	fullParams.push_back(target);
-	for (size_t i = 0; i < params.size(); i++)
-		fullParams.push_back(params[i]);
-
-	this->sendMessage(fd, _serverName, cmd.str(), fullParams, trailing);
-}
-
-void	Server::sendNotice(int fd, const std::string &target, const std::string &text)
-{
-	std::vector<std::string> params;
-	params.push_back(target);
-	this->sendMessage(fd, _serverName, "NOTICE", params, text);
-}
-
-void	Server::sendWelcome(Client &client)
-{
-	const std::string &nick = client.getNickname();
-	int fd = client.getFd();
-
-	// 001 RPL_WELCOME
-	sendNumeric(fd, 001, nick, std::vector<std::string>(),
-		"Welcome to the ft_irc server " + nick);
-
-	// 002 RPL_YOURHOST
-	sendNumeric(fd, 002, nick, std::vector<std::string>(),
-		"Your host is " + _serverName + ", running version 1.0");
-
-	// 003 RPL_CREATED
-	sendNumeric(fd, 003, nick, std::vector<std::string>(),
-		"This server was created 2025-11-30");
-
-	// 004 RPL_MYINFO
-	// <servername> <version> <usermodes> <channelmodes>
-	// supported user modes: i(nvisible)
-	// supported channel modes (i invite-only, t topic protected, k key/password, o operator, l user limit)
-	std::vector<std::string> params004;
-	params004.push_back(_serverName);
-	params004.push_back("ft_irc-42 1.0");
-	params004.push_back("i");	   // user modes
-	params004.push_back("itkol");  // channel modes
-	sendNumeric(fd, 004, nick, params004, "");
-
-	// 005 RPL_ISUPPORT
-	std::vector<std::string> params005;
-	params005.push_back("CHANTYPES=#");
-	params005.push_back("NICKLEN=16");
-	params005.push_back("USERLEN=32");
-	params005.push_back("PREFIX=(o)@");
-	params005.push_back("CASEMAPPING=ascii");
-	sendNumeric(fd, 005, nick, params005, "are supported by this server");
-}
-
 
 
 void Server::tryRegisterClient(Client &client)

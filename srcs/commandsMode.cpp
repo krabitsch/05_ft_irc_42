@@ -1,5 +1,6 @@
   // Commands_Mode.cpp	 // MODE/INVITE/KICK (subset)
   #include "../includes/Server.hpp"
+#include <cstddef>
   #include <cstdlib>
   #include <sstream>
   #include <sys/select.h>
@@ -109,7 +110,7 @@
     }
     else if (param == "+k") //Set password
     {
-      if (_password.empty() && !input.empty() || !_password.empty() && !input.empty())
+      if ((_password.empty() && !input.empty()) || (!_password.empty() && !input.empty()))
       {
         _password = input;
         _server->broadcastToChannel(_channelname, "Channel key has been set/changed for the channel " + _channelname + "\n", -1);
@@ -138,7 +139,7 @@
     }
     else if (param == "+l") //sets a user limit
     {
-      int num = 0;//Here we would convert the numerical string value into an int
+      size_t num = 0;//Here we would convert the numerical string value into an int
 
       if (input.empty())
       { //Custom error for empty input
@@ -196,7 +197,7 @@
   {
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
-      int i = 0;
+      size_t i = 0;
       while (i < _members.size()) //checks all the members if the channel
       {
         if (_members[i]->getNickname() == username) //compares the user written to possible users
@@ -236,7 +237,7 @@
 
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
-      int i = 0;
+      size_t i = 0;
       while (i < _members.size()) //checks all the members if the channel
       {
         if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users

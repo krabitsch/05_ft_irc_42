@@ -32,7 +32,7 @@ void Server::topic(std::string channelname, std::string maintopic, int clientfd)
     channel_type->setTopic(maintopic);
     this->broadcastToChannel(channel_type->getname(), "Channel topic has been changed to: " + maintopic + "\n", -1);
   }
-  else if (channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == true || channel_type->getTopicpriv() == false)
+  else if ((channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == true) || channel_type->getTopicpriv() == false)
   {
     channel_type->setTopic(maintopic);
     this->broadcastToChannel(channel_type->getname(), "Channel topic has been changed to: " + maintopic + "\n", -1);
