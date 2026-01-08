@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 11:43:39 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/08 13:37:20 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,6 +256,10 @@ void Server::quitCommand(Client &client, const IrcCommand &cmd)
 			broadcastToChannel(it->first, quitLine, fd); // broadcast to all channels the client is in (excluding the quitter)
 		}
 	}
+
+	// Send ERROR - this is the standard way to tell client "server is closing connection"
+    std::string errorMsg = "ERROR :Closing Link: " + nick + "[" + host + "] (" + message + ")\r\n";
+    sendConstructedMsg(fd, errorMsg);
 
 	std::cout << RED << "Client (fd = " << fd << ") Disconnected" << WHITE << std::endl;
 	clearClient(fd);
