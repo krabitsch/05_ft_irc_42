@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 13:41:02 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/08 13:58:50 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,6 +210,7 @@ void	Server::receiveData(int fd)	// receives new data from a registered client
 			return ;
 		std::cerr << RED << "recv() error on fd " << fd << ": " << std::strerror(errno) << WHITE << std::endl;
 		clearClient(fd);
+		return ;
 	}
 	if (bytes == 0)
 	{
@@ -450,6 +451,17 @@ void	Server::clearClient(int fd)
 
 void	Server::closeFds()
 {
+	// Send shutdown message to all connected clients
+    std::string shutdownMsg = "ERROR :Server shutting down\r\n";
+    for (size_t i = 0; i < this->_clients.size(); i++)
+    {
+        if (this->_clients[i])
+        {
+            int clientFd = this->_clients[i]->getFd();
+            send(clientFd, shutdownMsg.c_str(), shutdownMsg.length(), 0);
+        }
+    }
+
 	// close & delete clients
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
