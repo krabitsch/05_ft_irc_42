@@ -104,6 +104,7 @@
       }
       else
         _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+      return (1);
     }
     else if (param == "+k") //Set password
     {
@@ -116,6 +117,7 @@
       { //Custom error for empty input
         _server->sendNumeric(fd, 814, "", std::vector<std::string>(), "No available password key given!");
       }
+      return (1);
     }
     return (0);
   }
