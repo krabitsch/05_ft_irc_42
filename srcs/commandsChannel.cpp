@@ -22,15 +22,15 @@
         Channel _newchannel(this, fd,channelname); //creates the channel
         _channels.push_back(_newchannel);
       }
-      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel"); //fix this!
+      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel");
     }
     else 
     {
       Client *_client = findClient(fd, "");
       if (_client == NULL)
       {
-        //ERR_NOSUCHNICK
-        this->sendNumeric(fd, 401, "", std::vector<std::string>(), "nick does not exist");
+        //ERR_NOSUCHNICK *Technically this should never happen!
+        this->sendNumeric(fd, 401, "", std::vector<std::string>(), ":No such nick");
         return ;
       }
 
@@ -44,19 +44,19 @@
       if (_channel->getInviteonly() == true && checker == false)
       {
         //ERR_INVITEONLYCHAN 473
-        this->sendNumeric(fd, 473, "", std::vector<std::string>(), "Cannot join channel (+i)"); //You need an invite to join
+        this->sendNumeric(fd, 473, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+i)"); //You need an invite to join
         return ;
       }
       if (_channel->getUserlimit() == _channel->getMembersize())
       {
         //ERR_CHANNELISFULL 471
-        this->sendNumeric(fd, 471, "", std::vector<std::string>(), "Cannot join channel (+l)"); //Channel is full
+        this->sendNumeric(fd, 471, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+l)"); //Channel is full
         return ;
       }
       if (!_channel->getPassword().empty() && _channel->getPassword() != pass)
       {
-        //ERR_BADCHANNELKEY 476
-        this->sendNumeric(fd, 476, "", std::vector<std::string>(), "Wrong channel key"); //Wrong password when joining 
+        //ERR_BADCHANNELKEY 475
+        this->sendNumeric(fd, 475, "", std::vector<std::string>(), _channel->getname() +":Cannot join channel (+k)"); //Wrong password when joining 
         return ;
       }
 
@@ -82,7 +82,7 @@
     Channel *channel_type = findChannel(channelname);
     if (channel_type == NULL) //Checkes if the channel doesnt exist
     {
-      this->sendNumeric(fd, 403, "", std::vector<std::string>(), channelname+ " :No such channel");
+      this->sendNumeric(fd, 403, "", std::vector<std::string>(), channelname + " :No such channel");
       return ;
     }
     this->sendNotice(fd, channel_type->getname(), client->getNickname() + " has left the channel");

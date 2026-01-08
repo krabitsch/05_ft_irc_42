@@ -49,7 +49,7 @@
         _topicPriv = false;
       }
       else
-        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname + " :Channel key already set");
       return (1);
     }
     else if (param == "+t") //true
@@ -60,7 +60,7 @@
         _server->sendNotice(fd, _channelname, "Topic privilege has been set for the channel " + _channelname);
       }
       else
-        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname+ " :Channel key already set");
+        _server->sendNumeric(fd, 467, "", std::vector<std::string>(), _channelname + " :Channel key already set");
       return (1);
     }
     return (0);

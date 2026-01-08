@@ -88,8 +88,6 @@ void	Server::userCommand(Client &client, const IrcCommand &cmd)
 
 void Server::quit(std::string message, int fd)
 {
-	//Just need to add the custom message feature! - Al
-	
 	Client *client = findClient(fd, ""); //Finds the client
 	if (client == NULL)
 		return ;

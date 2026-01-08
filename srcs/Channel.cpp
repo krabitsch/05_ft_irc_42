@@ -69,18 +69,18 @@ Channel &Channel:: operator=(const Channel &other)
 //Step 1: Get client and add it to the map
 void Channel::AddMember(Client* user)
 {
-	std::cout << "Add Member 1 " << user->getNickname() << std::endl;
+	DBG({std::cout << "Adding Member" << user->getNickname() << std::endl;});
 	int i = 0;
 	while (i < _members.size())
 	{
 		if (_members[i]->getFd() == user->getFd())
 		{
-			std::cout << "early exit" << std::endl;	
+			DBG({std::cout << "early exit" << std::endl;});
 			return ;
 		}
 		i++;
 	}
-	std::cout << "Added Member!" << std::endl;
+	DBG({std::cout << "Added Member!" << std::endl;});
 	_members.push_back(user);
 	user->AddChannel(_channelname, 'm');
 }

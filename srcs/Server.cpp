@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/07 15:28:16 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/08 09:26:18 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -377,8 +377,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	if (c == "PRIVMSG")
 	{
-		/*
-		*************************
+		/**************************
 		Still need to implement:
 
 		404     ERR_CANNOTSENDTOCHAN
@@ -482,7 +481,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			else
 			{
 				//ERR_NOSUCHCHANNEL
-				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+				this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			}
 			return;
 		}
@@ -516,7 +515,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			if (channel == NULL)
 			{
 				//ERR_NOSUCHCHANNEL 403
-				this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+				this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			}
 			else if (cmd.parameters.size() == 1)
 				channel->mode(fd, "", ""); //If no mode parameters are given
@@ -559,7 +558,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		if (channel == NULL)
 		{
 			//ERR_NOSUCHCHANNEL 403
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			return ;
 		}
 		channel->invite(cmd.parameters[1], fd);
@@ -574,7 +573,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		Channel* channel = findChannel(findClient(fd, "")->getCurrentChannel());
 		if (channel == NULL)
 		{
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(), "No such channel");
+			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			return ;
 		}
 		if (cmd.parameters[0] == "-u")
