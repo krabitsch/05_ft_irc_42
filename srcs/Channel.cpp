@@ -21,7 +21,7 @@ Channel::Channel(Server *server, int fd, std::string name): _server(server), _ch
 
 Channel::Channel(Server *server, int fd, std::string name, std::string pass): _channelname(name), _server(server), _password(pass) 
 {
-	Client *client = _server->findClient(fd, "");
+	Client *client = _server->findClientByNickOrUser(fd, "");
 	client->AddChannel(name, 'o');
 	AddMember(client);
 	client->setCurrentChannel(name);

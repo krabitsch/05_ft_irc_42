@@ -49,20 +49,7 @@ class Channel
 	bool isMember(Client* client);
 	std::vector<Client *>* getMembers(void);
 	void printMembers(void);
-  
-	/*void					channelTopic(std::string newtopic);
-	void					AddMember(Client* user);
-	void					RemoveMember(std::string username);
 	void					RemoveMemberByFd(int fd);
-	std::string				getname(void) const;
-	size_t		  			getUserlimit(void) const;
-	size_t		  			getMembersize(void) const;
-	bool					getInviteonly(void) const;
-	bool					getTopicpriv(void) const;
-	std::string	 			getPassword(void) const;
-	bool					isMember(Client* client);
-	std::vector<Client *>*	getMembers(void);
-	void					printMembers(void);*/
 
 	//Mode Commands
 	int modeI(int fd, std::string param);
@@ -81,6 +68,6 @@ class Channel
 	void kick(std::string username, std::string comments, int fd);
 	void invite(std::string username, int fd);
 	void mode(int fd, std::string param, std::string input);
-}
+};
 
 #endif

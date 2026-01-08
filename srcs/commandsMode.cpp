@@ -225,7 +225,7 @@
       _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
     }
   }
-
+  }
   //KICK - Ejecting a client from the channel
   //The Kick interacts with the channel, with no channel you are unable to kick
   //Step 1: First we need if the client & Channel & Operator exists
@@ -237,28 +237,27 @@
 
   void Channel::kick(std::string username, std::string comments, int fd)
   {
-	(void)comments;
+    (void)comments;
 
-	if (IsOperator(fd) == true) //checks the user executing the command is an operator
-	{
-	  int i = 0;
-	  while (i < _members.size()) //checks all the members if the channel
-	  {
-		if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users
-		{
-		  RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
-		  _server->sendNotice(fd, _channelname, username + " has been kicked from the channel");
-		  return ;
-		}
-		i++;
-	  }
-	  //ERR_USERNOTINCHANNEL 441
-	  _server->sendNumeric(fd, 441, "", std::vector<std::string>(), username + " " + _channelname +" :They aren't on that channel");
-	}
-	else 
-	{
-	  //ERR_CHANOPRIVSNEEDED 482
-	  _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
-	}
+    if (IsOperator(fd) == true) //checks the user executing the command is an operator
+    {
+      int i = 0;
+      while (i < _members.size()) //checks all the members if the channel
+      {
+        if (_members[i]->getNickname() == username || _members[i]->getUsername() == username) //compares the user written to possible users
+        {
+          RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
+          _server->sendNotice(fd, _channelname, username + " has been kicked from the channel");
+          return ;
+        }
+        i++;
+      }
+      //ERR_USERNOTINCHANNEL 441
+      _server->sendNumeric(fd, 441, "", std::vector<std::string>(), username + " " + _channelname +" :They aren't on that channel");
+    }
+    else 
+    {
+      //ERR_CHANOPRIVSNEEDED 482
+      _server->sendNumeric(fd, 482, "", std::vector<std::string>(),_channelname + " :You're not channel operator");
+    }
   }
-  

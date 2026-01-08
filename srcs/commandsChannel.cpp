@@ -15,18 +15,18 @@
       if (!pass.empty())
       {
         Channel _newchannel(this, fd,channelname, pass); //creates the channel with passkey
-        _channels.push_back(_newchannel);
+        _channels.push_back(&_newchannel);
       }
       else
       {
         Channel _newchannel(this, fd,channelname); //creates the channel
-        _channels.push_back(_newchannel);
+        _channels.push_back(&_newchannel);
       }
       this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel");
     }
     else 
     {
-      Client *_client = findClient(fd, "");
+      Client *_client = findClientByNickOrUser(fd, "");
       if (_client == NULL)
       {
         //ERR_NOSUCHNICK *Technically this should never happen!
@@ -34,17 +34,17 @@
         return ;
       }
 
-	if (channel == NULL)
+	if (_channel == NULL)
 	{
 		Channel* newChannel = new Channel(this, fd, channelname);
 		this->_channels.push_back(newChannel);
-		channel = newChannel;
+		_channel = newChannel;
 
-		std::string joinMsg = ":" + client->getNickname() + " JOIN " + channelname + "\r\n";
+		std::string joinMsg = ":" + _client->getNickname() + " JOIN " + channelname + "\r\n";
 		broadcastToChannel(channelname, joinMsg, -1); // broadcast to all channel mmembers (including self)
     
       //Error Handling
-      if (_channel->getInviteonly() == true && checker == false)
+      if (_channel->getInviteonly() == true /*&& checker == false*/)
       {
         //ERR_INVITEONLYCHAN 473
         this->sendNumeric(fd, 473, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+i)"); //You need an invite to join
@@ -67,15 +67,16 @@
       _client->setCurrentChannel(channelname);
       this->sendNotice(fd, channelname, _client->getNickname() + " has joined the channel"); 
       
-      if (!checker) //Adds the channel to the client list !isnt is here 
+      //if (!checker) //Adds the channel to the client list !isnt is here 
         _channel->AddMember(_client);
     }
   }
+}
 
   //Part //leaves the channel you are currently on!
   void Server::part(int fd, std::string channelname)
   {
-    Client *client = findClient(fd, ""); //Finds the client
+    Client *client = findClientByNickOrUser(fd, ""); //Finds the client
     if (client == NULL) //error handling but client does exist
     {
       this->sendNumeric(fd, 401, "", std::vector<std::string>(), "nick does not exist");
