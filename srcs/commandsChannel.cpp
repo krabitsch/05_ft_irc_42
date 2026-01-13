@@ -44,19 +44,19 @@
       if (_channel->getInviteonly() == true && checker == false)
       {
         //ERR_INVITEONLYCHAN 473
-        this->sendNumeric(fd, 473, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+i)"); //You need an invite to join
+        this->sendNumeric(fd, 473, "", std::vector<std::string>(), _channel->getname() + " Cannot join channel (+i)"); //You need an invite to join
         return ;
       }
       if (_channel->getUserlimit() != 0 && _channel->getUserlimit() == _channel->getMembersize())
       {
         //ERR_CHANNELISFULL 471
-        this->sendNumeric(fd, 471, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+l)"); //Channel is full
+        this->sendNumeric(fd, 471, "", std::vector<std::string>(), _channel->getname() + " Cannot join channel (+l)"); //Channel is full
         return ;
       }
       if (!_channel->getPassword().empty() && _channel->getPassword() != pass)
       {
         //ERR_BADCHANNELKEY 475
-        this->sendNumeric(fd, 475, "", std::vector<std::string>(), _channel->getname() +":Cannot join channel (+k)"); //Wrong password when joining 
+        this->sendNumeric(fd, 475, "", std::vector<std::string>(), _channel->getname() +" Cannot join channel (+k)"); //Wrong password when joining 
         return ;
       }
 
