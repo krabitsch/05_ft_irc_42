@@ -47,7 +47,7 @@
         this->sendNumeric(fd, 473, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+i)"); //You need an invite to join
         return ;
       }
-      if (_channel->getUserlimit() == _channel->getMembersize())
+      if (_channel->getUserlimit() != 0 && _channel->getUserlimit() == _channel->getMembersize())
       {
         //ERR_CHANNELISFULL 471
         this->sendNumeric(fd, 471, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+l)"); //Channel is full
