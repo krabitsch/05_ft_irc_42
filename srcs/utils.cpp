@@ -21,6 +21,7 @@ void Server::broadcastMessage(const std::string &msgtype, const std::string& cha
 {
   std::string prefix = nickname + "!" + username + "@" + _serverName;
   std::string msg = ":" + prefix + " " + msgtype + " " + channelName + " :" + message + "\r\n";
+  DBG({std::cout << msg << std::endl;});
   broadcastToChannel(channelName, msg, -1);
 }
 
