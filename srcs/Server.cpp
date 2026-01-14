@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 13:58:50 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/14 12:02:39 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -353,6 +353,22 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		inviteCommand(fd, cmd);
 		return ;
 	}
+	if (c == "PING")
+	{
+		// Extract the server parameter (or use your server name as default)
+		std::string server;
+		
+		if (cmd.parameters.empty())
+			server =  _serverName;
+		else
+		 	server = cmd.parameters[0];
+			
+		// Respond with PONG
+		std::vector<std::string> params;
+		params.push_back(server);
+		sendMessage(client->getFd(), _serverName, "PONG", params, "");
+		return;
+	}
 	
 	//Special Debugging Commands these are custom commands so they dont follow the IRC protocol
 	if (c == "OP") //Al: The error handling hasnt been implemented for this function 
@@ -362,14 +378,14 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 		Channel* channel = findChannel(findClientByFd(fd)->getCurrentChannel());
 		if (channel == NULL)
 		{
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
+			this->sendNumeric(fd, 403, findClientByFd(fd)->getNickname(), std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
 			return ;
 		}
 		if (cmd.parameters[0] == "-u")
 		{
 			channel->UnsetOperator(cmd.parameters[1], fd);
 		}
-		else if (cmd.parameters[0] == "-u")
+		else if (cmd.parameters[0] == "+u")
 		{
 			channel->SetOperator(cmd.parameters[1], fd);
 		}

@@ -54,7 +54,7 @@ class Channel
 	//Mode Commands
 	int modeI(int fd, std::string param);
 	int modeT(int fd, std::string param);
-	int modeO(int fd, std::string param);
+	int modeO(int fd, std::string param, std::string input);
 	int modeK(int fd, std::string param, std::string input);
 	int modeL(int fd, std::string param, std::string input);
 

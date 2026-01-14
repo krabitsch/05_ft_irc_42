@@ -62,7 +62,7 @@ void Server::kickCommand(int fd, const IrcCommand &cmd)
 		else
 		{
 			//ERR_NOSUCHCHANNEL
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
+			this->sendNumeric(fd, 403, findClientByFd(fd)->getNickname(), std::vector<std::string>(1, "KICK"),cmd.parameters[0] + " :No such channel");
 		}
 	}
 	else 
@@ -81,7 +81,7 @@ void Server::modeCommand(int fd, const IrcCommand &cmd)
 		if (channel == NULL)
 		{
 			//ERR_NOSUCHCHANNEL 403
-			this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
+			this->sendNumeric(fd, 403, findClientByFd(fd)->getNickname(), std::vector<std::string>(1, "MODE"),cmd.parameters[0] + " :No such channel");
 		}
 		else if (cmd.parameters.size() == 1)
 			channel->mode(fd, "", ""); //If no mode parameters are given
@@ -114,7 +114,7 @@ void Server::inviteCommand(int fd, const IrcCommand &cmd)
 	if (channel == NULL)
 	{
 		//ERR_NOSUCHCHANNEL 403
-		this->sendNumeric(fd, 403, "", std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
+		this->sendNumeric(fd, 403, findClientByFd(fd)->getNickname(), std::vector<std::string>(1, "INVITE"),cmd.parameters[0] + " :No such channel");
 		return ;
 	}
 	channel->invite(cmd.parameters[1], fd);

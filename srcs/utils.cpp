@@ -16,6 +16,15 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 	}
 }
 
+
+void Server::broadcastMessage(const std::string &msgtype, const std::string& channelName, const std::string& nickname, const std::string& username, const std::string& message)
+{
+  std::string prefix = nickname + "!" + username + "@" + _serverName;
+  std::string msg = ":" + prefix + " " + msgtype + " " + channelName + " :" + message + "\r\n";
+  DBG({std::cout << msg << std::endl;});
+  broadcastToChannel(channelName, msg, -1);
+}
+
 void Server::broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd)
 {
 	Channel* channel = findChannel(channelName);

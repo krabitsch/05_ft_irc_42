@@ -9,6 +9,7 @@
   void Server::join(int fd, std::string channelname, std::string pass)
   {
     Channel *_channel = findChannel(channelname);
+    std::vector<std::string> params;
 
     if (_channel == NULL)
     {
@@ -22,15 +23,16 @@
         Channel *newchannel = new Channel(this, fd, channelname, pass); //creates the channel
         _channels.push_back(newchannel);
       }
-      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel");
+      this->sendMessage(fd, this->findClientByFd(fd)->getNickname(), "JOIN", std::vector<std::string>(1, channelname), "You have created this channel");
     }
     else 
     {
+      params.push_back(_channel->getname());
       Client *_client = findClientByNickOrUser(fd, "");
       if (_client == NULL)
       {
         //ERR_NOSUCHNICK *Technically this should never happen!
-        this->sendNumeric(fd, 401, "", std::vector<std::string>(), ":No such nick");
+        this->sendNumeric(fd, 401, _client->getNickname(), params, ":No such nick");
         return ;
       }
 
@@ -44,26 +46,26 @@
       if (_channel->getInviteonly() == true && checker == false)
       {
         //ERR_INVITEONLYCHAN 473
-        this->sendNumeric(fd, 473, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+i)"); //You need an invite to join
+        this->sendNumeric(fd, 473, _client->getNickname(), params, " Cannot join channel (+i)"); //You need an invite to join
         return ;
       }
-      if (_channel->getUserlimit() == _channel->getMembersize())
+      if (_channel->getUserlimit() != 0 && _channel->getUserlimit() == _channel->getMembersize())
       {
         //ERR_CHANNELISFULL 471
-        this->sendNumeric(fd, 471, "", std::vector<std::string>(), _channel->getname() + "Cannot join channel (+l)"); //Channel is full
+        this->sendNumeric(fd, 471, _client->getNickname(), params, " Cannot join channel (+l)"); //Channel is full
         return ;
       }
       if (!_channel->getPassword().empty() && _channel->getPassword() != pass)
       {
         //ERR_BADCHANNELKEY 475
-        this->sendNumeric(fd, 475, "", std::vector<std::string>(), _channel->getname() +":Cannot join channel (+k)"); //Wrong password when joining 
+        this->sendNumeric(fd, 475, _client->getNickname(), params," Cannot join channel (+k)"); //Wrong password when joining 
         return ;
       }
 
       //If no errors were found add the user, display message, if its a new channel add it to there list
       _client->setCurrentChannel(channelname);
       this->sendNotice(_client->getFd(), channelname, _client->getNickname() + " has joined the channel");
-      this->broadcastToChannel(channelname, _client->getNickname() + " has joined the channel\n", -1);
+      this->broadcastMessage("JOIN", channelname, _client->getNickname(), _client->getUsername(), _channel->getTopic());
       if (!checker) //Adds the channel to the client list !isnt is here 
         _channel->AddMember(_client);
     }
@@ -75,20 +77,18 @@
     Client *client = findClientByNickOrUser(fd, ""); //Finds the client
     if (client == NULL) //error handling but client does exist
     {
-      this->sendNumeric(fd, 401, "", std::vector<std::string>(), "nick does not exist");
+      this->sendNumeric(fd, 401, client->getNickname(), std::vector<std::string>(1, channelname), "nick does not exist");
       return ;
     }
 
     Channel *channel_type = findChannel(channelname);
     if (channel_type == NULL) //Checkes if the channel doesnt exist
     {
-      this->sendNumeric(fd, 403, "", std::vector<std::string>(), channelname + " :No such channel");
+      this->sendNumeric(fd, 403, client->getNickname(), std::vector<std::string>(1, channelname), channelname + " :No such channel");
       return ;
     }
-    this->broadcastToChannel(channelname, client->getNickname() + " has left the channel\n", -1);
+    this->broadcastMessage("PART", channelname, client->getNickname(), client->getUsername(), client->getNickname() + " has left the channel\n");
     channel_type->RemoveMember(client->getNickname()); //Removes the member from the channel
     client->RemoveChannel(client->getCurrentChannel()); //Removes the channel from the clients list
     client->setCurrentChannel(""); //Sets there current channel to nothing
-    return ;
-    
   }

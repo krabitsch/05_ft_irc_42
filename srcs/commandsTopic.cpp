@@ -11,7 +11,7 @@ void Server::topic(std::string channelname, std::string maintopic, int clientfd)
   //Note: that this should only be executed when the TOPIC command has an additional prameter 
   //Check if the channel exists 
   Client *user = findClientByNickOrUser(clientfd, ""); 
-  Channel *channel_type = findChannel(user->getCurrentChannel());
+  Channel *channel_type = findChannel(channelname);
   if (channel_type == NULL) //Checkes if the channel doesnt exist
   {
     this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");
@@ -23,23 +23,23 @@ void Server::topic(std::string channelname, std::string maintopic, int clientfd)
     if (channel_type->getTopic().empty()) //Error msg if the channel topic is already empty
       this->sendNumeric(clientfd, 331, "", std::vector<std::string>(), "No topic is set for this channel");
     else
-      this->broadcastToChannel(channel_type->getname(), "Current channel topic is: " + channel_type->getTopic() + "\n", -1);
+      this->broadcastMessage("TOPIC", channelname, user->getNickname(), user->getUsername(), channel_type->getTopic());
     return ;
   }
 
   if (channel_type->getTopicpriv() == false) //allows anyone is change the topic
   {
     channel_type->setTopic(maintopic);
-    this->broadcastToChannel(channel_type->getname(), "Channel topic has been changed to: " + maintopic + "\n", -1);
+    this->broadcastMessage("TOPIC", channelname, user->getNickname(), user->getUsername(), channel_type->getTopic());
   }
   else if ((channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == true) || channel_type->getTopicpriv() == false)
   {
     channel_type->setTopic(maintopic);
-    this->broadcastToChannel(channel_type->getname(), "Channel topic has been changed to: " + maintopic + "\n", -1);
+    this->broadcastMessage("TOPIC", channelname, user->getNickname(), user->getUsername(), channel_type->getTopic());
   }
   else if (channel_type->getTopicpriv() == true && channel_type->IsOperator(clientfd) == false)
   {
-    this->sendNumeric(clientfd, 482, "", std::vector<std::string>(), "You are not an operator!");
+    this->sendNumeric(clientfd, 482, user->getNickname(), std::vector<std::string>(1, channelname), "You are not an operator!");
   }
   return ;
 }

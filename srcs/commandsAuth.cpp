@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commandsAuth.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 13:37:20 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/14 11:23:32 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,7 +253,7 @@ void Server::quitCommand(Client &client, const IrcCommand &cmd)
 	{
 		for (std::map<std::string, char>::iterator it = chans->begin(); it != chans->end(); ++it)
 		{
-			broadcastToChannel(it->first, quitLine, fd); // broadcast to all channels the client is in (excluding the quitter)
+			broadcastMessage("QUIT", it->first, nick, user, message); // broadcast to all channels the client is in (excluding the quitter)
 		}
 	}
 
