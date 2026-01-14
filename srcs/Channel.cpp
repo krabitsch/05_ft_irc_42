@@ -196,7 +196,7 @@ bool Channel::IsOperator(int fd) //Checks if the user is an operator or not
 void Channel::SetOperator(std::string username, int fd) //Another Note: This function isnt done we still need to verify that the one executing this comamnd is a user or everyone is an operator
 {
 	//If the user is an operator
-	if (_operatorPriv == true)
+	if (IsOperator(fd) == true)
 	{
 		size_t i = 0;
 		while (i < _members.size()) //Note: Maybe put this into its own sperate function
@@ -212,17 +212,17 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 				}
 				else 
 				{
-					_server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already an operator in this channel");
+					_server->sendNumeric(fd, 443, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, username), "User is already an operator in this channel");
 					return ;
 				}
 			}
 			i++;
 		}
-		_server->sendNumeric(fd, 441, "", std::vector<std::string>(), "User is not in the channel");
+		_server->sendNumeric(fd, 441, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, username), "User is not in the channel");
 	}
 	else 
 	{
-		_server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
+		_server->sendNumeric(fd, 482, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "You are not an operator!");
 	}
 }
 
@@ -262,7 +262,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 				}
 				else 
 				{
-					_server->sendNumeric(fd, 443, "", std::vector<std::string>(), "User is already not an operator in this channel");
+					_server->sendNumeric(fd, 443, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, username), "User is already not an operator in this channel");
 					return ;
 				}
 			}
@@ -271,7 +271,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 	}
 	else 
 	{
-		_server->sendNumeric(fd, 482, "", std::vector<std::string>(), "You are not an operator!");
+		_server->sendNumeric(fd, 482, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "You are not an operator!");
 	}
 }
 
