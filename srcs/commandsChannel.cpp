@@ -23,7 +23,7 @@
         Channel *newchannel = new Channel(this, fd, channelname, pass); //creates the channel
         _channels.push_back(newchannel);
       }
-      this->sendMessage(fd, _serverName, "JOIN", std::vector<std::string>(1, channelname), "You have created this channel");
+      this->sendMessage(fd, this->findClientByFd(fd)->getNickname(), "JOIN", std::vector<std::string>(1, channelname), "You have created this channel");
     }
     else 
     {

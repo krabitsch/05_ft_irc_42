@@ -43,9 +43,6 @@ void Server::broadcastToChannel(const std::string& channelName, const std::strin
 		if (!m)
 			continue ;
 
-		if (m->getCurrentChannel() != channelName) //checks whether or not the user is in the current channel!
-			continue ;
-
 		int toFd = m->getFd();
 		if (exceptFd != -1 && toFd == exceptFd) 
 			continue ;

@@ -70,6 +70,12 @@
 
   int Channel::modeO(int fd, std::string param, std::string input)
   {
+    if (input.empty() && (param == "+o" || param == "-o"))
+    {
+      _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
+					"Not enough parameters");
+      return (1);
+    }
     if (param == "-o") //false
     {
       Client *client = _server->findClientByNickOrUser(-1, input);
@@ -79,7 +85,7 @@
         return (1);
       }
 
-      if (IsOperator(client->getFd()) == false)
+      if (IsOperator(client->getFd()) == true)
       {
         UnsetOperator(input, fd);
         _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), input + " is no longer an operator in " + _channelname + "\n");
@@ -97,8 +103,7 @@
         return (1);
       }
       
-      
-      if (IsOperator(client->getFd()) == true)
+      if (IsOperator(client->getFd()) == false)
       {
         SetOperator(input, fd);
         _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), input + " is now an operator in " + _channelname + "\n");
@@ -141,6 +146,7 @@
 
   int Channel::modeL(int fd, std::string param, std::string input)
   {
+
     if (param == "-l") //removes user limit
     {
       if (_userlimit > 0)
@@ -203,7 +209,6 @@
     { //ERR_CHANOPRIVSNEEDED  
       _server->sendNumeric(fd, 482, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, param), "You're not a channel operator");
     }
-    return ;
   }
 
   //Invite - Invite a client of the current channel
