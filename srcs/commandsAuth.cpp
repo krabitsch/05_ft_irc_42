@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/14 13:03:14 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/14 13:57:26 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,7 @@ void Server::broadcastNickChange(Client& client, const std::string& oldNick, con
 	}
 
 	for (std::map<std::string, char>::iterator it = channels->begin(); it != channels->end(); it++)
+		//broadcastMessage("NICK", "", oldNick, user, newNick);	
 		broadcastToChannel(it->first, msg, -1); // include self too (exceptFd == -1)
 }
 
@@ -169,15 +170,18 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 
 	// change to new nickname and broadcast new nickname message to everyone who shares a channel with this client
 	std::string oldNick = client.getNickname();
-	client.setNickname(newNick);
+	//client.setNickname(newNick);
   	//this->sendNotice(client.getFd(), newNick, "Your nickname is now set to " + newNick); // libera sends no notice 
-	client.setHasNick(true);
+	//client.setHasNick(true);
 
 	if (client.isRegistered() && !oldNick.empty() && oldNick != newNick)
 		broadcastNickChange(client, oldNick, newNick);
 
 	if (!client.isRegistered())
 		this->tryRegisterClient(client);
+
+	client.setNickname(newNick);
+	client.setHasNick(true);
 }
 
 // USER COMMAND helper functions (static, file scope functions)
@@ -274,7 +278,7 @@ void Server::quitCommand(Client &client, const IrcCommand &cmd)
 	{
 		for (std::map<std::string, char>::iterator it = chans->begin(); it != chans->end(); ++it)
 		{
-			broadcastToChannel(it->first, quitLine, fd); // broadcast to all channels the client is in (excluding the quitter)
+			broadcastMessage("QUIT", it->first, nick, user, message); // broadcast to all channels the client is in (excluding the quitter)
 		}
 	}
 

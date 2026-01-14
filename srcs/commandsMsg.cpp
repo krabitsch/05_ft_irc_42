@@ -11,7 +11,7 @@
 void Server::privmsgCommand(Client &client, const IrcCommand &cmd){
 
 	int fd = client.getFd();
-	DBG({std::cout << "Handling PRIVMSG command" << std::endl});
+	DBG({std::cout << "Handling PRIVMSG command" << std::endl;});
 	if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
 	{
 		//411 ERR_NORECIPIENT

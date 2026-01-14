@@ -16,6 +16,15 @@ void Server::broadcastMessage(int from_fd, const std::string& msg)
 	}
 }
 
+
+void Server::broadcastMessage(const std::string &msgtype, const std::string& channelName, const std::string& nickname, const std::string& username, const std::string& message)
+{
+  std::string prefix = nickname + "!" + username + "@" + _serverName;
+  std::string msg = ":" + prefix + " " + msgtype + " " + channelName + " :" + message + "\r\n";
+  std::cout << "Broadcast massage: "<< msg << std::endl;
+  broadcastToChannel(channelName, msg, -1);
+}
+
 void Server::broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd)
 {
 	Channel* channel = findChannel(channelName);
@@ -34,10 +43,13 @@ void Server::broadcastToChannel(const std::string& channelName, const std::strin
 		if (!m)
 			continue ;
 
+		if (m->getCurrentChannel() != channelName) //checks whether or not the user is in the current channel!
+			continue ;
+
 		int toFd = m->getFd();
 		if (exceptFd != -1 && toFd == exceptFd) 
 			continue ;
-
+		std::cout << "  sending to fd " << toFd << ": " << msg << std::endl;
 		sendConstructedMsg(toFd, msg); // msg ends with \r\n
 	}
 }
