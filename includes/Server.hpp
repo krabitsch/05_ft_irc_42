@@ -6,7 +6,7 @@
 /*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 13:29:21 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/14 10:15:17 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,7 @@ class Server
 	void		sendMessage(int fd, const std::string &prefix, const std::string &command,
 					const std::vector<std::string> &params, const std::string &trailing);
 	void		broadcastToChannel(const std::string& channelName, const std::string& msg, int exceptFd); //Make it public
+	void		broadcastMessage(const std::string &msgtype, const std::string& channelName, const std::string& nickname, const std::string& username, const std::string& newTopic);
 	void		sendNumeric(int fd, int code, const std::string &target,
 					const std::vector<std::string> &params, const std::string &trailing);
 	void		sendNotice(int fd, const std::string &target, const std::string &text);

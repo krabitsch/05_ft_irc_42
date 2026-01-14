@@ -201,7 +201,7 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 		size_t i = 0;
 		while (i < _members.size()) //Note: Maybe put this into its own sperate function
 		{
-			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
+			if (_members[i]->getNickname() == username)
 			{
 				if (IsOperator(_members[i]->getFd()) == false)
 				{
@@ -239,7 +239,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 		size_t i = 0;
 		while (i < _members.size())
 		{
-			if (_members[i]->getNickname() == username || _members[i]->getUsername() == username)
+			if (_members[i]->getNickname() == username)
 			{
 				if (IsOperator(_members[i]->getFd()) == true)
 				{
