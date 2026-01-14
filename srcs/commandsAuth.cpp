@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/08 13:37:20 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/14 13:03:14 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,11 @@
 // PASS COMMAND: requires server password (./ircserv <port> <password>)
 void	Server::passCommand(Client &client, const IrcCommand &cmd)
 {
+	if (_password.empty())
+	{
+		client.setHasPass(true);
+		return ;
+	}
 	if (client.isRegistered())
 	{
 		this->sendNumeric(client.getFd(), 462, client.getNickname(), std::vector<std::string>(),
@@ -33,6 +38,15 @@ void	Server::passCommand(Client &client, const IrcCommand &cmd)
 	{
 		this->sendNumeric(client.getFd(), 461, "*", std::vector<std::string>(1, "PASS"),
 					"Too many parameters"); // libera ignores this: no perfect numeric for too many params -> reuse 461
+		return ;
+	}
+
+	if (cmd.parameters[0] != this->_password)
+	{
+		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
+					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
+		std::cout << RED << "Client (fd = " << client.getFd() << ") Disconnected" << WHITE << std::endl;
+		this->clearClient(client.getFd());
 		return ;
 	}
 
@@ -71,13 +85,21 @@ static bool isAscii(unsigned char c)
 void Server::broadcastNickChange(Client& client, const std::string& oldNick, const std::string& newNick)
 {
 	// minimal prefix; later you can build nick!user@host
-	std::string prefix = oldNick;
+	const std::string user = client.getUsername().empty() ? "unknown" : client.getUsername();
+    const std::string host = _serverName/* client.getHostname() */;
+	std::string prefix = oldNick + "!" + user + "@" + host;
+
+	std::cout << prefix << std::endl;
 
 	std::string msg = ":" + prefix + " NICK :" + newNick + "\r\n";
+	
+	std::cout << msg << std::endl;
 
+	send(client.getFd(), msg.c_str(), msg.length(), 0);
 	std::map<std::string, char>* channels = client.GetChannel();
-	if (!channels)
+	if (!channels){
 		return ;
+	}
 
 	for (std::map<std::string, char>::iterator it = channels->begin(); it != channels->end(); it++)
 		broadcastToChannel(it->first, msg, -1); // include self too (exceptFd == -1)
@@ -88,7 +110,7 @@ void Server::broadcastNickChange(Client& client, const std::string& oldNick, con
 void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 {
 	// decision to treat it this way: must have received PASS before NICK/USER
-	if (!client.hasPass())
+	if (/* !this->_password.empty() && */ !client.hasPass())
 	{
 		this->sendNumeric(client.getFd(), 451, "*", std::vector<std::string>(),
 					"Password required"); // 451 ERR_NOTREGISTERED (PASS is required before NICK/USER)
@@ -156,7 +178,6 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 
 	if (!client.isRegistered())
 		this->tryRegisterClient(client);
-
 }
 
 // USER COMMAND helper functions (static, file scope functions)
@@ -190,7 +211,7 @@ static bool isValidUsername(const std::string& u)
 // so the implementation below checks it receives 4 params, but only <username> is really stored and used
 void	Server::userCommand(Client &client, const IrcCommand &cmd)
 {
-	if (!client.hasPass())
+	if (/* !_password.empty()  && */ !client.hasPass())
 	{
 		sendNumeric(client.getFd(), 451, "*", std::vector<std::string>(),
 					"Password required");
