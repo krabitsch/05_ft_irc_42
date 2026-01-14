@@ -69,7 +69,6 @@ Channel &Channel:: operator=(const Channel &other)
 };
 
 //Add Member
-//Step 1: Get client and add it to the map
 void Channel::AddMember(Client* user)
 {
 	DBG({std::cout << "Adding Member" << user->getNickname() << std::endl;});
@@ -78,17 +77,15 @@ void Channel::AddMember(Client* user)
 
 	for (size_t i = 0; i < _members.size(); i++)
 	{
-    DBG({std::cout << "early exit" << std::endl;});
+    	DBG({std::cout << "early exit" << std::endl;});
 		if (_members[i] && _members[i]->getFd() == user->getFd())
 			return;
 	}
 
 	DBG({std::cout << "Added Member!" << std::endl;});
 	_members.push_back(user);
-	//user->AddChannel(_channelname, 'm'); // KR: removed this: is set to 'o' via Channel constructor (if new channel)
-										   // and should be AddChannel should be called by commands (e.g. JOIN) to change status
-										 // would overwrite 'o' status here
 	// add channel to client's channel map only if missing.
+
 	std::map<std::string, char>* chmap = user->GetChannel();
 	if (chmap && chmap->find(_channelname) == chmap->end())
 		(*chmap)[_channelname] = 'm';  // do NOT overwrite 'o'

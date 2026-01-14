@@ -11,7 +11,7 @@ void Server::topic(std::string channelname, std::string maintopic, int clientfd)
   //Note: that this should only be executed when the TOPIC command has an additional prameter 
   //Check if the channel exists 
   Client *user = findClientByNickOrUser(clientfd, ""); 
-  Channel *channel_type = findChannel(user->getCurrentChannel());
+  Channel *channel_type = findChannel(channelname);
   if (channel_type == NULL) //Checkes if the channel doesnt exist
   {
     this->sendNumeric(clientfd, 403, channelname, std::vector<std::string>(), "No such channel");
