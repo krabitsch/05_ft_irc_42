@@ -48,8 +48,9 @@ class Channel
 	std::string	getPassword(void) const;
 	bool isMember(Client* client);
 	std::vector<Client *>* getMembers(void);
-	void printMembers(void);
+	void 					printMembers(void);
 	void					RemoveMemberByFd(int fd);
+	void 					rpl_namrepl(int fd);
 
 	//Mode Commands
 	int modeI(int fd, std::string param);
