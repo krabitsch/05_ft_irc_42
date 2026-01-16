@@ -144,4 +144,41 @@ void	Server::sendWelcome(Client &client)
 	params005.push_back("PREFIX=(o)@");
 	params005.push_back("CASEMAPPING=ascii");
 	sendNumeric(fd, 005, nick, params005, "are supported by this server");
+
+	// 251 RPL_LUSERCLIENT
+    std::ostringstream luser1;
+    luser1 << "There are " << _clients.size() << " users and 0 invisible on 1 servers";
+    sendNumeric(fd, 251, nick, std::vector<std::string>(), luser1.str());
+
+    // 252 RPL_LUSEROP
+    // Count operators (clients with operator status somewhere)
+    std::set<int> uniqueOperators;  // Use set to track unique operator fds
+	for (size_t i = 0; i < _channels.size(); i++)
+	{
+		if (!_channels[i])
+		    continue;
+
+		std::vector<int>* operators = _channels[i]->getOperators();
+		if (!operators)
+		    continue;
+
+		for (size_t j = 0; j < operators->size(); j++)
+		{
+		    uniqueOperators.insert((*operators)[j]);
+		}
+	}
+    
+    std::ostringstream luser2;
+    luser2 << uniqueOperators.size() << " :operator(s) online";
+    sendNumeric(fd, 252, nick, std::vector<std::string>(), luser2.str());
+
+    // 254 RPL_LUSERCHANNELS
+    std::ostringstream luser3;
+    luser3 << _channels.size() << " :channels formed";
+    sendNumeric(fd, 254, nick, std::vector<std::string>(), luser3.str());
+
+    // 255 RPL_LUSERME
+    std::ostringstream luser4;
+    luser4 << "I have " << _clients.size() << " clients and 1 servers";
+    sendNumeric(fd, 255, nick, std::vector<std::string>(), luser4.str());
 }

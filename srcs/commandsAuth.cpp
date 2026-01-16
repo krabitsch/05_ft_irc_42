@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/14 13:57:26 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/16 10:58:16 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ void Server::broadcastNickChange(Client& client, const std::string& oldNick, con
 
 	std::cout << prefix << std::endl;
 
-	std::string msg = ":" + prefix + " NICK :" + newNick + "\r\n";
+	std::string msg = ":" + prefix + " NICK " + newNick + "\r\n";
 	
 	std::cout << msg << std::endl;
 
@@ -103,7 +103,7 @@ void Server::broadcastNickChange(Client& client, const std::string& oldNick, con
 
 	for (std::map<std::string, char>::iterator it = channels->begin(); it != channels->end(); it++)
 		//broadcastMessage("NICK", "", oldNick, user, newNick);	
-		broadcastToChannel(it->first, msg, -1); // include self too (exceptFd == -1)
+		broadcastToChannel(it->first, msg, client.getFd()); // include self too (exceptFd == -1)
 }
 
 

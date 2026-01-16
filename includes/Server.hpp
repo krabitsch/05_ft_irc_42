@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:37 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/14 10:15:17 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/16 11:20:59 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@
 # include <cerrno>
 # include <string>
 # include <vector>
+# include <set>
 # include "Channel.hpp"
 # include "Parser.hpp"
 # include "Replies.hpp"
