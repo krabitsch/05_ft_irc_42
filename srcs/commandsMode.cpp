@@ -241,6 +241,7 @@
       client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
       std::string msg = "You have been invited to " + _channelname;
       _server->sendNotice(client->getFd(), client->getNickname(), msg); //sends the notice to the client
+      _server->sendNumeric(fd, 341, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, username), _channelname + " :You have invited " + username + " to " + _channelname + "\n");
     }
     else 
     {
@@ -253,8 +254,6 @@
 
   void Channel::kick(std::string username, std::string comments, int fd)
   {
-    (void)comments;
-
     if (IsOperator(fd) == true) //checks the user executing the command is an operator
     {
       size_t i = 0;
@@ -262,7 +261,10 @@
       {
         if (_members[i]->getNickname() == username) //compares the user written to possible users
         {
-          _server->broadcastMessage("KICK", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), username + " has been kicked from " + _channelname + "\n");
+          if (!comments.empty())
+            _server->broadcastMessage("KICK", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), username + " has been kicked from " + _channelname + " (" + comments + ")");
+          else
+            _server->broadcastMessage("KICK", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), username + " has been kicked from " + _channelname);
           RemoveMember(username); //removes the member from the channel and removes the channel from there channel list
           return ;
         }

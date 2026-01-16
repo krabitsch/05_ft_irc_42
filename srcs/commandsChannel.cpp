@@ -6,6 +6,36 @@
 
   //JOIN Needs to be fixed when joining the channel the user isnt added to the channel list of the client
 
+  //Rpl_Namreply 353: used when the user joins the channel!
+  void Channel::rpl_namrepl(int fd)
+  {
+    std::string names;
+    
+    size_t i = 0;
+    while (i < _members.size())
+    {
+      if (i > 0)
+        names += " ";
+      if (IsOperator(_members[i]->getFd()) == true)
+        names += "@";
+      names += _members[i]->getNickname();
+      i++;
+    }
+    
+    // Send RPL_NAMREPLY (353) only to the joining user
+    std::vector<std::string> params;
+    params.push_back("=");
+    params.push_back(this->getname());
+    Client *client = this->_server->findClientByFd(fd);
+    this->_server->sendNumeric(fd, 353, client->getNickname(), params, names);
+    
+    // Send RPL_ENDOFNAMES (366) only to the joining user
+    std::vector<std::string> endParams;
+    endParams.push_back(this->getname());
+    this->_server->sendNumeric(fd, 366, client->getNickname(), endParams, "End of NAMES list");
+  }
+
+
   void Server::join(int fd, std::string channelname, std::string pass)
   {
     Channel *_channel = findChannel(channelname);
@@ -68,6 +98,19 @@
       this->broadcastMessage("JOIN", channelname, _client->getNickname(), _client->getUsername(), _channel->getTopic());
       if (!checker) //Adds the channel to the client list !isnt is here 
         _channel->AddMember(_client);
+
+      //RPL_NAMREPLY 353
+      _channel->rpl_namrepl(fd);
+
+      //Topic Reply
+      if (_channel->getTopic().empty())
+      { //RPL_NOTOPIC 331
+        this->sendNumeric(fd, 331, _client->getNickname(), params, "No topic is set for this channel");
+      }
+      else
+      { //RPL_TOPIC 332
+        this->sendNumeric(fd, 332, _client->getNickname(), params, _channel->getTopic());
+      }
     }
   }
 
