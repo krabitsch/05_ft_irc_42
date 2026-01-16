@@ -48,13 +48,14 @@ class Channel
 	std::string	getPassword(void) const;
 	bool isMember(Client* client);
 	std::vector<Client *>* getMembers(void);
-	void printMembers(void);
+	void 					printMembers(void);
 	void					RemoveMemberByFd(int fd);
+	void 					rpl_namrepl(int fd);
 
 	//Mode Commands
 	int modeI(int fd, std::string param);
 	int modeT(int fd, std::string param);
-	int modeO(int fd, std::string param);
+	int modeO(int fd, std::string param, std::string input);
 	int modeK(int fd, std::string param, std::string input);
 	int modeL(int fd, std::string param, std::string input);
 
