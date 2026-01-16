@@ -16,6 +16,8 @@
     {
       if (i > 0)
         names += " ";
+      if (IsOperator(_members[i]->getFd()) == true)
+        names += "@";
       names += _members[i]->getNickname();
       i++;
     }
