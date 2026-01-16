@@ -223,6 +223,11 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 	}
 }
 
+std::vector<int>* Channel::getOperators(void)
+{
+    return &_operators;
+}
+
 //Unset Operator Privilage
 //Step 1: Check if user is already a operator and is already a member
 //Step 2: remove member in the vector 

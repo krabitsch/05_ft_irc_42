@@ -130,8 +130,9 @@
       this->sendNumeric(fd, 403, client->getNickname(), std::vector<std::string>(1, channelname), channelname + " :No such channel");
       return ;
     }
-    this->broadcastMessage("PART", channelname, client->getNickname(), client->getUsername(), client->getNickname() + " has left the channel\n");
+    this->broadcastMessage("PART", channelname, client->getNickname(), client->getUsername(), client->getNickname() + " has left the channel");
     channel_type->RemoveMember(client->getNickname()); //Removes the member from the channel
-    client->RemoveChannel(client->getCurrentChannel()); //Removes the channel from the clients list
+    if (client->getCurrentChannel() == channelname)
+        client->RemoveChannel(channelname); //Removes the channel from the clients list
     client->setCurrentChannel(""); //Sets there current channel to nothing
   }

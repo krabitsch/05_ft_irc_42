@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/14 12:02:39 by aruckenb         ###   ########.fr       */
+/*   Updated: 2026/01/16 13:55:56 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ Server::Server(): _port(-1),
 Server::Server(int port, std::string password): _port(port),
 												_password(password),
 												_fdServer(-1),
-												_serverName("ircAlPeKa@42") {}
+												_serverName("ircAlPeKa") {}
 
 Server::Server(Server const& other): _port(other._port), 
 									 _password(other._password),
@@ -557,17 +557,17 @@ void Server::tryRegisterClient(Client &client)
 	if (client.isRegistered())
 		return ;
 	
-	if (!client.hasPass() || !client.hasNick() || !client.hasUser())
+	if ((!client.hasPass() /* && !this->_password.empty() */) || !client.hasNick() || !client.hasUser())
 		return ;
 
-	if (client.getPassword() != this->_password)
+	/* if (client.getPassword() != this->_password)
 	{
 		this->sendNumeric(client.getFd(), 464, "*", std::vector<std::string>(),
 					"Password incorrect"); // 464 ERR_PASSWDMISMATCH -> disconnect client
 		std::cout << RED << "Client (fd = " << client.getFd() << ") Disconnected" << WHITE << std::endl;
 		//this->clearClient(client.getFd());
 		return ;
-	}
+	} */
 
 	// client not yet registered and all conditions met -> set as registered and send welcome
 	client.setRegistered(true);

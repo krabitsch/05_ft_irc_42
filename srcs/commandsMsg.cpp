@@ -11,7 +11,9 @@
 void Server::privmsgCommand(Client &client, const IrcCommand &cmd){
 
 	int fd = client.getFd();
-	DBG({std::cout << "Handling PRIVMSG command" << std::endl});
+	std::cout << "DEBUG: privmsgCommand called with " << cmd.parameters.size() 
+        << " parameters" << std::endl;  // ADD THIS
+	DBG({std::cout << "Handling PRIVMSG command" << std::endl;});
 	if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
 	{
 		//411 ERR_NORECIPIENT
@@ -58,6 +60,9 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
 	if (!sender)
 		return;
 
+	std::cout << "DEBUG: privateMsg called - sender: " << sender->getNickname() 
+        << ", target: " << target << ", msg: " << msg << std::endl;  // ADD THIS
+	
 	if (target.empty())
 	{
 		//411 ERR_NORECIPIENT
@@ -88,7 +93,7 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
 		}
 
 		// Build sender prefix: nick!user@host
-		std::string senderPrefix = sender->getNickname() + "!" + sender->getUsername() + "@localhost";
+		std::string senderPrefix = sender->getNickname() + "!" + sender->getUsername() + "@" + _serverName;
 		std::string privmsgLine = makePrivmsg(senderPrefix, target, msg);
 
 		// Forward to every channel member except sender
@@ -121,7 +126,7 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
 		}
 
 		// Build sender prefix: nick!user@host
-		std::string senderPrefix = sender->getNickname() + "!" + sender->getUsername() + "@localhost";
+		std::string senderPrefix = sender->getNickname() + "!" + sender->getUsername() + "@" + _serverName;
 		std::string privmsgLine = makePrivmsg(senderPrefix, target, msg);
 
         // Send message to recipient

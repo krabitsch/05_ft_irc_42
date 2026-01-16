@@ -47,7 +47,8 @@ class Channel
 	bool	getTopicpriv(void) const;
 	std::string	getPassword(void) const;
 	bool isMember(Client* client);
-	std::vector<Client *>* getMembers(void);
+	std::vector<Client *>*	getMembers(void);
+	std::vector<int>*		getOperators(void);
 	void 					printMembers(void);
 	void					RemoveMemberByFd(int fd);
 	void 					rpl_namrepl(int fd);
