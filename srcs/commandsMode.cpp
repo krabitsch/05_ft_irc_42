@@ -191,6 +191,12 @@
     //Set certain status in the channel
     if (IsOperator(fd))
     {
+      if (param.size() < 2)
+      {
+        //ERR_NEEDMOREPARAMS 
+        _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),"Not enough parameters");
+          return ;
+      }
       size_t count = 1;
       size_t has_o = 0;
       int has_l = 0;
