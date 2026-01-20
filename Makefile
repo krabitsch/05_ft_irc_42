@@ -6,7 +6,7 @@
 #    By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/11/18 15:34:59 by krabitsc          #+#    #+#              #
-#    Updated: 2026/01/08 13:43:13 by aruckenb         ###   ########.fr        #
+#    Updated: 2026/01/20 11:39:10 by aruckenb         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,6 @@ SRCS 	 	= srcs/main.cpp \
 			  srcs/Server.cpp \
 			  srcs/utils.cpp \
 			  srcs/Parser.cpp \
-			  srcs/Replies.cpp \
 			  srcs/Client.cpp \
 			  srcs/Channel.cpp \
 			  srcs/commandsAuth.cpp \
