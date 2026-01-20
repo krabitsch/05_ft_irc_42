@@ -90,14 +90,8 @@ void Server::modeCommand(int fd, const IrcCommand &cmd)
 			//ERR_NOSUCHCHANNEL 403
 			this->sendNumeric(fd, 403, findClientByFd(fd)->getNickname(), std::vector<std::string>(1, "MODE"),cmd.parameters[0] + " :No such channel");
 		}
-		else if (cmd.parameters.size() == 1)
-			channel->mode(fd, "", ""); //If no mode parameters are given
-		else
-		{
-			if (cmd.parameters.size() == 2)
-				channel->mode(fd, cmd.parameters[1], "");
-			else if (cmd.parameters.size() == 3)
-				channel->mode(fd, cmd.parameters[1], cmd.parameters[2]);
+		else {
+			channel->mode(fd, cmd.parameters);
 		}
 	}
 	else 
