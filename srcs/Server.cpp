@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aruckenb <aruckenb@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 14:58:30 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/20 11:01:24 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/20 11:21:28 by aruckenb         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -371,26 +371,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 	}
 	
 	//Special Debugging Commands these are custom commands so they dont follow the IRC protocol
-	if (c == "OP") //Al: The error handling hasnt been implemented for this function 
-	{	
-		if (cmd.parameters.empty())
-			return ;
-		Channel* channel = findChannel(findClientByFd(fd)->getCurrentChannel());
-		if (channel == NULL)
-		{
-			this->sendNumeric(fd, 403, findClientByFd(fd)->getNickname(), std::vector<std::string>(),cmd.parameters[0] + " :No such channel");
-			return ;
-		}
-		if (cmd.parameters[0] == "-u")
-		{
-			channel->UnsetOperator(cmd.parameters[1], fd);
-		}
-		else if (cmd.parameters[0] == "+u")
-		{
-			channel->SetOperator(cmd.parameters[1], fd);
-		}
-		return ;
-	}
+	/*
 	if (c == "LIST")
 	{
 		if (cmd.parameters.empty())
@@ -421,7 +402,7 @@ void Server::handleMessage(int fd, const IrcCommand &cmd)
 			channel->printMembers();
 		}
 		return ;
-	}
+	}*/
 
 	// unknown/other commands: handle by sending 421 numeric (unknown commands)
 	this->sendNumeric(fd, 421, client->getNickname(), std::vector<std::string>(1, c), "Unknown command");
