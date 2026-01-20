@@ -69,7 +69,7 @@ class Channel
 
 	void kick(std::string username, std::string comments, int fd);
 	void invite(std::string username, int fd);
-	void mode(int fd, std::string param, std::string input);
+	void mode(int fd, std::vector<std::string> params);
 };
 
 #endif

@@ -21,7 +21,7 @@
       if (_inviteonly == true)
       {
         _inviteonly = false;
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Invite only mode has been removed from the channel\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Invite only mode has been removed from the channel");
       }
       else
         _server->sendNumeric(fd, 467, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Channel key already set");
@@ -32,7 +32,7 @@
       if (_inviteonly == false)
       {
         _inviteonly = true;
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Invite only mode has been turned on for " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Invite only mode has been turned on for " + _channelname);
       }
       else
         _server->sendNumeric(fd, 467, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Channel key already set");
@@ -47,7 +47,7 @@
     {
       if (_topicPriv == true)
       {
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Topic privilege has been removed from " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Topic privilege has been removed from " + _channelname);
         _topicPriv = false;
       }
       else
@@ -59,7 +59,7 @@
       if (_topicPriv == false)
       {
         _topicPriv = true;
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Topic privilege has been set for " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Topic privilege has been set for " + _channelname);
       }
       else
         _server->sendNumeric(fd, 467, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Channel key already set");
@@ -88,7 +88,7 @@
       if (IsOperator(client->getFd()) == true)
       {
         UnsetOperator(input, fd);
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), input + " is no longer an operator in " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), input + " is no longer an operator in " + _channelname);
       }
       else
         _server->sendNumeric(fd, 467, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Channel key already set");
@@ -106,7 +106,7 @@
       if (IsOperator(client->getFd()) == false)
       {
         SetOperator(input, fd);
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), input + " is now an operator in " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), input + " is now an operator in " + _channelname);
       }
       else
         _server->sendNumeric(fd, 467, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Channel key already set");
@@ -122,7 +122,7 @@
       if (!_password.empty())
       {
         _password.erase();
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Channel key has been removed from the channel " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByFd(fd)->getUsername(), _server->findClientByFd(fd)->getUsername(), "Channel key has been removed from the channel " + _channelname);
       }
       else
         _server->sendNumeric(fd, 467, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Channel key already set");
@@ -133,7 +133,7 @@
       if ((_password.empty() && !input.empty()) || (!_password.empty() && !input.empty()))
       {
         _password = input;
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), "Channel key has been set/changed for the channel " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), "Channel key has been set/changed for the channel " + _channelname);
       }
       else 
       { //Custom error for empty input
@@ -152,7 +152,7 @@
       if (_userlimit > 0)
       {
         _userlimit = 0;
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), "User limit has been removed from " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), "User limit has been removed from " + _channelname);
       }
       else
         _server->sendNumeric(fd, 467, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Channel key already set");
@@ -179,35 +179,85 @@
       else
       {
         _userlimit = num;
-        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), "User limit has been set for " + _channelname + "\n");
+        _server->broadcastMessage("MODE", _channelname, _server->findClientByNickOrUser(fd, "")->getNickname(), _server->findClientByNickOrUser(fd, "")->getUsername(), "User limit has been set for " + _channelname);
       }
       return (1);
     }
     return (0);
   }
 
-  void Channel::mode(int fd, std::string param, std::string input)//the input is one of the flags 
+  void Channel::mode(int fd, std::vector<std::string> param)//the input is one of the flags 
   {
     //Set certain status in the channel
     if (IsOperator(fd))
     {
-      if (modeI(fd, param) == 1)
-        return ;
-      if (modeT(fd, param) == 1)
-        return ;
-      if (modeO(fd, param, input) == 1)
-        return ;
-      if (modeK(fd, param, input) == 1)
-        return ;
-      if (modeL(fd, param, input) == 1)
-        return ;
+      size_t count = 1;
+      size_t has_o = 0;
+      int has_l = 0;
+      int status = 0;
 
-     //ERR_UNKNOWNMODE 
-      _server->sendNumeric(fd, 472, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, param), ":is unknown mode char to me");
+      
+      if (param[1].find("l") != std::string::npos)
+      {
+        count++;
+        has_l = 1;
+      }
+      if (param[1].find("k") != std::string::npos || param[1].find("o") != std::string::npos)
+        count++;
+      if (param[1][0] == '+')
+        status = 1;
+      else if (param[1][0] == '-')
+        status = 0;
+      if (param[1].find("o") != std::string::npos)
+        has_o = 1;
+      if ((status == 1 && count != param.size() - 1) || (status == 0 && param.size() - 1 >= 2 + has_o))
+      {
+        //ERR_NEEDMOREPARAMS 
+        _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
+          "Not enough parameters");
+            return ;
+      }
+
+      for (size_t i = 1; i < param[1].length(); i++)
+      {
+        if(param[1][i] == 't'){
+          if (status == 1)
+            modeT(fd, "+t");
+          else
+            modeT(fd, "-t");
+        }
+        else if(param[1][i] == 'i'){
+          if (status == 1)
+            modeI(fd, "+i");
+          else
+            modeI(fd, "-i");
+        }
+        else if(param[1][i] == 'l'){
+          if (status == 1)
+            modeL(fd, "+l", param[2]);
+          else
+            modeL(fd, "-l", "");
+        }
+        else if(param[1][i] == 'o'){
+          if (status == 1)
+            modeO(fd, "+o", param[2 + has_l]);
+          else
+            modeO(fd, "-o", param[2 + has_l]);
+        }
+        else if(param[1][i] == 'k'){
+          if (status == 1)
+            modeK(fd, "+k", param[2 + has_l]);
+          else
+            modeK(fd, "-k", "");
+        }
+        else
+          //ERR_UNKNOWNMODE 
+          _server->sendNumeric(fd, 472, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, param[2]), ":is unknown mode char to me");
+      }
     }
     else 
     { //ERR_CHANOPRIVSNEEDED  
-      _server->sendNumeric(fd, 482, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, param), "You're not a channel operator");
+      _server->sendNumeric(fd, 482, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, param[2]), "You're not a channel operator");
     }
   }
 
