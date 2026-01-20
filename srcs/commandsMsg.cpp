@@ -11,8 +11,6 @@
 void Server::privmsgCommand(Client &client, const IrcCommand &cmd){
 
 	int fd = client.getFd();
-	std::cout << "DEBUG: privmsgCommand called with " << cmd.parameters.size() 
-        << " parameters" << std::endl;  // ADD THIS
 	DBG({std::cout << "Handling PRIVMSG command" << std::endl;});
 	if (cmd.parameters.empty() || (cmd.parameters.size() == 1 && cmd.has_trailing == true))
 	{
@@ -60,8 +58,8 @@ void Server::privateMsg(int senderFd, std::string target, std::string msg)
 	if (!sender)
 		return;
 
-	std::cout << "DEBUG: privateMsg called - sender: " << sender->getNickname() 
-        << ", target: " << target << ", msg: " << msg << std::endl;  // ADD THIS
+	DBG ({std::cout << "DEBUG: privateMsg called - sender: " << sender->getNickname() 
+        << ", target: " << target << ", msg: " << msg << std::endl; });
 	
 	if (target.empty())
 	{
