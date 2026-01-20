@@ -291,7 +291,7 @@
       client->AddChannel(_channelname, 'm'); //adds the channel to the clients channels
       std::string msg = "You have been invited to " + _channelname;
       _server->sendNotice(client->getFd(), client->getNickname(), msg); //sends the notice to the client
-      _server->sendNumeric(fd, 341, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, username), _channelname + " :You have invited " + username + " to " + _channelname + "\n");
+      _server->sendNumeric(fd, 341, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, username), _channelname + " :You have invited " + username + " to " + _channelname);
     }
     else 
     {
