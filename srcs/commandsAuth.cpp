@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/20 11:01:51 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/20 11:29:09 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,14 +96,34 @@ void Server::broadcastNickChange(Client& client, const std::string& oldNick, con
 	std::cout << msg << std::endl;
 
 	send(client.getFd(), msg.c_str(), msg.length(), 0);
-	std::map<std::string, char>* channels = client.GetChannel();
-	if (!channels){
-		return ;
-	}
+	
+	std::set<int> recipients;
+    std::map<std::string, char>* chans = client.GetChannel();
+    if (!chans)
+		return;
 
-	for (std::map<std::string, char>::iterator it = channels->begin(); it != channels->end(); it++)
-		//broadcastMessage("NICK", "", oldNick, user, newNick);	
-		broadcastToChannel(it->first, msg, client.getFd()); // include self too (exceptFd == -1)
+    for (std::map<std::string, char>::iterator it = chans->begin(); it != chans->end(); ++it)
+    {
+        Channel* ch = findChannel(it->first);
+        if (!ch) continue;
+
+        std::vector<Client*>* members = ch->getMembers();
+        if (!members)
+			continue;
+
+        for (std::vector<Client*>::iterator it = members->begin(); it != members->end(); ++it)
+        {
+			Client* m = *it;
+            if (!m)
+				continue;
+            if (m->getFd() == client.getFd())
+				continue;
+            recipients.insert(m->getFd());
+        }
+    }
+
+    for (std::set<int>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+        send(*it, msg.c_str(), msg.length(), 0);
 }
 
 
