@@ -2,8 +2,15 @@
 
 void Server::joinCommand(int fd, const IrcCommand &cmd)
 {
-	if (!cmd.parameters.empty() && cmd.parameters[0][0] == '#') // move this logic inside the command handling
+	if (!cmd.parameters.empty())
 	{
+		if (cmd.parameters[0][0] != '#')
+		{
+			// 403 ERR_NOSUCHCHANNEL
+			this->sendNumeric(fd, 403, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, cmd.parameters[0]),
+							"No such channel");
+			return ;
+		}
 		if (cmd.parameters.size() == 2)
 			join(fd, cmd.parameters[0], cmd.parameters[1]);
 		else

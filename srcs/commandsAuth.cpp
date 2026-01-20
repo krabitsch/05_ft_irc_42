@@ -6,7 +6,7 @@
 /*   By: pvass <pvass@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 14:00:50 by krabitsc          #+#    #+#             */
-/*   Updated: 2026/01/16 10:58:16 by pvass            ###   ########.fr       */
+/*   Updated: 2026/01/20 11:01:51 by pvass            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,11 +177,11 @@ void	Server::nickCommand(Client &client, const IrcCommand &cmd)
 	if (client.isRegistered() && !oldNick.empty() && oldNick != newNick)
 		broadcastNickChange(client, oldNick, newNick);
 
-	if (!client.isRegistered())
-		this->tryRegisterClient(client);
-
 	client.setNickname(newNick);
 	client.setHasNick(true);
+	
+	if (!client.isRegistered())
+		this->tryRegisterClient(client);
 }
 
 // USER COMMAND helper functions (static, file scope functions)
