@@ -8,7 +8,7 @@ void Server::joinCommand(int fd, const IrcCommand &cmd)
 			join(fd, cmd.parameters[0], cmd.parameters[1]);
 		else
 			join(fd, cmd.parameters[0], "");
-		DBG({std::cout << "User has joined channel: " << _channels[0].getname() << std::endl;});
+		DBG({std::cout << "User has joined channel: " << _channels[0]->getname() << std::endl;});
 	}
 	else 
 	{
