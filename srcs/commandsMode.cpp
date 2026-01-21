@@ -216,7 +216,7 @@
         status = 0;
       if (param[1].find("o") != std::string::npos)
         has_o = 1;
-      if ((status == 1 && count != param.size() - 1) || (status == 0 && param.size() - 1 >= 2 + has_o))
+      if ((status == 1 && count != param.size() - 1) || (status == 0 && param.size() - 1 <= 2 + has_o))
       {
         //ERR_NEEDMOREPARAMS 
         _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
@@ -258,12 +258,12 @@
         }
         else
           //ERR_UNKNOWNMODE 
-          _server->sendNumeric(fd, 472, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, param[2]), ":is unknown mode char to me");
+          _server->sendNumeric(fd, 472, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, "MODE"), ":is unknown mode char to me");
       }
     }
     else 
     { //ERR_CHANOPRIVSNEEDED  
-      _server->sendNumeric(fd, 482, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, param[2]), "You're not a channel operator");
+      _server->sendNumeric(fd, 482, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, "MODE"), "You're not a channel operator");
     }
   }
 
