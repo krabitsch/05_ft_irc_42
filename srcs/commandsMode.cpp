@@ -216,8 +216,7 @@
         status = 0;
       if (param[1].find("o") != std::string::npos)
         has_o = 1;
-      std::cout << param.size() << " VS " << 2 + has_o << std::endl;
-      if ((status == 1 && count != param.size() - 1))
+      if (status == 1 && count != param.size() - 1)
       {
         //ERR_NEEDMOREPARAMS 
         _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
