@@ -216,7 +216,8 @@
         status = 0;
       if (param[1].find("o") != std::string::npos)
         has_o = 1;
-      if ((status == 1 && count != param.size() - 1) || (status == 0 && param.size() - 1 <= 2 + has_o))
+      std::cout << param.size() << " VS " << 2 + has_o << std::endl;
+      if ((status == 1 && count != param.size() - 1))
       {
         //ERR_NEEDMOREPARAMS 
         _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
@@ -248,7 +249,15 @@
           if (status == 1)
             modeO(fd, "+o", param[2 + has_l]);
           else
+          {
+            if (status == 0 && param.size() < 3)
+            {
+              //ERR_NEEDMOREPARAMS 
+              _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),"Not enough parameters");
+              return ;
+            }
             modeO(fd, "-o", param[2 + has_l]);
+          }
         }
         else if(param[1][i] == 'k'){
           if (status == 1)
