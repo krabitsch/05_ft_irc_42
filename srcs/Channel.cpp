@@ -106,15 +106,15 @@ void Channel::RemoveMember(std::string username)
 			_members[i]->setCurrentChannel(""); //Set the users current channel to blank
 			if (IsOperator(_members[i]->getFd()) == true) //Remove the user as an operator
 			{
-				size_t i = 0;
-				while (i < _operators.size()) // KR: again index i?!
+				size_t j = 0;
+				while (j < _operators.size())
 				{
-					if (_operators[i] == _members[i]->getFd())
+					if (_operators[j] == _members[i]->getFd())
 					{
-						_operators.erase(_operators.begin() + i);
+						_operators.erase(_operators.begin() + j);
 						break ;
 					}
-					i++;
+					j++;
 				}
 			}
 			_members.erase(_members.begin() + i); //removes the user from members
@@ -262,6 +262,7 @@ void Channel::UnsetOperator(std::string username, int fd)
 					}
 					_operators = newoperators;
 					_server->sendNotice(clientfd, _channelname, "You are no longer an operator in " + _channelname + " channel");
+					return ;
 				}
 				else 
 				{
