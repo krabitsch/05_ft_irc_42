@@ -206,6 +206,7 @@ void Channel::SetOperator(std::string username, int fd) //Another Note: This fun
 					(*user_channels)[_channelname] = 'o'; //check if this sets the channel in the client correctly
 					_operators.push_back(_members[i]->getFd());
 					_server->sendNotice(_members[i]->getFd(), _channelname, "You are now an operator in " + _channelname + " channel");
+					return ;
 				}
 				else 
 				{
