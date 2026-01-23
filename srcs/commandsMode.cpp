@@ -213,7 +213,7 @@
         status = 1;
       else if (param[1][0] == '-')
         status = 0;
-      if (status == 1 && count != param.size() - 1)
+      if (status == 1 && count > param.size() - 1)
       {
         //ERR_NEEDMOREPARAMS 
         _server->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "MODE"),
