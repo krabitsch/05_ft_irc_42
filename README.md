@@ -132,7 +132,7 @@ NICK alice
 USER alice 0 * :Alice
 JOIN #test
 PRIVMSG #test :Hello everyone!
-PART #test :Bye
+PART #test
 QUIT :Leaving
 ```
 
