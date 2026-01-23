@@ -21,14 +21,14 @@ void Server::privmsgCommand(Client &client, const IrcCommand &cmd){
 	{
 		//412 ERR_NOTEXTTOSEND
 		sendNumeric(fd, 412, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
-			":No text to send");
+			"No text to send");
 		return;
 	}
 	else if (cmd.parameters.size() > 6)
 	{
 		//407 ERR_TOOMANYTARGETS
 		sendNumeric(fd, 407, this->findClientByFd(fd)->getNickname(), std::vector<std::string>(),
-			":Too many recipients. No message delivered");
+			"Too many recipients. No message delivered");
 	}
 	else
 	{
