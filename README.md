@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by aruckenb, pvass, krabitsch.*
+*This project has been created as part of the 42 curriculum by aruckenb, pvass, krabitsc.*
 
 # ft_irc — IRC Server (RFC 1459)
 
@@ -64,12 +64,17 @@ Example:
 
 To connect with an IRC client:
 ```bash
-irssi -c localhost -p 6667 -w hunter2
+irssi
 ```
 
-Or using raw TCP:
+Inside the IRC client:
 ```bash
-nc localhost 6667
+/connect localhost 6667 hunter2
+```
+
+Or using raw NC:
+```bash
+nc -C localhost 6667
 ```
 
 ## Implemented Commands
@@ -138,7 +143,7 @@ packet aggregation and buffering behavior.
 
 ### Using irssi
 ```text
-/connect 127.0.0.1 6667 hunter2
+/connect localhost 6667 hunter2
 /join #test
 /msg #test hello
 /part #test
