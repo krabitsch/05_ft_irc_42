@@ -168,13 +168,17 @@
         return (1);
       }
 
-      std::stringstream convert(input); //Converts string to int
+
+      std::stringstream convert(input); //Converts string to size_t
+      if (input[0] == '-')
+      {
+        _server->sendNumeric(fd, 814, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Invalid numerical input!"); 
+        return (1);
+      }
+      
       convert >> num;
 
-      //Check Number Validity
-      if (num <= 0)
-        _server->sendNumeric(fd, 814, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Invalid numerical input!"); 
-      else if (num < _members.size())
+      if (num < _members.size())
         _server->sendNumeric(fd, 814, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "Too many members are already apart of the channel: Unable to Set Limit!"); //Verify if that is the correct numerical number
       else
       {
