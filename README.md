@@ -157,7 +157,7 @@ with an official IRC client.
 - **C++98 Standard Documentation** — Standard template library and language reference
 - **POSIX Socket Programming** — Unix socket API documentation for network communication
 - **poll() System Call** — Event multiplexing for non-blocking I/O
-- **Youtube Video Used** — 
+- **Youtube Video** — (https://www.youtube.com/playlist?list=PLHBVNH27RbWqGTL-AYMylWkNck45cxPnG)
 
 ### AI Usage
 
