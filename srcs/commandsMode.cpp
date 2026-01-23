@@ -299,7 +299,7 @@
       if (client == NULL)
       {
         //ERR_NOSUCHNIC //need to add the number code and sentance
-        _server->sendNumeric(fd, 000, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "nick does not exist");
+        _server->sendNumeric(fd, 401, _server->findClientByFd(fd)->getNickname(), std::vector<std::string>(1, _channelname), "nick does not exist");
         return ;
       }
       AddMember(client); //adds the client onto the channel list
