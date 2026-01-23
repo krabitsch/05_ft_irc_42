@@ -37,10 +37,10 @@ void Server::partCommand(int fd, const IrcCommand &cmd)
 
 void Server::topicCommand(int fd, const IrcCommand &cmd)
 {
-	if (!cmd.parameters.empty() && cmd.parameters.size() == 2)
-		topic(cmd.parameters[0], cmd.parameters[1], fd);
-	else if (!cmd.parameters.empty() && cmd.parameters.size() == 1)
+	if (!cmd.parameters.empty() && cmd.parameters.size() == 1)
 		topic(cmd.parameters[0], "", fd);
+	else if (!cmd.parameters.empty() && cmd.parameters.size() >= 2)
+		topic(cmd.parameters[0], cmd.parameters[1], fd);
 	else
 		this->sendNumeric(fd, 461, "*", std::vector<std::string>(1, "TOPIC"),
 			"Not enough parameters");
@@ -63,7 +63,7 @@ void Server::kickCommand(int fd, const IrcCommand &cmd)
 		{
 			if (cmd.parameters.size() == 2)
 				channel->kick(cmd.parameters[1], "", fd); //If no comments are included
-			else if (cmd.parameters.size() == 3)
+			else if (cmd.parameters.size() >= 3)
 				channel->kick(cmd.parameters[1], cmd.parameters[2], fd); //if comments are included
 		}
 		else
