@@ -100,13 +100,13 @@ PRIVMSG {<target>} :<message>
 ### Channels
 ```text
 JOIN <#channel> [key]
-PART <#channel> [:message]
+PART <#channel>
 ```
 
 ### Channel Operator Commands
 ```text
 KICK <#channel> <nickname> [:reason]
-INVITE <nickname> <#channel>
+INVITE <#channel> <nickname>
 TOPIC <#channel> [:topic]
 MODE <#channel> <modes> [parameters]
 ```
