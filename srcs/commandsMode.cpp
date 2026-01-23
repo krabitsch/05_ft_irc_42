@@ -198,7 +198,6 @@
           return ;
       }
       size_t count = 1;
-      size_t has_o = 0;
       int has_l = 0;
       int status = 0;
 
@@ -214,8 +213,6 @@
         status = 1;
       else if (param[1][0] == '-')
         status = 0;
-      if (param[1].find("o") != std::string::npos)
-        has_o = 1;
       if (status == 1 && count != param.size() - 1)
       {
         //ERR_NEEDMOREPARAMS 
